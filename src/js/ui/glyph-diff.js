@@ -8,9 +8,18 @@ const STORAGE_KEY = 'glyph-diff';
 const SIZE = 192;                      // 描画に使う canvas の画素数（表示は CSS で 1em 四方に縮める）
 const FONT = `${SIZE}px "${WEB_FONT_FAMILY}", "IPAmjMincho", "IPAmj明朝", serif`;
 const SAME_THRESHOLD = 0.002;          // 違う画素がこの割合未満なら「通常の字形と同じ」とみなす
+const INK_CACHE_MAX = 256;             // 覚えておく字の数（1字 SIZE*SIZE = 約36KB なので、約9MB まで）
 
-/** @type {Map<string, Uint8ClampedArray>} 文字列 → 描いた字の濃さ（画素ごと） */
+/**
+ * 文字列 → 描いた字の濃さ（画素ごと）。Map の順序を使い、最近使ったものを後ろに置いて、
+ * INK_CACHE_MAX を超えたら前（しばらく使っていないもの）から捨てる
+ * @type {Map<string, Uint8ClampedArray>}
+ */
 const inkCache = new Map();
+/** @type {CanvasRenderingContext2D | null} ink() で使い回す canvas（描いてすぐ読むので、共有しても混ざらない） */
+let inkContext = null;
+/** themeColors() の結果。テーマを切り替えたら捨てる */
+let colorCache = null;
 let enabled = load();
 
 function load() {
@@ -52,7 +61,7 @@ async function drawDiff(face, text) {
   const base = String.fromCodePoint(text.codePointAt(0)); // 異体字セレクタなし
   await document.fonts.load(FONT, text + base);
   const [a, b] = [ink(text), ink(base)];
-  const colors = themeColors();
+  const { onlyThis, onlyBase, common: commonColor } = themeColors();
   const canvas = face.querySelector('canvas') ?? document.createElement('canvas');
   canvas.width = SIZE;
   canvas.height = SIZE;
@@ -67,19 +76,16 @@ async function drawDiff(face, text) {
     const common = Math.min(a[i], b[i]);
     if (a[i] > 128 || b[i] > 128) total++;
     if (onlyA > 128 || onlyB > 128) differ++;
-    // 色を重ねる: 違う部分は濃く、共通の部分は薄く
-    const layers = [[colors.onlyThis, onlyA], [colors.onlyBase, onlyB], [colors.common, common * 0.45]];
-    let alpha = 0;
-    let r = 0; let g = 0; let bl = 0;
-    for (const [color, value] of layers) {
-      const w = value / 255;
-      r += color[0] * w; g += color[1] * w; bl += color[2] * w; alpha += w;
-    }
+    // 色を重ねる: 違う部分は濃く、共通の部分は薄く（画素ごとに配列を作らないよう、3色を直接足す）
+    const wThis = onlyA / 255;
+    const wBase = onlyB / 255;
+    const wCommon = (common * 0.45) / 255;
+    const alpha = wThis + wBase + wCommon;
     const o = i * 4;
     if (alpha > 0) {
-      image.data[o] = r / alpha;
-      image.data[o + 1] = g / alpha;
-      image.data[o + 2] = bl / alpha;
+      image.data[o] = (onlyThis[0] * wThis + onlyBase[0] * wBase + commonColor[0] * wCommon) / alpha;
+      image.data[o + 1] = (onlyThis[1] * wThis + onlyBase[1] * wBase + commonColor[1] * wCommon) / alpha;
+      image.data[o + 2] = (onlyThis[2] * wThis + onlyBase[2] * wBase + commonColor[2] * wCommon) / alpha;
       image.data[o + 3] = Math.min(255, alpha * 255);
     }
   }
@@ -99,38 +105,54 @@ async function drawDiff(face, text) {
 
 /** 字を描いて、画素ごとの濃さ（0〜255）を返す */
 function ink(text) {
-  if (inkCache.has(text)) return inkCache.get(text);
-  const canvas = document.createElement('canvas');
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.font = FONT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#000';
+  const cached = inkCache.get(text);
+  if (cached) {
+    inkCache.delete(text);
+    inkCache.set(text, cached); // 最近使ったものとして後ろへ
+    return cached;
+  }
+  if (!inkContext) {
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    inkContext = canvas.getContext('2d', { willReadFrequently: true });
+    inkContext.textAlign = 'center';
+    inkContext.textBaseline = 'middle';
+    inkContext.fillStyle = '#000';
+  }
+  const ctx = inkContext;
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  ctx.font = FONT; // フォントを読み込んだ後の描画でも確実に使われるよう、毎回指定する
   ctx.fillText(text, SIZE / 2, SIZE / 2);
   const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
   const alpha = new Uint8ClampedArray(SIZE * SIZE);
   for (let i = 0; i < alpha.length; i++) alpha[i] = data[i * 4 + 3];
   inkCache.set(text, alpha);
+  if (inkCache.size > INK_CACHE_MAX) inkCache.delete(inkCache.keys().next().value);
   return alpha;
 }
 
-/** 配色（ダーク/ライトで変わる CSS 変数）を RGB で読む */
+/** 配色（ダーク/ライトで変わる CSS 変数）を RGB で読む。テーマが変わるまでは同じなので覚えておく */
 function themeColors() {
+  if (colorCache) return colorCache;
   const style = getComputedStyle(document.documentElement);
+  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
   const rgb = (name) => {
-    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+    ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = style.getPropertyValue(name).trim();
     ctx.fillRect(0, 0, 1, 1);
     return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
   };
-  return { onlyThis: rgb('--crimson-bright'), onlyBase: rgb('--overlay-b'), common: rgb('--text') };
+  colorCache = { onlyThis: rgb('--crimson-bright'), onlyBase: rgb('--overlay-b'), common: rgb('--text') };
+  return colorCache;
 }
 
 export function setupGlyphDiff() {
   document.body.classList.toggle('diff-mode', enabled);
-  // ダーク/ライトを切り替えたら描き直す
-  new MutationObserver(() => { if (enabled) refreshAll(); })
+  // ダーク/ライトを切り替えたら、配色を読み直して描き直す
+  new MutationObserver(() => {
+    colorCache = null;
+    if (enabled) refreshAll();
+  })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 }

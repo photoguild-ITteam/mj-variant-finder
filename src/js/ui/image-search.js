@@ -14,9 +14,8 @@ const MATCH_DELAY_MS = 200;
 let matcherModule = null;
 let featuresModule = null;
 let index = null;
-/** @type {ImageBitmap | null} */
+/** @type {HTMLCanvasElement | null} 読み込んだ画像（元の大きさ。照合はここから画素を読む） */
 let sourceImage = null;
-let sourceCanvas = null;
 let selection = null; // 元画像の座標での切り出し範囲
 let timer;
 let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
@@ -111,16 +110,21 @@ function setupDropZone() {
 
 async function loadFile(file) {
   matchToken += 1;
+  let bitmap;
   try {
-    sourceImage = await createImageBitmap(file);
+    bitmap = await createImageBitmap(file);
   } catch {
     setStatus('この画像は読み込めませんでした。');
     return;
   }
-  sourceCanvas = document.createElement('canvas');
-  sourceCanvas.width = sourceImage.width;
-  sourceCanvas.height = sourceImage.height;
-  sourceCanvas.getContext('2d', { willReadFrequently: true }).drawImage(sourceImage, 0, 0);
+  // canvas に描いたら bitmap はすぐ閉じる（同じ画像を元の大きさで2つ持たない）
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext('2d', { willReadFrequently: true }).drawImage(bitmap, 0, 0);
+  bitmap.close();
+  if (sourceImage) sourceImage.width = sourceImage.height = 0; // 前の画像のメモリを早めに手放す
+  sourceImage = canvas;
   selection = null;
   $('#img-drop').hidden = true;
   $('#img-stage').hidden = false;
@@ -210,7 +214,7 @@ function runMatch() {
     const currentToken = matchToken;
     setStatus('照合中…', true);
     const region = selection ?? { x: 0, y: 0, width: sourceImage.width, height: sourceImage.height };
-    const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    const ctx = sourceImage.getContext('2d', { willReadFrequently: true });
     const image = ctx.getImageData(Math.round(region.x), Math.round(region.y),
       Math.max(1, Math.round(region.width)), Math.max(1, Math.round(region.height)));
     try {
