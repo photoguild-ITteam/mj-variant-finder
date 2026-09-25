@@ -92,4 +92,4 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 ## クレジット
 
-Developed by **YOUR-COMPANY** — https://YOUR-COMPANY.example
+Developed by **株式会社フォトギルド** — https://YOUR-COMPANY.example

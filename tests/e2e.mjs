@@ -306,16 +306,19 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.ok(input.width > 150, `入力欄 ${Math.round(input.width)}px`);
     assert.equal(await page.locator('.search-box #handwriting-open').count(), 0);
 
+    // 広い画面ではヘッダーに開発元を表示する（狭い画面では省く。ライセンスのモーダルには常にある）
+    assert.match(await page.textContent('.site-header .brand__company'), /株式会社フォトギルド/);
     // ライセンスへのリンクはヘッダーにある（フッターには置かない）
     assert.equal(await page.locator('.site-header #license-open').count(), 1);
     assert.equal(await page.locator('.site-footer #license-open').count(), 0);
     await page.click('#license-open');
     await page.waitForSelector('#license-dialog[open]');
     const headings = await page.$$eval('#license-dialog h3', (els) => els.map((e) => e.textContent));
-    assert.deepEqual(headings, ['ライセンスの構成', '文字のデータ', 'フォント', '手書き認識', '画像から探す', '人名・地名の読み', 'ソフトウェア']);
+    assert.deepEqual(headings, ['ライセンスの構成', '文字のデータ', 'フォント', '手書き認識', '画像から探す', '人名・地名の読み', '開発', 'ソフトウェア']);
     const text = await page.textContent('#license-dialog');
     assert.match(text, /CC BY-SA 2\.1 JP/);
-    assert.match(text, /CC BY-SA 3\.0/);                                  // KanjiVG 由来は別のライセンス
+    assert.match(text, /CC BY-SA 3\.0/);
+    assert.match(text, /Developed by 株式会社フォトギルド/);                                  // KanjiVG 由来は別のライセンス
     assert.match(text, /字形の同一性・正確性を保証するものではありません/); // 免責事項
     await page.click('#license-dialog [data-close]');
     await page.waitForSelector('#license-dialog', { state: 'hidden' });
