@@ -159,7 +159,12 @@ function setupSelection() {
   const at = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scale = previewScale();
-    return [(e.clientX - rect.left) / scale, (e.clientY - rect.top) / scale];
+    const cssScaleX = rect.width ? canvas.width / rect.width : 1;
+    const cssScaleY = rect.height ? canvas.height / rect.height : 1;
+    return [
+      (e.clientX - rect.left) * cssScaleX / scale,
+      (e.clientY - rect.top) * cssScaleY / scale,
+    ];
   };
   canvas.addEventListener('pointerdown', (e) => {
     if (!sourceImage) return;
