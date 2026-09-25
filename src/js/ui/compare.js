@@ -11,10 +11,18 @@ const glyphs = [];
 
 export const isCompared = (glyph) => glyphs.some((g) => g.mj === glyph.mj);
 
+function clearAll() {
+  glyphs.length = 0;
+  update();
+}
+
 export function setupCompare() {
-  $('#compare-clear').addEventListener('click', () => {
-    glyphs.length = 0;
-    update();
+  $('#compare-clear').addEventListener('click', clearAll);
+  // 比較画面の中からも消せるようにする（開いている間、画面下のトレイは押せないので隠している）
+  $('#compare-clear-all').addEventListener('click', () => {
+    clearAll();
+    $('#compare-dialog').close();
+    showToast('比較リストを空にしました');
   });
   $('#compare-open').addEventListener('click', () => {
     renderStage();
@@ -77,7 +85,11 @@ function renderStage() {
   if ($('#compare-overlay').checked && glyphs.length >= 2) items.push(overlayItem(glyphs[0], glyphs[1]));
   items.push(...glyphs.map((glyph) => h('div', { class: 'compare-item' },
     h('div', { class: 'compare-item__glyph glyph' }, glyph.char),
-    h('div', { class: 'compare-item__label' }, glyph.mj, h('br'), sequenceLabel(glyph)))));
+    h('div', { class: 'compare-item__label' }, glyph.mj, h('br'), sequenceLabel(glyph)),
+    h('button', {
+      class: 'button button--small compare-item__remove', type: 'button', 'aria-label': `${glyph.mj} を比較から外す`,
+      onclick: () => toggleCompare(glyph),
+    }, '外す'))));
   stage.replaceChildren(...(items.length ? items : [h('p', { class: 'muted' }, '字形カードの「比較」で追加してください。')]));
 }
 

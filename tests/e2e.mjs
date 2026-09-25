@@ -495,6 +495,25 @@ if (isLocal) {
     await page.click('#compare-clear');
   });
 
+  await check('比較画面の中から外す・すべてクリア（開いている間はトレイを隠す）', async () => {
+    await page.fill('#q', '邉');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.glyph-card .glyph-card__compare');
+    for (let i = 0; i < 3; i++) await page.locator('.glyph-card .glyph-card__compare').nth(i).click();
+    await page.click('#compare-open');
+    await page.waitForSelector('#compare-dialog[open] .compare-item');
+    // 背景越しにトレイの「クリア」が見えると、押しても比較画面が閉じるだけになる
+    assert.equal(await page.locator('#compare-tray').isVisible(), false);
+    await page.locator('#compare-dialog .compare-item__remove').first().click();
+    assert.equal(await page.textContent('#compare-count'), '2');
+    assert.equal(await page.locator('#compare-dialog .compare-item__remove').count(), 2);
+    await page.click('#compare-clear-all');
+    await page.waitForSelector('#compare-dialog', { state: 'hidden' });
+    assert.equal(await page.textContent('#compare-count'), '0');
+    assert.equal(await page.locator('#compare-tray').isVisible(), false);
+    assert.equal(await page.locator('.glyph-card.is-selected').count(), 0);
+  });
+
   await check('一覧の操作でエラーが出ない', async () => assert.deepEqual(errors, []));
   await context.close();
 }

@@ -644,6 +644,10 @@ a.icon-button { color: inherit; }
   border: 1px solid var(--border); border-radius: var(--radius);
 }
 .compare-item__label { font-family: var(--font-mono); font-size: 12px; text-align: center; }
+.compare-item__remove { min-height: 26px; padding: 1px 10px; font-size: 12px; }
+.compare-controls__clear { margin-left: auto; }
+/* ダイアログを開いている間は、画面下の比較トレイを隠す（背景越しに見えても押せないため） */
+body:has(dialog[open]) .compare-tray { display: none; }
 .compare-stage.show-guides .compare-item__glyph {
   background-image:
     linear-gradient(var(--guide), var(--guide)), linear-gradient(var(--guide), var(--guide)),
