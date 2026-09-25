@@ -3,7 +3,7 @@
 **IPAmj明朝の異体字（IVS）を、フォントを入れなくてもブラウザだけで検索・比較・コピー・画像化できる静的Webツールです。**
 サーバー処理も外部APIも不要で、静的ファイルを置くだけで動きます。
 
-> 🌐 **デモ**: https://photoguild-itteam.github.io/mj-variant-finder/
+> 🌐 **デモ**: https://photoguild-itteam.github.io/mj-variant-finder/ ・ [English summary](#english-summary)
 
 ![異体字の一覧](docs/images/01-variants.png)
 
@@ -67,7 +67,7 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、`np
 データやフォントを作り直す手順、各機能の仕組みは [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) にあります。
 元データ（MJ文字情報一覧表など）は公式配布元から取得するもので、リポジトリには含めません（`data/raw/`、Git 管理外）。
 
-MJ文字情報や Unicode の改訂があったときは、`npm run build:data` などのスクリプトを再実行して差分をコミットします。
+MJ文字情報や Unicode の改訂があったときは、`npm run build:data` などのスクリプトを再実行して差分をコミットします。新しい版が出たかは、GitHub Actions（`check-data-updates`）が毎月1日に配布元を確認し、出ていれば Issue を立てます（手元では `python scripts/check_updates.py`）。変更は [CHANGELOG.md](CHANGELOG.md) に記録します。
 
 ### コントリビューション
 
@@ -123,6 +123,23 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 - [Unicode IVD](https://www.unicode.org/ivd/)・[Unihan](https://www.unicode.org/reports/tr38/)（Unicode, Inc.）
 - [KanjiVG](https://kanjivg.tagaini.net/)（Copyright (C) 2009-2013 Ulrich Apel、CC BY-SA 3.0）・[Kanji Canvas](https://github.com/asdfjkl/kanjicanvas)（手書き認識）
 - [mecab-ipadic](https://taku910.github.io/mecab/)・[郵便番号データ](https://www.post.japanpost.jp/zipcode/dl/utf-zip.html)（人名・地名の読み）
+
+## English summary
+
+**MJ Variant Finder** is a static web tool for searching, comparing, copying and exporting Japanese kanji variant glyphs (Ideographic Variation Sequences, IVS) of the **IPAmj Mincho** font, entirely in the browser — no font installation, server-side code or external API required.
+
+- **Search** by character or word, reading (hiragana, with a name/place-name dictionary), MJ glyph name (`MJ026190`), code point (`U+8FBB`, `9089_E010F`), radical and stroke count
+- **Variants**: IVS variants of the same code point, and related characters with different code points (old/new forms, based on the MJ Shrink Map and Unihan)
+- **Copy** the character with its IVS, the MJ number, code points or escapes; **export** a transparent PNG or an SVG outline
+- **Web font**: a derived font of IPAmj Mincho ("MJ Variant Mincho"), split with `unicode-range`
+- **Handwriting** and **image (screenshot) search**
+
+The UI is in Japanese. Data sources are the MJ Character Information List (CC BY-SA 2.1 JP), Unicode IVD/Unihan, KanjiVG (CC BY-SA 3.0) and mecab-ipadic.
+This is an **unofficial** tool, not affiliated with the Character Information Technology Promotion Council (CITPC) or the Information-technology Promotion Agency, Japan (IPA), and the accuracy of the data is not guaranteed.
+
+**License**: mixed. The program is MIT; the data and fonts keep the licenses of their sources (CC BY-SA 2.1 JP, CC BY-SA 3.0, IPA Font License v1.0 and others). See [LICENSES.md](LICENSES.md) for the per-file list.
+
+Run locally with `npm run serve` (Python 3) and open http://127.0.0.1:8765/. Issues and pull requests are welcome in English or Japanese.
 
 ## クレジット
 

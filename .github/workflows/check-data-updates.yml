@@ -1,0 +1,41 @@
+# 元データ（MJ文字情報一覧表・IVD・Unihan・KanjiVG・IPAmj明朝）に新しい版が出たら Issue を立てる
+name: check-data-updates
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"   # 毎月1日 9:00（日本時間）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 新しい版を調べる
+        id: check
+        run: |
+          if python scripts/check_updates.py --markdown report.md; then
+            echo "updates=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "updates=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Issue を立てる（同じ題の Issue が開いていれば本文を更新）
+        if: steps.check.outputs.updates == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="元データの新しい版が出ています"
+          number=$(gh issue list --state open --search "in:title $title" --json number,title \
+            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md --label dependencies
+          fi

@@ -32,6 +32,8 @@
 
 ## データパイプライン
 
+元データの新しい版は `scripts/check_updates.py` が配布元のページから調べる（`.github/workflows/check-data-updates.yml` が毎月1日に実行し、新しい版があれば Issue「元データの新しい版が出ています」を立てる。開いたままなら本文を更新する）。
+
 ```sh
 python scripts/build_variant_db.py          # data/raw/ に元データが無ければ自動ダウンロード
 python -m unittest scripts/test_variant_db.py -v
