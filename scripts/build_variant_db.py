@@ -61,8 +61,8 @@ SOURCES = {
     },
     "unihan": {
         "file": "Unihan.zip",
-        "url": "https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip",
-        "title": "Unihan Database (Unicode 17.0.0)",
+        "url": "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip",
+        "title": "Unihan Database (Unicode 18.0.0)",
         "publisher": "Unicode, Inc.",
         "license": "Unicode License v3",
         "page": "https://www.unicode.org/reports/tr38/",
