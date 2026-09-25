@@ -478,8 +478,15 @@ if (isLocal) {
     await page.waitForSelector('#compare-tray:not([hidden])');
     // フッターの余白は次の描画で付くので、付いてから最下部へ
     await page.waitForFunction(() => parseFloat(document.body.style.getPropertyValue('--tray-space')) > 0);
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await page.waitForTimeout(300);
+    // フォントの読み込みや、画面に入ってから描くカードで高さが変わるので、高さが落ち着くまで最下部へ送る
+    await page.evaluate(async () => {
+      for (let i = 0; i < 30; i++) {
+        const height = document.documentElement.scrollHeight;
+        window.scrollTo(0, height);
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        if (document.documentElement.scrollHeight === height && Math.ceil(window.scrollY + innerHeight) >= height) break;
+      }
+    });
     const [textBottom, trayTop] = await page.evaluate(() => [
       document.querySelector('#data-meta').getBoundingClientRect().bottom,
       document.querySelector('#compare-tray').getBoundingClientRect().top,
