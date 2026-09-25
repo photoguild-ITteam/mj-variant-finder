@@ -4,8 +4,8 @@
 
 脆弱性を見つけた場合は、**公開の Issue には書かず**、次の方法で非公開にご連絡ください。
 
-- GitHub の **[Security Advisories](https://github.com/YOUR-ORG/mj-variant-finder/security/advisories/new)**（"Report a vulnerability"）
-- または `security@YOUR-COMPANY.example`（※公開前に実際の窓口に置き換えてください）
+- GitHub の **[Security Advisories](https://github.com/photoguild/mj-variant-finder/security/advisories/new)**（"Report a vulnerability"）
+- または `info@photoguild.jp`（件名に **[mj-variant-finder セキュリティ]** と付けてください。一般の問い合わせと区別するためです）
 
 再現手順、影響範囲、可能であれば修正案を添えてください。
 

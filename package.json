@@ -7,13 +7,13 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR-ORG/mj-variant-finder.git"
+    "url": "git+https://github.com/photoguild/mj-variant-finder.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR-ORG/mj-variant-finder/issues"
+    "url": "https://github.com/photoguild/mj-variant-finder/issues"
   },
-  "homepage": "https://YOUR-ORG.github.io/mj-variant-finder/",
-  "author": "株式会社フォトギルド <https://YOUR-COMPANY.example>",
+  "homepage": "https://photoguild.github.io/mj-variant-finder/",
+  "author": "株式会社フォトギルド <https://photoguild.jp>",
   "keywords": [
     "kanji",
     "ivs",

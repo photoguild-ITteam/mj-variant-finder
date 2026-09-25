@@ -306,6 +306,24 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.ok(input.width > 150, `入力欄 ${Math.round(input.width)}px`);
     assert.equal(await page.locator('.search-box #handwriting-open').count(), 0);
 
+    // ヘッダーの構造: リンクの中にリンクを入れない（入れるとブラウザが構造を組み替える）。
+    // ロゴは背景と違う色の文字で表示される（リンクの色の継承で見えなくならない）
+    assert.equal(await page.locator('a a').count(), 0);
+    assert.equal(await page.locator('.brand .brand__company a[href="https://photoguild.jp/"]').count(), 1);
+    // 文字色と背景色が「違う」だけでは足りない（ほぼ同じ濃色でも通ってしまう）ので、コントラスト比で確かめる
+    const contrast = await page.locator('.brand__mark').evaluate((e) => {
+      const luminance = (rgb) => {
+        const [r, g, b] = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).map((v) => {
+          const c = v / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const style = getComputedStyle(e);
+      const [a, b] = [luminance(style.color), luminance(style.backgroundColor)].sort((x, y) => y - x);
+      return (a + 0.05) / (b + 0.05);
+    });
+    assert.ok(contrast >= 4.5, `ロゴのコントラスト比が低い（見えにくい）: ${contrast.toFixed(2)}`);
     // 広い画面ではヘッダーに開発元を表示する（狭い画面では省く。ライセンスのモーダルには常にある）
     assert.match(await page.textContent('.site-header .brand__company'), /株式会社フォトギルド/);
     // ライセンスへのリンクはヘッダーにある（フッターには置かない）

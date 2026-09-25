@@ -3,7 +3,7 @@
 **IPAmj明朝の異体字（IVS）を、フォントを入れなくてもブラウザだけで検索・比較・コピー・画像化できる静的Webツールです。**
 サーバー処理も外部APIも不要で、静的ファイルを置くだけで動きます。
 
-> 🌐 **デモ**: https://YOUR-ORG.github.io/mj-variant-finder/
+> 🌐 **デモ**: https://photoguild.github.io/mj-variant-finder/
 
 ![異体字の一覧](docs/images/01-variants.png)
 
@@ -45,7 +45,7 @@
 ### ローカルで動かす
 
 ```sh
-git clone https://github.com/YOUR-ORG/mj-variant-finder.git
+git clone https://github.com/photoguild/mj-variant-finder.git
 cd mj-variant-finder
 npm run serve            # = python -m http.server 8765 → http://127.0.0.1:8765/
 ```
@@ -92,4 +92,4 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 ## クレジット
 
-Developed by **株式会社フォトギルド** — https://YOUR-COMPANY.example
+Developed by **株式会社フォトギルド** — https://photoguild.jp
