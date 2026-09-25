@@ -712,6 +712,24 @@ body:has(dialog[open]) .compare-tray { display: none; }
   text-decoration: underline; text-underline-offset: 3px;
 }
 .header-link:hover { color: var(--gold-bright); }
+/* 使い方 */
+.help h3 { margin: 20px 0 8px; }
+.help h3:first-child { margin-top: 0; }
+.help ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.help-table { width: 100%; border-collapse: collapse; margin: 4px 0 12px; font-size: 13.5px; }
+.help-table th { width: 9em; padding: 8px 12px 8px 0; text-align: left; vertical-align: top; font-weight: 600; white-space: nowrap; }
+.help-table td { padding: 6px 0; color: var(--text-muted); }
+.help-table tr + tr { border-top: 1px solid var(--border); }
+.help-table .chip { margin: 2px 4px 2px 0; color: var(--text); }
+.help-badges { list-style: none; padding-left: 0 !important; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 6px 16px !important; font-size: 13px; color: var(--text-muted); }
+.help kbd { padding: 1px 6px; border: 1px solid var(--border-strong); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+/* 狭い画面では、見出しを説明の上に置く */
+@media (max-width: 560px) {
+  .help-table tr, .help-table th, .help-table td { display: block; }
+  .help-table th { width: auto; padding: 8px 0 2px; }
+  .help-table td { padding: 0 0 8px; }
+}
+
 .license h3 { margin: 18px 0 6px; }
 .license h3:first-child { margin-top: 0; }
 .license ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }

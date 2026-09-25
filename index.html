@@ -38,6 +38,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <button type="button" class="header-link" id="help-open" aria-haspopup="dialog">使い方</button>
         <button type="button" class="header-link" id="license-open" aria-haspopup="dialog">データ出典<span class="header-link__long">・ライセンス</span></button>
         <button type="button" class="font-status" id="font-status" data-state="checking" aria-haspopup="dialog">
           <span class="font-status__dot" aria-hidden="true"></span>
@@ -223,6 +224,60 @@
         <dd>OS標準の機能ではインストールできません。このサイトでの表示確認には Webフォントが使われます。</dd>
       </dl>
       <p class="muted">インストール後にブラウザを再起動すると、状態表示が「端末のIPAmj明朝」に変わります。Safari はプライバシー保護のため、インストールしたフォントを検出できないことがあります。</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="help-dialog" aria-labelledby="help-title">
+    <div class="dialog__header">
+      <h2 id="help-title">使い方</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="prose help">
+      <h3>1. 探す</h3>
+      <p>検索欄に次のどれかを入れて Enter を押します。例のボタンを押すと、その検索をします。</p>
+      <table class="help-table">
+        <tr><th>漢字・単語</th><td><button type="button" class="chip" data-query="渡辺">渡辺</button> 1文字ずつ、その字の異体字を表示</td></tr>
+        <tr><th>読み（ひらがな）</th><td><button type="button" class="chip" data-query="さいとう">さいとう</button> 人名・地名の表記と、音訓が一致する字</td></tr>
+        <tr><th>字の呼び名</th><td><button type="button" class="chip" data-query="はしごだか">はしごだか</button> <button type="button" class="chip" data-query="やまへんのさき">やまへんのさき</button> 呼び名や「部首名＋の＋読み」</td></tr>
+        <tr><th>MJ文字図形名</th><td><button type="button" class="chip" data-query="MJ026190">MJ026190</button></td></tr>
+        <tr><th>文字コード</th><td><button type="button" class="chip" data-query="U+8FBB">U+8FBB</button> <button type="button" class="chip" data-query="9089_E010F">9089_E010F</button> IVS 付きは、その字形を強調して表示</td></tr>
+      </table>
+      <p>字を入力できないときは、検索欄の下の「手書きで探す」「画像から探す」（スクリーンショットを貼り付けて1文字を囲む）が使えます。左の「絞り込み」では、部首・画数・漢字施策から一覧できます。</p>
+
+      <h3>2. 字形を見比べる</h3>
+      <ul>
+        <li>1つの字に字形が複数あるときは、カードで並びます。カードの字を押すと、全項目とコードの詳細が開きます。</li>
+        <li><strong>違いを色で表示</strong>: IVS を付けないときに表示される通常の字形と重ね、この字形だけにある部分を赤、通常の字形だけにある部分を青で示します。</li>
+        <li><strong>絞り込み</strong>: 戸籍・住基・入管・JIS・ゴシック○ などで、業務に合う字形だけにします。</li>
+        <li><strong>比較</strong>: カードの「比較」で最大8字形を集め、画面下の「比較する」で並べたり、先頭の2字を重ねたりできます。</li>
+        <li><strong>関連する異体字</strong>: 新旧字体・俗字など、文字コードが違う字です（MJ縮退マップ・Unihan による）。</li>
+      </ul>
+
+      <h3>3. カードの札の意味</h3>
+      <ul class="help-badges">
+        <li><span class="badge">戸籍</span> 戸籍統一文字番号がある</li>
+        <li><span class="badge">住基</span> 住基ネット統一文字コードがある</li>
+        <li><span class="badge">入管</span> 入管正字・外字コードがある</li>
+        <li><span class="badge badge--navy">第1</span>〜<span class="badge badge--navy">第4</span> JIS X 0213 の水準</li>
+        <li><span class="badge badge--gold">常用</span> <span class="badge badge--gold">人名用</span> 漢字施策</li>
+        <li><span class="badge badge--ok">ゴシック○</span> ゴシック体でも使える</li>
+        <li><span class="badge badge--warn">ゴシック△</span> ゴシック体に字が無いことがある</li>
+        <li><span class="badge badge--muted">ゴシック×</span> IVS でのみ区別でき、ゴシック体では通常の字形になる</li>
+      </ul>
+
+      <h3>4. 使う</h3>
+      <ul>
+        <li><strong>コピー</strong>: IVS 付きの文字をコピーします。貼り付け先のアプリやフォントが IVS に対応していないと、通常の字形で表示されます。</li>
+        <li><strong>画像</strong>: 透明な PNG 画像としてコピーします。Canva など IVS の扱いが不確かなアプリには、画像で貼り付けると字形が崩れません。詳細からは PNG・SVG で保存もできます。</li>
+        <li>詳細からは、MJ文字図形名・Unicode・HTML 参照・JS/CSS の形式でもコピーできます。</li>
+      </ul>
+
+      <h3>5. 知っておくと便利</h3>
+      <ul>
+        <li>右上の丸はフォントの状態です。緑なら IVS の字形を正しく表示できています（押すと詳しく確認できます）。</li>
+        <li>キーボードの <kbd>/</kbd> で検索欄に移動します。</li>
+        <li>検索すると URL（<code>#q=…</code>）が変わるので、その URL で検索結果を共有できます。</li>
+      </ul>
     </div>
   </dialog>
 

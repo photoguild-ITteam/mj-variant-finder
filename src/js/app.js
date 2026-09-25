@@ -109,6 +109,7 @@ function setupSearchForm() {
     const target = e.target.closest('[data-query]');
     if (!target) return;
     e.preventDefault();
+    target.closest('dialog')?.close(); // 使い方などの例から検索したら、ダイアログを閉じて結果を見せる
     navigate(target.dataset.query);
   });
   document.addEventListener('keydown', (e) => {
@@ -122,6 +123,7 @@ function setupSearchForm() {
 // ---------------------------------------------------------------------------- その他
 
 function setupDialogs() {
+  $('#help-open').addEventListener('click', () => $('#help-dialog').showModal());
   $('#license-open').addEventListener('click', () => $('#license-dialog').showModal());
   for (const dialog of document.querySelectorAll('dialog')) {
     dialog.addEventListener('click', (e) => {

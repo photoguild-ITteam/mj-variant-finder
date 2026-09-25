@@ -533,6 +533,16 @@ if (isLocal) {
     assert.ok(await page.locator('.candidate[data-query="﨑"]').count() > 0);
   });
 
+  await check('使い方のモーダル（例を押すと閉じて検索する）', async () => {
+    await page.click('#help-open');
+    await page.waitForSelector('#help-dialog[open]');
+    const headings = await page.$$eval('#help-dialog h3', (els) => els.map((e) => e.textContent));
+    assert.deepEqual(headings, ['1. 探す', '2. 字形を見比べる', '3. カードの札の意味', '4. 使う', '5. 知っておくと便利']);
+    await page.click('#help-dialog .chip[data-query="はしごだか"]');
+    await page.waitForSelector('#help-dialog', { state: 'hidden' });
+    await page.waitForSelector('.nickname-row:has-text("はしごだか")');
+  });
+
   await check('一覧の操作でエラーが出ない', async () => assert.deepEqual(errors, []));
   await context.close();
 }
