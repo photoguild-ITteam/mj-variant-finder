@@ -23,7 +23,7 @@
 - **ゴシック体の判定**: その字形がゴシック体でも使えるか（○/△/×）を表示
 - **手書きで探す**: 枠に書いた字から候補を出す（KanjiVG、6,702字）
 - **画像から探す**: スクリーンショットを貼り付け、1文字を囲むと、IPAmj明朝の全 58,843 字形と照合（同じ IPAmj明朝の表示なら 1位 90% / 上位10 98%）
-- ダーク/ライトモード、スマホ対応、URL（`#q=渡辺`）での共有
+- ダーク/ライトモード、スマホ対応、URL（`#q=渡辺`）での共有、キーボード操作（`/` で検索欄へ移動）、ヘッダーの「使い方」ガイド（札の意味や操作の解説）
 
 | 読み検索 | 字形の詳細 | 比較 |
 |---|---|---|
@@ -77,7 +77,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 ## ライセンス
 
-このリポジトリは**複合ライセンス**です。プログラムは当社が書いたもので MIT ライセンスですが、文字データとフォントは公的機関やほかのプロジェクトの成果物を加工したもので、**元のライセンスをそれぞれ引き継いでいます。`src/data/`・`src/fonts/`・`src/vendor/` は MIT ではありません。**
+このリポジトリは**複合ライセンス**です。プログラムは当社が書いたもので MIT ライセンスですが、文字データとフォントは公的機関やほかのプロジェクトの成果物を加工したもので、**元のライセンスをそれぞれ引き継いでいます。`src/data/`（`nicknames.json` を除く）・`src/fonts/`・`src/vendor/` は MIT ではありません。**
 
 > ここに書いたのは各ライセンスの一般的な読み方で、法的な助言ではありません。判断に迷う使い方をするときは、条文の原文を確認し、必要に応じて専門家に相談してください。
 
@@ -89,6 +89,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 | 異体字データ | `src/data/chars/`, `src/data/search-index.json`, `src/data/meta.json` | [CC BY-SA 2.1 JP](https://creativecommons.org/licenses/by-sa/2.1/jp/) ＋ [Unicode License v3](licenses/UNICODE-LICENSE.txt) | 文字情報技術促進協議会（MJ文字情報一覧表）、情報処理推進機構（MJ縮退マップ）、Unicode, Inc.（IVD・Unihan） |
 | 手書き認識データ | `src/data/handwriting-patterns.json` | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | Ulrich Apel（[KanjiVG](https://kanjivg.tagaini.net/)） |
 | 人名・地名の辞書 | `src/data/names.json` | [ipadic ライセンス](licenses/IPADIC-COPYING.txt) | 奈良先端科学技術大学院大学（mecab-ipadic）、日本郵便（郵便番号データ。著作権を主張していない） |
+| 字の呼び名データ | `src/data/nicknames.json` | [MIT](LICENSE) | 株式会社フォトギルド（手作業の呼び名・部首名辞書） |
 | Webフォント | `src/fonts/` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | 情報処理推進機構（IPAmj明朝）。名称を「MJ Variant Mincho」に変えた派生フォント |
 | 画像検索のデータ | `src/data/image-index.*` | IPAフォントライセンス v1.0 | IPAmj明朝で描いた字形から計算した特徴量（フォントそのものではない） |
 | 同梱ライブラリ | `src/vendor/` | [MIT](src/vendor/kanji-canvas.LICENSE.txt)・[Apache-2.0・0BSD ほか](src/vendor/THIRD_PARTY_LICENSES.txt) | Kanji Canvas、fontkit と依存パッケージ |
@@ -130,11 +131,14 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 **MJ Variant Finder** is a static web tool for searching, comparing, copying and exporting Japanese kanji variant glyphs (Ideographic Variation Sequences, IVS) of the **IPAmj Mincho** font, entirely in the browser — no font installation, server-side code or external API required.
 
-- **Search** by character or word, reading (hiragana, with a name/place-name dictionary), MJ glyph name (`MJ026190`), code point (`U+8FBB`, `9089_E010F`), radical and stroke count
+- **Search** by character or word, reading (hiragana, with a name/place-name dictionary), glyph nicknames (`はしごだか`) and "radical + reading" (`やまへんのさき`), MJ glyph name (`MJ026190`), code point (`U+8FBB`, `9089_E010F`), radical and stroke count
 - **Variants**: IVS variants of the same code point, and related characters with different code points (old/new forms, based on the MJ Shrink Map and Unihan)
+- **Diff & Compare**: highlight glyph differences in color against the default glyph; filter variants by official registry (Koseki, Juki, Immigration, JIS, Gothic coverage); compare multiple glyphs side-by-side or overlaid
+- **Gothic coverage**: check whether a glyph is supported in Gothic fonts (○/△/×)
 - **Copy** the character with its IVS, the MJ number, code points or escapes; **export** a transparent PNG or an SVG outline
 - **Web font**: a derived font of IPAmj Mincho ("MJ Variant Mincho"), split with `unicode-range`
 - **Handwriting** and **image (screenshot) search**
+- In-app usage guide and keyboard navigation (`/` to focus search)
 
 The UI is in Japanese. Data sources are the MJ Character Information List (CC BY-SA 2.1 JP), Unicode IVD/Unihan, KanjiVG (CC BY-SA 3.0) and mecab-ipadic.
 This is an **unofficial** tool, not affiliated with the Character Information Technology Promotion Council (CITPC) or the Information-technology Promotion Agency, Japan (IPA), and the accuracy of the data is not guaranteed.
