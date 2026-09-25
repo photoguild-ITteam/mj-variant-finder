@@ -19,9 +19,13 @@ let sourceImage = null;
 let sourceCanvas = null;
 let selection = null; // 元画像の座標での切り出し範囲
 let timer;
+let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
 
 export function setupImageSearch() {
   $('#image-open').addEventListener('click', () => openDialog());
+  $('#image-dialog').addEventListener('close', () => {
+    matchToken += 1;
+  });
   for (const id of ['#img-file', '#img-file2']) {
     $(id).addEventListener('change', (e) => {
       const file = e.target.files?.[0];
@@ -106,6 +110,7 @@ function setupDropZone() {
 }
 
 async function loadFile(file) {
+  matchToken += 1;
   try {
     sourceImage = await createImageBitmap(file);
   } catch {
@@ -201,6 +206,8 @@ function runMatch() {
   clearTimeout(timer);
   if (!index || !sourceImage) return;
   timer = setTimeout(async () => {
+    matchToken += 1;
+    const currentToken = matchToken;
     setStatus('照合中…', true);
     const region = selection ?? { x: 0, y: 0, width: sourceImage.width, height: sourceImage.height };
     const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
@@ -209,8 +216,10 @@ function runMatch() {
     try {
       const started = performance.now();
       const candidates = await matcherModule.matchImage(index, image, { limit: 12, renderGlyph });
+      if (matchToken !== currentToken) return;
       showCandidates(candidates, Math.round(performance.now() - started));
     } catch (err) {
+      if (matchToken !== currentToken) return;
       console.error(err);
       setStatus(`照合できませんでした: ${err.message}`);
     }
