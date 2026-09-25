@@ -13,7 +13,8 @@
 | `src/js/theme-init.js` | 描画前に `data-theme` を確定（保存値、無ければ OS 設定）。CSS は `data-theme` だけを見る |
 | `src/js/ui/results.js` | 検索結果の描画（種類ごと: 文字タブ・読み・絞り込み・見つからない） |
 | `src/js/ui/char-panel.js` | 1文字分のパネル（概要・字形バリエーション・関連する異体字） |
-| `src/js/ui/glyph-card.js` / `glyph-dialog.js` | 字形カードと、詳細ダイアログ（コピー形式・画像書き出し・全項目） |
+| `src/js/ui/glyph-card.js` / `glyph-dialog.js` | 字形カードと一覧の道具（絞り込み・違いを色で表示の切り替え）、詳細ダイアログ（コピー形式・画像書き出し・全項目） |
+| `src/js/ui/glyph-diff.js` | 違いを色で表示: 字形と、IVS なしの通常の字形を canvas に描いて画素ごとに比べる（この字形だけ=赤、通常の字形だけ=青、共通=薄く）。設定は localStorage に保存 |
 | `src/js/ui/glyph-info.js` | 表示ラベルとゴシック体の判定。DOM 非依存（`tests/glyph-info.test.mjs`） |
 | `src/js/ui/compare.js` | 比較トレイと比較ダイアログ |
 | `src/js/ui/filters.js` | 絞り込みフォームと「よく検索される異体字」 |

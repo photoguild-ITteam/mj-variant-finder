@@ -5,7 +5,7 @@ import { app } from './context.js';
 import { COMPARE_MAX, addToCompare } from './compare.js';
 import { badge, h, loading, queryButton } from './dom.js';
 import { copyText, showToast } from './feedback.js';
-import { glyphGrid, gothicLegend } from './glyph-card.js';
+import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
 import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.js';
 import { reportError } from './session.js';
 
@@ -53,12 +53,16 @@ function hero(entry, glyphs) {
 }
 
 function glyphSection(glyphs, focus) {
-  return h('section', { class: 'panel-section' },
+  const grid = glyphGrid(glyphs, focus);
+  const section = h('section', { class: 'panel-section' },
     h('div', { class: 'panel-section__head' },
       h('h3', {}, `字形バリエーション（${glyphs.length}）`),
       h('p', {}, '字形をクリックすると詳細とコピー形式を表示')),
     gothicLegend(),
-    glyphGrid(glyphs, focus));
+    grid);
+  // 絞り込みは grid の直後に「該当なし」の表示を足すので、grid を置いてから作る
+  grid.before(glyphTools(glyphs, grid));
+  return section;
 }
 
 function relatedSection({ primary, reference }) {

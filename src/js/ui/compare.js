@@ -48,7 +48,10 @@ export function toggleCompare(glyph) {
 }
 
 function update() {
-  $('#compare-tray').hidden = glyphs.length === 0;
+  const tray = $('#compare-tray');
+  tray.hidden = glyphs.length === 0;
+  // 画面下に固定したトレイがフッターの文字を隠さないよう、その高さだけフッターの下に余白を取る
+  requestAnimationFrame(() => document.body.style.setProperty('--tray-space', tray.hidden ? '0px' : `${tray.offsetHeight + 24}px`));
   $('#compare-count').textContent = String(glyphs.length);
   $('#compare-list').replaceChildren(...glyphs.map((glyph) => h('li', {},
     h('button', { class: 'glyph', type: 'button', title: `${glyph.mj}（クリックで削除）`, onclick: () => toggleCompare(glyph) },

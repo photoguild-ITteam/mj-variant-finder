@@ -235,6 +235,8 @@ a.icon-button { color: inherit; }
 }
 .chip:hover { border-color: var(--gold-bright); color: var(--text); }
 .chip--ghost { background: transparent; }
+.chip--toggle[aria-pressed="true"] { border-color: var(--navy); background: var(--inverse-bg); color: var(--inverse-fg); }
+.chip__count { font-size: 11px; opacity: 0.7; }
 
 .search-form { margin: 0; }
 .search-box {
@@ -252,7 +254,13 @@ a.icon-button { color: inherit; }
   font-family: var(--font-glyph), var(--font-ui);
 }
 .search-box input::placeholder { color: var(--text-muted); font-family: var(--font-ui); font-size: 14px; }
-.search-box input::-webkit-search-cancel-button { cursor: pointer; }
+/* 消去ボタン（×）: ブラウザ標準の青ではなく、周りと同じ色にする */
+.search-box input::-webkit-search-cancel-button {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-left: 6px; cursor: pointer;
+  background-color: var(--text-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / 14px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+.search-box input::-webkit-search-cancel-button:hover { background-color: var(--text); }
 
 .search-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .search-tools .button { flex: 1 1 auto; }
@@ -293,6 +301,10 @@ a.icon-button { color: inherit; }
 .section-label { margin: 0 0 8px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-muted); }
 
 .quick-access { margin-top: 20px; }
+.quick-access > summary { cursor: pointer; list-style: none; }
+.quick-access > summary::-webkit-details-marker { display: none; }
+.quick-access > summary::after { content: ' ▸'; }
+.quick-access[open] > summary::after { content: ' ▾'; }
 .quick-access__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
 .quick-access__list button {
   font-family: var(--font-glyph-preset);
@@ -419,6 +431,37 @@ a.icon-button { color: inherit; }
   background-blend-mode: normal;
 }
 .glyph-card__face:not(:hover) { background-size: 0 0, 0 0; }
+.glyph-card__face { position: relative; }
+.glyph-card__face > * { grid-area: 1 / 1; }
+/* 違いを色で表示: 文字の代わりに、通常の字形と重ねた画像（glyph-diff.js）を出す */
+.glyph-card__face canvas { width: 1em; height: 1em; }
+.glyph-card__face.is-diff .glyph-card__char { visibility: hidden; }
+.glyph-card__face.is-default-glyph::after {
+  content: 'IVSなしと同じ'; position: absolute; top: 6px; left: 6px;
+  padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--text-muted);
+  font-family: var(--font-ui); font-size: 10.5px; line-height: 1.6;
+}
+.glyph-card.is-filtered-out { display: none; }
+
+/* 字形の一覧の上の道具（絞り込み・違いを色で表示） */
+.glyph-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.glyph-tools__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.glyph-tools__label, .glyph-tools__status { font-size: 12px; color: var(--text-muted); }
+.glyph-tools__filters .chip { padding: 2px 10px; font-size: 12.5px; }
+.glyph-tools__empty { margin: 8px 0 0; }
+.glyph-tools__diff { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-left: auto; }
+.diff-toggle[aria-pressed="true"] { background: var(--inverse-bg); border-color: var(--inverse-bg); color: var(--inverse-fg); }
+.diff-legend { display: none; gap: 10px; font-size: 12px; color: var(--text-muted); }
+.diff-mode .diff-legend { display: inline-flex; flex-wrap: wrap; }
+.diff-legend > span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 2px; vertical-align: -1px; }
+.diff-legend__this::before { background: var(--crimson-bright); }
+.diff-legend__base::before { background: var(--overlay-b); }
+
+/* 見つからないときの案内 */
+.not-found-help { margin-top: 20px; }
+.not-found-help__tools { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.not-found-help ul { margin: 0; padding-left: 1.2em; font-size: 13.5px; color: var(--text-muted); }
+.not-found-help li { margin: 6px 0; }
 
 .glyph-card__body { padding: 8px 10px 4px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .glyph-card__mj { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; }
@@ -632,7 +675,7 @@ a.icon-button { color: inherit; }
 .toast .glyph { font-size: 20px; vertical-align: -3px; margin: 0 2px; }
 
 /* フッター */
-.site-footer { border-top: 1px solid var(--border); background: var(--bg-accent); }
+.site-footer { border-top: 1px solid var(--border); background: var(--bg-accent); padding-bottom: var(--tray-space, 0px); }
 .site-footer__inner { max-width: var(--max-width); margin: 0 auto; padding: 20px var(--gutter) 28px; font-size: 12.5px; color: var(--text-muted); }
 .site-footer p { margin: 0; }
 .site-footer__disclaimer { font-size: 12px; margin-bottom: 4px !important; }

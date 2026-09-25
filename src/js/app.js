@@ -7,6 +7,7 @@ import { app } from './ui/context.js';
 import { $, h } from './ui/dom.js';
 import { renderQuickAccess, setupFilters } from './ui/filters.js';
 import { setupFontStatus } from './ui/font-status.js';
+import { setupGlyphDiff } from './ui/glyph-diff.js';
 import { setupHandwriting } from './ui/handwriting.js';
 import { setupImageSearch } from './ui/image-search.js';
 import { isFilterable, renderResult } from './ui/results.js';
@@ -32,6 +33,7 @@ async function init() {
   setupTheme();
   setupDialogs();
   setupCompare();
+  setupGlyphDiff();
   setupSessionWatch();
   setupFontStatus();
 
@@ -84,6 +86,9 @@ async function search(query, { fromHash = false } = {}) {
   if (KANA_ONLY.test(query.trim())) await app.db.ensureNames().catch((err) => console.warn(err));
   app.result = app.db.search(query, app.filters);
   await renderResult(app.result);
+
+  // 狭い画面では「よく検索される異体字」が結果を押し下げるので、検索中は畳む（空の検索で開く）
+  if (!wide.matches) $('#quick-access-box').open = !query;
 
   // 狭い画面では検索パネルの下に結果があるので、操作した後は結果までスクロールする
   if (!fromHash && !wide.matches) $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });

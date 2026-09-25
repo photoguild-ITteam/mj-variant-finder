@@ -55,10 +55,22 @@ function renderWelcome() {
 }
 
 function renderNotFound(result) {
+  const example = (query) => queryButton(query, query, 'chip chip--ghost');
+  // 次にできることを示す（手書き・画像のボタンは検索欄の下にあるものを押す）
+  const openTool = (id, label) => h('button', { class: 'button button--small', type: 'button', onclick: () => $(id).click() }, label);
   show(h('div', { class: 'notice notice--warn' },
     h('strong', {}, '見つかりませんでした'),
     h('p', {}, result.reason ?? ''),
-    isFilterActive(app.filters) ? h('p', { class: 'muted' }, '絞り込み条件が有効です。条件を外すと見つかる場合があります。') : null));
+    isFilterActive(app.filters) ? h('p', { class: 'muted' }, '絞り込み条件が有効です。条件を外すと見つかる場合があります。') : null),
+  h('div', { class: 'not-found-help' },
+    h('h3', { class: 'section-label' }, 'ほかの探し方'),
+    h('div', { class: 'not-found-help__tools' },
+      openTool('#handwriting-open', '✍ 手書きで探す'),
+      openTool('#image-open', '🖼 画像から探す')),
+    h('ul', {},
+      h('li', {}, '漢字（1文字でも単語でも）: ', example('渡辺')),
+      h('li', {}, '読み（ひらがな）: ', example('さいとう'), ' — 人名・地名の読みにも対応'),
+      h('li', {}, 'MJ文字図形名・コードポイント: ', example('MJ026190'), ' ', example('U+8FBB')))));
 }
 
 async function renderNoChar(result) {

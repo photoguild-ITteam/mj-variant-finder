@@ -425,6 +425,71 @@ if (isLocal) {
   await context.close();
 }
 
+// --- 字形の一覧の使いやすさ（違いを色で表示・絞り込み・見つからないとき・比較トレイ）
+{
+  const { page, errors, context } = await newPage();
+  await page.goto(BASE + '#q=' + encodeURIComponent('邉'));
+  await page.waitForSelector('.glyph-card');
+  const main = page.locator('.char-panel .panel-section').first();
+
+  await check('違いを色で表示（通常の字形と同じ字形には印）', async () => {
+    await main.locator('.diff-toggle').click();
+    await page.waitForFunction(() => document.querySelectorAll('.char-panel .panel-section:first-of-type .glyph-card__face.is-diff canvas').length >= 10);
+    // 邉（U+9089）を IVS なしで表示すると MJ026190 の字形になる
+    await page.waitForSelector('.glyph-card[data-mj="MJ026190"] .glyph-card__face.is-default-glyph');
+    assert.equal(await page.locator('.glyph-card[data-mj="MJ026191"] .glyph-card__face.is-default-glyph').count(), 0);
+    // 設定は次の検索にも引き継ぐ。切ると元の表示に戻る
+    await page.fill('#q', '辺');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.char-hero__code:text("U+8FBA")');
+    await page.waitForSelector('.glyph-card__face.is-diff canvas, .glyph-card__face.is-default-glyph');
+    await page.locator('.diff-toggle').first().click();
+    assert.equal(await page.locator('.glyph-card__face canvas').count(), 0);
+    assert.equal(await page.locator('.glyph-card__face.is-diff').count(), 0);
+  });
+
+  await check('字形の絞り込み（戸籍）', async () => {
+    await page.fill('#q', '邉');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.char-hero__code:text("U+9089")');
+    const chip = main.locator('.glyph-tools__filters .chip', { hasText: '戸籍' });
+    const expected = Number(await chip.locator('.chip__count').textContent());
+    await chip.click();
+    assert.equal(await main.locator('.glyph-card:not(.is-filtered-out)').count(), expected);
+    assert.match(await main.locator('.glyph-tools__status').textContent(), new RegExp(`16 字形中 ${expected} 字形`));
+    await chip.click();
+    assert.equal(await main.locator('.glyph-card.is-filtered-out').count(), 0);
+  });
+
+  await check('見つからないときは、ほかの探し方を示す', async () => {
+    await page.fill('#q', 'xyz');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.not-found-help');
+    await page.click('.not-found-help button:has-text("手書きで探す")');
+    await page.waitForSelector('#handwriting-dialog[open]');
+    await page.keyboard.press('Escape');
+  });
+
+  await check('比較トレイがフッターの文字を隠さない', async () => {
+    await page.fill('#q', '邉');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.glyph-card .glyph-card__compare');
+    await page.locator('.glyph-card .glyph-card__compare').first().click();
+    await page.waitForSelector('#compare-tray:not([hidden])');
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
+    const [textBottom, trayTop] = await page.evaluate(() => [
+      document.querySelector('#data-meta').getBoundingClientRect().bottom,
+      document.querySelector('#compare-tray').getBoundingClientRect().top,
+    ]);
+    assert.ok(textBottom <= trayTop, `フッター ${textBottom} > トレイ ${trayTop}`);
+    await page.click('#compare-clear');
+  });
+
+  await check('一覧の操作でエラーが出ない', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
 // --- OSS としての表示（ソースへのリンク・非公式の明記・共有用の画像）
 {
   const { page, context } = await newPage();
@@ -465,6 +530,9 @@ if (isLocal) {
   await check('スマホ幅で横スクロールなし', async () => {
     const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     assert.ok(sw <= iw, `${sw} > ${iw}`);
+  });
+  await check('スマホ幅では検索中「よく検索される異体字」を畳む', async () => {
+    assert.equal(await page.locator('#quick-access-box[open]').count(), 0);
   });
   await check('スマホ幅で検索すると結果までスクロールする', async () => {
     await page.evaluate(() => window.scrollTo(0, 0));
