@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -42,6 +43,7 @@ SOURCES = {
         "publisher": "一般社団法人 文字情報技術促進協議会 (CITPC)",
         "license": "CC BY-SA 2.1 JP",
         "page": "https://moji.or.jp/mojikiban/mjlist/",
+        "sha256": "f79075bf006b66c5e57a6df60503c5a01679cabbcea2f124eb3758593cf6fd3f",
     },
     "shrink": {
         "file": "MJShrinkMap.1.2.0.json",
@@ -50,22 +52,25 @@ SOURCES = {
         "publisher": "独立行政法人 情報処理推進機構 (IPA) / CITPC",
         "license": "CC BY-SA 2.1 JP",
         "page": "https://moji.or.jp/mojikiban/map/",
+        "sha256": "275b57ecd5929edb822c05a7e4326980b7028466384afe323ed7209f48acd8cd",
     },
     "ivd": {
-        "file": "IVD_Sequences.txt",
+        "file": "IVD_Sequences.2026-08-03.txt",
         "url": "https://www.unicode.org/ivd/data/2026-08-03/IVD_Sequences.txt",
         "title": "Ideographic Variation Database 2026-08-03",
         "publisher": "Unicode, Inc.",
         "license": "Unicode License v3",
         "page": "https://www.unicode.org/ivd/",
+        "sha256": "2b466659c2bfde1c52e60bd9fc883ab14dfa5c583df024b80352420265d2cd87",
     },
     "unihan": {
-        "file": "Unihan.zip",
+        "file": "Unihan.18.0.0.zip",
         "url": "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip",
         "title": "Unihan Database (Unicode 18.0.0)",
         "publisher": "Unicode, Inc.",
         "license": "Unicode License v3",
         "page": "https://www.unicode.org/reports/tr38/",
+        "sha256": "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e",
     },
 }
 
@@ -153,20 +158,59 @@ def log(msg: str) -> None:
 
 # --------------------------------------------------------------------------- 入力
 
+def sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verify_sha256(path: Path, expected: str) -> None:
+    actual = sha256_of(path)
+    if actual != expected:
+        sys.exit(
+            f"SHA256 不一致 ({path.name}):\n"
+            f"  期待値: {expected}\n"
+            f"  実際値: {actual}\n"
+            f"ファイルが破損しているか、新しい版に変更されている可能性があります。"
+        )
+
+
 def ensure_sources(raw: Path, offline: bool) -> None:
     raw.mkdir(parents=True, exist_ok=True)
     for src in SOURCES.values():
         path = raw / src["file"]
+        expected_sha = src.get("sha256")
         if path.exists():
+            if expected_sha:
+                verify_sha256(path, expected_sha)
             continue
         if offline:
             sys.exit(f"missing {path} (--offline のためダウンロードしません)")
         log(f"download {src['url']}")
         req = urllib.request.Request(src["url"], headers={"User-Agent": "IPAmjWEB-build/1.0"})
-        with urllib.request.urlopen(req, timeout=300) as res:
-            tmp = path.with_suffix(path.suffix + ".part")
-            tmp.write_bytes(res.read())
+        tmp = path.with_suffix(path.suffix + ".part")
+        try:
+            with urllib.request.urlopen(req, timeout=300) as res, tmp.open("wb") as out:
+                while chunk := res.read(65536):
+                    out.write(chunk)
+            if expected_sha:
+                actual_sha = sha256_of(tmp)
+                if actual_sha != expected_sha:
+                    if tmp.exists():
+                        tmp.unlink()
+                    sys.exit(
+                        f"SHA256 不一致 ({src['file']}):\n"
+                        f"  期待値: {expected_sha}\n"
+                        f"  実際値: {actual_sha}\n"
+                        f"ダウンロードしたファイルが破損しているか、内容が変更されています。"
+                    )
             tmp.replace(path)
+        except BaseException:
+            if tmp.exists():
+                tmp.unlink()
+            raise
 
 
 def read_strict_xlsx(path: Path) -> list[dict[str, str]]:

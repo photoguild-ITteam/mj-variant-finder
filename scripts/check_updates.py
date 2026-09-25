@@ -4,7 +4,7 @@
   python scripts/check_updates.py [--markdown 出力先.md]
 
 使っている版は src/data/ と src/fonts/README.md から読み、公式の配布ページの最新版と比べる。
-新しい版があれば一覧を表示して終了コード 1 を返す（ワークフローはこれを見て Issue を立てる）。
+新しい版があれば一覧を表示して終了コード 10 を返す（ワークフローはこれを見て Issue を立てる）。
 配布ページが読めなかったものは「確認できなかった」として表示し、それだけでは失敗にしない。
 標準ライブラリだけで動く。
 """
@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 USER_AGENT = "Mozilla/5.0 (compatible; mj-variant-finder update check)"
+EXIT_UPDATES_FOUND = 10
 
 
 def fetch(url: str) -> str:
@@ -105,7 +106,7 @@ def main() -> None:
         ]
         args.markdown.write_text("\n".join(body) + "\n", encoding="utf-8")
 
-    sys.exit(1 if updates else 0)
+    sys.exit(EXIT_UPDATES_FOUND if updates else 0)
 
 
 if __name__ == "__main__":

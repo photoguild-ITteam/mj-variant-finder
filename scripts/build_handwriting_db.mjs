@@ -7,7 +7,7 @@
 // 先頭3つは Kanji Canvas の refPatterns と同じ並び（文字・画数・特徴点）。
 // 4つ目は 8x8 の「墨の量」を 0-15 で表した指紋（16進64桁）。総当たりは遅いので、
 // 画面側はまず画数と指紋で候補を数百字に絞り、その中だけ Kanji Canvas で照合する。
-import { createReadStream, createWriteStream, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, createWriteStream, existsSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createGunzip } from 'node:zlib';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
@@ -35,9 +35,23 @@ async function readKanjiVG() {
       console.error(`download ${KANJIVG.url}`);
       const res = await fetch(KANJIVG.url);
       if (!res.ok) throw new Error(`KanjiVG のダウンロードに失敗しました (${res.status})`);
-      await pipeline(Readable.fromWeb(res.body), createWriteStream(KANJIVG.gz));
+      const gzPart = `${KANJIVG.gz}.part`;
+      try {
+        await pipeline(Readable.fromWeb(res.body), createWriteStream(gzPart));
+        renameSync(gzPart, KANJIVG.gz);
+      } catch (err) {
+        if (existsSync(gzPart)) unlinkSync(gzPart);
+        throw err;
+      }
     }
-    await pipeline(createReadStream(KANJIVG.gz), createGunzip(), createWriteStream(KANJIVG.xml));
+    const xmlPart = `${KANJIVG.xml}.part`;
+    try {
+      await pipeline(createReadStream(KANJIVG.gz), createGunzip(), createWriteStream(xmlPart));
+      renameSync(xmlPart, KANJIVG.xml);
+    } catch (err) {
+      if (existsSync(xmlPart)) unlinkSync(xmlPart);
+      throw err;
+    }
   }
   return readFileSync(KANJIVG.xml, 'utf8');
 }

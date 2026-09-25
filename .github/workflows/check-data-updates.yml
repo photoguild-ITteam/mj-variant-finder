@@ -21,10 +21,17 @@ jobs:
       - name: 新しい版を調べる
         id: check
         run: |
-          if python scripts/check_updates.py --markdown report.md; then
+          set +e
+          python scripts/check_updates.py --markdown report.md
+          code=$?
+          set -e
+          if [ "$code" -eq 10 ]; then
+            echo "updates=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" -eq 0 ]; then
             echo "updates=false" >> "$GITHUB_OUTPUT"
           else
-            echo "updates=true" >> "$GITHUB_OUTPUT"
+            echo "check_updates.py failed with exit code $code" >&2
+            exit "$code"
           fi
       - name: Issue を立てる（同じ題の Issue が開いていれば本文を更新）
         if: steps.check.outputs.updates == 'true'
