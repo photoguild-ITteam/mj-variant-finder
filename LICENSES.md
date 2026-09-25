@@ -5,12 +5,14 @@
 
 | 対象 | ライセンス | 由来・出典 |
 |---|---|---|
-| プログラム（`index.html`, `src/js/`, `src/css/`, `scripts/`, `tests/`） | [MIT](LICENSE) | 本リポジトリ |
-| `src/fonts/*.woff2`, `src/fonts/fonts.css` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | [IPAmj明朝 Ver.006.01](https://moji.or.jp/mojikiban/font/) の派生（名称を「MJ Variant Mincho」に変更。[作成方法](src/fonts/README.md)） |
+| プログラム（`index.html`, `src/js/`, `src/css/`, `scripts/`, `tests/`, `.github/`）、ドキュメント（`*.md`, `docs/*.md`） | [MIT](LICENSE) | 本リポジトリ |
+| `src/fonts/*.woff2`, `src/fonts/fonts.css`, `src/fonts/fonts-map.json` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | [IPAmj明朝 Ver.006.01](https://moji.or.jp/mojikiban/font/) の派生（名称を「MJ Variant Mincho」に変更。[作成方法](src/fonts/README.md)） |
 | `src/data/chars/`, `src/data/search-index.json`, `src/data/meta.json` | **CC BY-SA 2.1 JP** ＋ [Unicode License v3](licenses/UNICODE-LICENSE.txt) | [MJ文字情報一覧表 Ver.006.02](https://moji.or.jp/mojikiban/mjlist/)、[MJ縮退マップ Ver.1.2.0](https://moji.or.jp/mojikiban/map/)（[CC BY-SA 2.1 JP](https://creativecommons.org/licenses/by-sa/2.1/jp/)）、[Unicode IVD](https://www.unicode.org/ivd/)・[Unihan](https://www.unicode.org/reports/tr38/)（[Unicode License v3](https://www.unicode.org/license.txt)）を加工 |
 | `src/data/handwriting-patterns.json` | **CC BY-SA 3.0** | [KanjiVG](https://kanjivg.tagaini.net/) r20250816（Copyright (C) 2009-2013 Ulrich Apel）の筆画データを加工。[著作権表示](licenses/KANJIVG-NOTICE.txt) |
 | `src/data/names.json` | [ipadic ライセンス](licenses/IPADIC-COPYING.txt)（Copyright 2000-2003 NAIST、ICOT Free Software の無保証条項を含む）／日本郵便 | [mecab-ipadic](https://taku910.github.io/mecab/) 2.7.0-20070801（姓・名）、[郵便番号データ](https://www.post.japanpost.jp/zipcode/dl/utf-zip.html)（市区町村・町域。日本郵便は著作権を主張せず自由利用可）、`scripts/data/*.json`（手作業の置き換え表） |
 | `src/data/image-index.bin`, `image-index.json` | IPAフォントライセンス v1.0 に従う | IPAmj明朝の字形を画像化した特徴量（字形そのものではない） |
+| `docs/images/*.png` | CC BY-SA 2.1 JP | このツールの画面写真。MJ文字情報一覧表のデータを表示しているため |
+| `licenses/*.txt` | それぞれの条文そのもの | 各ライセンスの原文（改変しないこと） |
 | `src/vendor/kanji-canvas*.js` | [MIT](src/vendor/kanji-canvas.LICENSE.txt) | [Kanji Canvas](https://github.com/asdfjkl/kanjicanvas)（`kanji-canvas.js` は無改変） |
 | `src/vendor/fontkit.js` | MIT ほか（[一覧](src/vendor/THIRD_PARTY_LICENSES.txt)） | fontkit と依存パッケージをバンドルしたもの |
 
