@@ -20,6 +20,10 @@ self.onmessage = async ({ data }) => {
       self.postMessage({ type: 'result', id: data.id, candidates: recognize(data.strokes) });
     }
   } catch (err) {
-    self.postMessage({ type: 'error', id: data.id, message: String(err.message ?? err) });
+    if (data.type === 'init') {
+      self.postMessage({ type: 'init-error', message: String(err.message ?? err) });
+    } else {
+      self.postMessage({ type: 'error', id: data.id, message: String(err.message ?? err) });
+    }
   }
 };
