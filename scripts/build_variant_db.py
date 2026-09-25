@@ -136,9 +136,9 @@ PRESETS_PATH = ROOT / "scripts" / "data" / "name_presets.json"
 # 「ゴシック体で使えるか」の判定に使うフォント（文字の収録状況＝cmap だけを読む。フォント自体は配布しない）.
 # Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体で出せるのは「実装したUCS」を持つ字形だけ。
 #   ok=True のフォントすべてに字があれば ○、欠けていれば △、実装したUCS が無い（IVS でしか区別できない）字形は ×
+# 判定に使うのは、誰でも入手・再配布できる SIL Open Font License のフォントだけにする。
+# ok=True のフォントすべてに字があれば ○（BIZ UDゴシックの字は Noto Sans JP にすべて含まれるので参考表示）
 GOTHIC_FONTS = [
-    {"key": "yu", "name": "游ゴシック", "ok": True,
-     "paths": [r"C:\Windows\Fonts\YuGothR.ttc", "/System/Library/Fonts/YuGothic-Medium.otf"]},
     {"key": "noto", "name": "Noto Sans JP", "ok": True,
      "paths": ["data/raw/NotoSansJP-VF.ttf", r"C:\Windows\Fonts\NotoSansJP-VF.ttf",
                "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"]},

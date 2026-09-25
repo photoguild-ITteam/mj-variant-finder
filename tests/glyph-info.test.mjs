@@ -5,7 +5,6 @@ import { gothicStatus, ivsListLabel, relationDirection, sequenceLabel } from '..
 
 const GOTHIC_META = {
   fonts: [
-    { key: 'yu', name: '游ゴシック', ok: true },
     { key: 'noto', name: 'Noto Sans JP', ok: true },
     { key: 'biz', name: 'BIZ UDゴシック', ok: false },
   ],
@@ -32,14 +31,14 @@ test('relationDirection', () => {
 });
 
 test('gothicStatus: ○ は ok=true のフォントすべてに字がある', () => {
-  const s = gothicStatus({ char: '邉', impl: '9089', gothic: ['yu', 'noto'] }, GOTHIC_META);
+  const s = gothicStatus({ char: '邉', impl: '9089', gothic: ['noto'] }, GOTHIC_META);
   assert.equal(s.mark, '○');
-  assert.match(s.detail, /游ゴシック ○ \/ Noto Sans JP ○ \/ BIZ UDゴシック ×/);
+  assert.match(s.detail, /Noto Sans JP ○ \/ BIZ UDゴシック ×/);
 });
 
 test('gothicStatus: △ は判定用フォントに欠けがある', () => {
   assert.equal(gothicStatus({ char: 'x', impl: '20000', gothic: [] }, GOTHIC_META).label, 'ゴシック体に字がない');
-  assert.equal(gothicStatus({ char: 'x', impl: '20000', gothic: ['biz', 'yu'] }, GOTHIC_META).label, '一部のゴシック体にしか字がない');
+  assert.equal(gothicStatus({ char: 'x', impl: '20000', gothic: ['biz'] }, GOTHIC_META).label, '一部のゴシック体にしか字がない');
 });
 
 test('gothicStatus: × は実装したUCS が無い（IVS でしか区別できない）', () => {

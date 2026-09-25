@@ -109,13 +109,13 @@ class TestDatabase(unittest.TestCase):
         counts = gothic["counts"]
         self.assertEqual(sum(counts.values()), load(DATA / "meta.json")["counts"]["mjGlyphs"] - len(index()["noChar"]))
         glyphs = {g["mj"]: g for g in detail("邉")["glyphs"]}
-        self.assertTrue({"yu", "noto"} <= set(glyphs["MJ026190"]["gothic"]))  # 実装したUCS U+9089 → ゴシック体にある
+        self.assertIn("noto", glyphs["MJ026190"]["gothic"])  # 実装したUCS U+9089 → ゴシック体にある
         self.assertNotIn("gothic", glyphs["MJ026191"])                        # IVS のみ → 判定対象外（×）
         ext_b = next(g for g in detail("\U00020000")["glyphs"] if g["mj"] == "MJ030312")
-        self.assertEqual(ext_b["gothic"], [])                                  # 游ゴシック・Noto Sans JP に字が無い（△）
+        self.assertEqual(ext_b["gothic"], [])                                  # Noto Sans JP・BIZ UDゴシックに字が無い（△）
         for ch in "髙𠮷﨑":                                                     # 人名でよく使う字は ○
             g = next(x for x in detail(ch)["glyphs"] if x.get("impl") == f"{ord(ch):04X}")
-            self.assertTrue({"yu", "noto"} <= set(g["gothic"]), ch)
+            self.assertIn("noto", g["gothic"], ch)
 
     def test_compat_alias(self):
         self.assertEqual(resolve("塚"), "585A")  # 互換漢字 U+FA10 → 塚 U+585A
