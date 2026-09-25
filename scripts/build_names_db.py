@@ -22,6 +22,7 @@ from __future__ import annotations
 import codecs
 import collections
 import csv
+import hashlib
 import io
 import json
 import re
@@ -51,6 +52,14 @@ SUFFIXES = {
 
 def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
+
+
+def sha256_of(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def to_hiragana(text: str) -> str:
@@ -166,9 +175,11 @@ def main() -> None:
             {"title": "mecab-ipadic 2.7.0-20070801（人名: 姓・名）", "license": "ipadic ライセンス（BSD 系）",
              "copyright": "Copyright 2000, 2001, 2002, 2003 Nara Institute of Science and Technology",
              "notice": "licenses/IPADIC-COPYING.txt",
-             "page": "https://taku910.github.io/mecab/"},
+             "page": "https://taku910.github.io/mecab/",
+             "sha256": sha256_of(IPADIC)},
             {"title": "郵便番号データ（市区町村・町域）", "license": "日本郵便（著作権を主張せず、自由に利用可）",
-             "page": "https://www.post.japanpost.jp/zipcode/dl/utf-zip.html"},
+             "page": "https://www.post.japanpost.jp/zipcode/dl/utf-zip.html",
+             "sha256": sha256_of(POSTAL)},
             {"title": "異体字の置き換え表・人名プリセット（手作業）", "license": "本リポジトリと同じ",
              "page": "scripts/data/name_variants.json"},
         ],

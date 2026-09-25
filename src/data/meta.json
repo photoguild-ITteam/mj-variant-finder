@@ -1,33 +1,37 @@
 {
-  "generatedAt": "2026-09-25T16:14:39+00:00",
+  "generatedAt": "2026-09-25T18:14:42+00:00",
   "sources": {
     "mji": {
       "url": "https://moji.or.jp/wp-content/uploads/2024/01/mji.00602.xlsx",
       "title": "MJ文字情報一覧表 Ver.006.02",
       "publisher": "一般社団法人 文字情報技術促進協議会 (CITPC)",
       "license": "CC BY-SA 2.1 JP",
-      "page": "https://moji.or.jp/mojikiban/mjlist/"
+      "page": "https://moji.or.jp/mojikiban/mjlist/",
+      "sha256": "f79075bf006b66c5e57a6df60503c5a01679cabbcea2f124eb3758593cf6fd3f"
     },
     "shrink": {
       "url": "https://moji.or.jp/wp-content/mojikiban/oscdl/MJShrinkMap.1.2.0.json",
       "title": "MJ縮退マップ Ver.1.2.0",
       "publisher": "独立行政法人 情報処理推進機構 (IPA) / CITPC",
       "license": "CC BY-SA 2.1 JP",
-      "page": "https://moji.or.jp/mojikiban/map/"
+      "page": "https://moji.or.jp/mojikiban/map/",
+      "sha256": "275b57ecd5929edb822c05a7e4326980b7028466384afe323ed7209f48acd8cd"
     },
     "ivd": {
       "url": "https://www.unicode.org/ivd/data/2026-08-03/IVD_Sequences.txt",
       "title": "Ideographic Variation Database 2026-08-03",
       "publisher": "Unicode, Inc.",
       "license": "Unicode License v3",
-      "page": "https://www.unicode.org/ivd/"
+      "page": "https://www.unicode.org/ivd/",
+      "sha256": "2b466659c2bfde1c52e60bd9fc883ab14dfa5c583df024b80352420265d2cd87"
     },
     "unihan": {
       "url": "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip",
       "title": "Unihan Database (Unicode 18.0.0)",
       "publisher": "Unicode, Inc.",
       "license": "Unicode License v3",
-      "page": "https://www.unicode.org/reports/tr38/"
+      "page": "https://www.unicode.org/reports/tr38/",
+      "sha256": "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
     }
   },
   "fontNote": "IPAmj明朝 Ver.006.01 は MJ文字情報一覧表 Ver.006.01 相当。ivdOnly の IVS はフォントに字形が無い場合があります。",
