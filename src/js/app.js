@@ -14,6 +14,9 @@ import { isFilterable, renderResult } from './ui/results.js';
 import { setupSessionWatch, showSessionExpired } from './ui/session.js';
 import { setupTheme } from './ui/theme.js';
 
+// 起動を始めた印。theme-init.js は、これが付かないまま時間がたつと「このブラウザでは動かない」と案内する
+document.documentElement.dataset.app = 'started';
+
 const DEFAULT_TITLE = '異体字検索 MJ Variant Finder — IPAmj明朝・MJ文字情報一覧表';
 const wide = matchMedia('(min-width: 1000px)');
 
@@ -23,10 +26,15 @@ init().catch((err) => {
     showSessionExpired();
     return;
   }
+  // init() は各部品のイベントを登録するので、呼び直さずにページごと読み直す
   $('#results').replaceChildren(h('div', { class: 'notice notice--error' },
     h('strong', {}, 'データの読み込みに失敗しました。'),
     h('p', {}, String(err.message ?? err)),
-    h('p', { class: 'muted' }, 'file:// で開いている場合は、ローカルHTTPサーバー（例: python -m http.server）経由で開いてください。')));
+    location.protocol === 'file:'
+      ? h('p', { class: 'muted' }, 'file:// で開いている場合は、ローカルHTTPサーバー（例: npm run serve）経由で開いてください。')
+      : null,
+    h('p', { class: 'notice__actions' },
+      h('button', { class: 'button button--primary', type: 'button', onclick: () => location.reload() }, '再読み込み'))));
 });
 
 async function init() {

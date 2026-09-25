@@ -167,7 +167,7 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
 
   await check('画像でコピー（透明PNGがクリップボードに入る）', async () => {
     await page.click('#glyph-dialog .export-box button:has-text("画像でコピー")');
-    await page.waitForSelector('.toast.is-visible:has-text("画像をコピーしました")');
+    await page.waitForSelector('#glyph-dialog .toast.is-visible:has-text("画像をコピーしました")');
     const info = await page.evaluate(async () => {
       const [item] = await navigator.clipboard.read();
       const blob = await item.getType('image/png');
