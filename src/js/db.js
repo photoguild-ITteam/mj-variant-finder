@@ -71,6 +71,10 @@ export class VariantDB {
     /** names.json（姓・名・地名・異体字の置き換え）。ensureNames() で読み込む */
     this.names = null;
     this._namesPromise = null;
+    /** nicknames.json（はしごだか などの呼び名と部首名）。ensureNicknames() で読み込む */
+    this.nicknames = null;
+    this._nicknamesPromise = null;
+    this._radicalNames = [];
   }
 
   static async load(baseUrl = new URL('../data/', import.meta.url), fetchJson = defaultFetchJson) {
@@ -184,6 +188,28 @@ export class VariantDB {
     return this._namesPromise;
   }
 
+  /**
+   * 字の呼び名と部首名の辞書（src/data/nicknames.json、数KB）を読み込む. 読み検索のときだけ必要.
+   */
+  async ensureNicknames() {
+    this._nicknamesPromise ??= this.fetchJson(new URL('nicknames.json', this.baseUrl))
+      .then((data) => {
+        this.nicknames = data;
+        // 長い名前から試す（「ぎょうにんべん」を「にんべん」より先に）
+        this._radicalNames = data.radicals
+          .flatMap((r) => r.names.map((name) => ({ name, radicals: [r.radical].flat() })))
+          .sort((a, b) => b.name.length - a.name.length);
+        return data;
+      })
+      .catch((err) => { this._nicknamesPromise = null; throw err; });
+    return this._nicknamesPromise;
+  }
+
+  /** 字の部首（一覧表は1字に部首を4つまで持つ。最初のものが chars に、残りが extraRadicals にある） */
+  radicalsOf(key) {
+    return [this.index.chars[key][2], ...(this.index.extraRadicals?.[key] ?? [])];
+  }
+
   relationLabel(kind) {
     return this.meta.relationTypes[kind] ?? kind;
   }
@@ -295,10 +321,48 @@ export class VariantDB {
     const exactKeys = this.rank(filtered(exact));
     const prefixKeys = this.rank(filtered(prefix));
     const candidates = [...exactKeys, ...prefixKeys];
-    if (!candidates.length && !names.length) {
+    const nicknames = this.nicknameMatches(reading);
+    // 「やまへんのさき」のような部首名つきの言い方（読みそのものに一致する字があるときは試さない）
+    const byRadical = exact.size ? null : this.radicalReading(reading, filters);
+    if (!candidates.length && !names.length && !nicknames.length && !byRadical) {
       return { type: 'notfound', query, reason: `読み「${reading}」に一致する文字が見つかりません。` };
     }
-    return { type: 'reading', query, reading, names, candidates, exactCount: exactKeys.length, total: candidates.length };
+    return { type: 'reading', query, reading, names, nicknames, byRadical, candidates, exactCount: exactKeys.length, total: candidates.length };
+  }
+
+  /**
+   * 呼び名（はしごだか など）に一致する字. 完全一致を先に、2文字以上なら前方一致も.
+   * @returns {{name: string, note: string, exact: boolean, targets: {query: string, char: string, mj?: string}[]}[]}
+   */
+  nicknameMatches(reading) {
+    if (!this.nicknames) return [];
+    const found = [];
+    for (const entry of this.nicknames.nicknames) {
+      const name = entry.names.find((n) => n === reading) ?? (reading.length >= 2 ? entry.names.find((n) => n.startsWith(reading)) : null);
+      if (!name) continue;
+      const targets = entry.targets.map((code, i) => {
+        const char = code.split('_').map((c) => String.fromCodePoint(parseInt(c, 16))).join('');
+        // IVS 付きは字形を指すので、コードで検索してその字形を強調する
+        return { query: code.includes('_') ? code : char, char, mj: entry.mj?.[i] };
+      });
+      found.push({ name, note: entry.note, targets, exact: name === reading });
+    }
+    return found.sort((a, b) => Number(b.exact) - Number(a.exact));
+  }
+
+  /**
+   * 「〇〇へんの〇〇」（部首名＋の＋読み）に一致する字.
+   * @returns {{radicalName: string, reading: string, keys: string[]} | null}
+   */
+  radicalReading(reading, filters) {
+    for (const { name, radicals } of this._radicalNames) {
+      if (!reading.startsWith(`${name}の`)) continue;
+      const rest = reading.slice(name.length + 1);
+      const keys = (this.index.readings[rest] ?? [])
+        .filter((k) => this.radicalsOf(k).some((r) => radicals.includes(r)) && this.matchesFilter(k, filters));
+      if (keys.length) return { radicalName: name, reading: rest, keys: this.rank(keys) };
+    }
+    return null;
   }
 
   /**
@@ -322,10 +386,10 @@ export class VariantDB {
   }
 
   matchesFilter(key, { strokesMin, strokesMax, radical, ivsOnly, policy } = {}) {
-    const [, strokes, rad, flags] = this.index.chars[key];
+    const [, strokes, , flags] = this.index.chars[key];
     if (strokesMin && strokes < strokesMin) return false;
     if (strokesMax && strokes > strokesMax) return false;
-    if (radical && rad !== radical) return false;
+    if (radical && !this.radicalsOf(key).includes(radical)) return false;
     if (ivsOnly && !(flags & FLAG_IVS)) return false;
     if (policy === 'jouyou' && !(flags & FLAG_JOUYOU)) return false;
     if (policy === 'jinmei' && !(flags & FLAG_JINMEI)) return false;

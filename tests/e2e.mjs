@@ -514,6 +514,25 @@ if (isLocal) {
     assert.equal(await page.locator('.glyph-card.is-selected').count(), 0);
   });
 
+  await check('呼び名で探す（はしごだか・たてにし）と、部首名＋読み（やまへんのさき）', async () => {
+    await page.fill('#q', 'はしごだか');
+    await page.press('#q', 'Enter');
+    await page.click('.nickname-row .nickname-target');
+    await page.waitForSelector('.char-hero__code:text("U+9AD9")');
+
+    // 字形を指す呼び名は、その字形を強調して開く
+    await page.fill('#q', 'たてにし');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.nickname-target:has-text("MJ024197")');
+    await page.click('.nickname-target');
+    await page.waitForSelector('.glyph-card.is-focus[data-mj="MJ024197"]');
+
+    await page.fill('#q', 'やまへんのさき');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.section-label:has-text("やまへん")');
+    assert.ok(await page.locator('.candidate[data-query="﨑"]').count() > 0);
+  });
+
   await check('一覧の操作でエラーが出ない', async () => assert.deepEqual(errors, []));
   await context.close();
 }

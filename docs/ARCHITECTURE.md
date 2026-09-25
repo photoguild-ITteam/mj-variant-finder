@@ -22,6 +22,7 @@
 | `src/js/ui/feedback.js` / `export-actions.js` | トースト・クリップボード / 画像書き出しの操作 |
 | `src/js/ui/handwriting.js` | 手書き入力パネル（枠に書く → 候補 → その字で検索） |
 | `src/data/names.json` | 人名・地名の読み辞書（かな検索時に遅延読み込み） |
+| `src/data/nicknames.json` | 字の呼び名（はしごだか→髙、たてにし→西 E0102 など）と部首名（さんずい=85 など）。手作業、かな検索時に遅延読み込み。読み検索では、呼び名の完全一致・前方一致と、「部首名＋の＋読み」（やまへんのさき）を解釈する。部首は一覧表の最大4つの部首のどれでも一致とする（`search-index.json` の `extraRadicals`） |
 | `src/js/ui/image-search.js` | 画像パネル（貼り付け・読み込み → 1文字を囲む → 候補） |
 | `src/js/image-search/` | 画像の前処理（`features.js`）と索引との照合（`matcher.js`） |
 | `src/js/handwriting/` | 認識の中核（`recognizer.js`）、指紋（`signature.js`）、別スレッド実行（`worker.js`） |

@@ -509,11 +509,16 @@ def public_glyph(g: dict) -> dict:
     return {k: v for k, v in g.items() if k != "mjNum"}
 
 
-def build_shards_and_index(chars: dict[int, dict]) -> tuple[dict[str, dict], dict[str, list], dict[str, set[str]]]:
-    """詳細シャード、インデックスの chars、読み → UCS を作る."""
+def build_shards_and_index(chars: dict[int, dict]) -> tuple[dict[str, dict], dict[str, list], dict[str, set[str]], dict[str, list[int]]]:
+    """詳細シャード、インデックスの chars、読み → UCS、2つ目以降の部首 を作る.
+
+    一覧表は1字に部首を4つまで持つ（例: 解 は 刀 と 角）。chars には最初の部首だけを入れ、残りは extra_radicals に入れる
+    （部首での絞り込みや「つのへんのかい」のような部首名での検索で、どちらの部首でも引けるようにする）。
+    """
     shards: dict[str, dict] = defaultdict(dict)
     index_chars: dict[str, list] = {}
     readings: dict[str, set[str]] = defaultdict(set)
+    extra_radicals: dict[str, list[int]] = {}
     for cp in sorted(chars):
         key = hex_cp(cp)
         glyphs = sorted(chars[cp]["glyphs"], key=lambda g: g["mjNum"])
@@ -525,6 +530,9 @@ def build_shards_and_index(chars: dict[int, dict]) -> tuple[dict[str, dict], dic
             primary["radicals"][0][0] if primary.get("radicals") else 0,
             flags,
         ]
+        others = sorted({r for g in glyphs for r, _ in g.get("radicals", [])} - {index_chars[key][2]})
+        if others:
+            extra_radicals[key] = others
         for g in glyphs:
             for r in g.get("readings", []):
                 readings[kata_to_hira(r)].add(key)
@@ -537,7 +545,7 @@ def build_shards_and_index(chars: dict[int, dict]) -> tuple[dict[str, dict], dic
         if related:
             shard_entry["related"] = related
         shards[f"{cp >> SHARD_BITS:X}"][key] = shard_entry
-    return shards, index_chars, readings
+    return shards, index_chars, readings, extra_radicals
 
 
 def build_aliases(chars: dict[int, dict]) -> dict[str, str]:
@@ -601,7 +609,7 @@ def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] 
     gothic_fonts = read_gothic_fonts(gothic_overrides or {})
     gothic_counts = annotate_gothic(grouped.chars, gothic_fonts)
 
-    shards, index_chars, readings = build_shards_and_index(grouped.chars)
+    shards, index_chars, readings, extra_radicals = build_shards_and_index(grouped.chars)
     aliases = build_aliases(grouped.chars)
     presets = load_checked_presets(set(grouped.chars) | {int(k, 16) for k in aliases})
     index = {
@@ -610,6 +618,7 @@ def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] 
         "aliases": aliases,
         "noChar": [g["mjNum"] for g in grouped.no_char],
         "readings": {r: sorted(v) for r, v in sorted(readings.items())},
+        "extraRadicals": extra_radicals,
         "names": presets["names"],
         "quickAccess": presets["quickAccess"],
     }

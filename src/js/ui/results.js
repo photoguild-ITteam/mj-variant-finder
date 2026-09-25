@@ -49,6 +49,7 @@ function renderWelcome() {
     h('ul', {},
       h('li', {}, '文字・単語: ', example('渡辺'), ' — 1文字ずつ異体字を表示'),
       h('li', {}, '読み: ', example('さいとう'), ' — 人名・地名と音訓から'),
+      h('li', {}, '呼び名: ', example('はしごだか'), ' ', example('やまへんのさき'), ' — 字の呼び名や「部首名＋読み」でも'),
       h('li', {}, 'MJ文字図形名: ', example('MJ026190')),
       h('li', {}, 'Unicode / IVS: ', example('9089_E010F')),
       h('li', {}, '部首・画数: 左の「絞り込み」だけでも一覧できます'))));
@@ -140,18 +141,37 @@ function charTabs(items, onSelect) {
 // ---------------------------------------------------------------------------- 読み・絞り込み
 
 function renderReading(result) {
+  const { nicknames = [], byRadical = null } = result;
   show(
     h('div', { class: 'result-header' },
       h('h2', {}, `読み「${result.reading}」`),
       h('p', {}, result.total
         ? `音訓が一致する文字 ${result.total.toLocaleString()} 字${isFilterActive(app.filters) ? '（絞り込み中）' : ''}。● は IVS 異体字あり、数字は字形数`
-        : (result.names.length ? '人名・地名の表記から選んでください。' : '一致する文字がありません。'))),
+        : (nicknames.length || byRadical || result.names.length ? '候補から選んでください。' : '一致する文字がありません。'))),
+    nicknames.length ? nicknameSection(nicknames) : null,
+    byRadical ? [
+      h('h3', { class: 'section-label' }, `部首と読み: 「${byRadical.radicalName}」で読みが「${byRadical.reading}」の字`),
+      candidateGrid(byRadical.keys),
+    ] : null,
     result.names.length ? nameSections(result.names) : null,
     result.candidates.length ? [
       h('h3', { class: 'section-label' }, '音訓が一致する文字'),
       candidateGrid(result.candidates, result.exactCount),
     ] : null,
   );
+}
+
+/** 呼び名（はしごだか など）に一致する字。IVS 付きの字形を指すものは、その字形を開く */
+function nicknameSection(nicknames) {
+  return [
+    h('h3', { class: 'section-label' }, '呼び名'),
+    h('div', { class: 'nickname-list' }, nicknames.map((n) => h('div', { class: 'nickname-row' },
+      h('span', { class: 'nickname-row__name' }, n.name),
+      h('span', { class: 'nickname-row__targets' }, n.targets.map((t) => h('button', {
+        class: 'chip nickname-target', type: 'button', dataset: { query: t.query }, title: t.mj ?? t.query,
+      }, h('span', { class: 'glyph' }, t.char), t.mj ? h('span', { class: 'nickname-target__mj' }, t.mj) : null))),
+      h('span', { class: 'nickname-row__note' }, n.note)))),
+  ];
 }
 
 /** 人名・地名の候補を種別（姓・名・地名・異体字での表記）ごとにまとめる */
