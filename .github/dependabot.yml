@@ -1,0 +1,17 @@
+# 依存の更新を月1回まとめて PR にする（脆弱性の修正は別途すぐに PR が来る）
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm   # 開発用（テスト・ビルド）のみ。サイトの実行には使わない
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      dev:
+        patterns: ["*"]
