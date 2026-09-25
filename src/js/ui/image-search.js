@@ -65,7 +65,8 @@ async function loadIndex() {
       fetch(INDEX_META),
       fetch(INDEX_BIN),
     ]);
-    if (!metaRes.ok || !binRes.ok) throw new Error(`照合データを読み込めません (${metaRes.status || binRes.status})`);
+    const failed = [metaRes, binRes].find((r) => !r.ok);
+    if (failed) throw new Error(`照合データを読み込めません (${failed.status})`);
     matcherModule = module;
     featuresModule = featModule;
     index = module.createIndex(await binRes.arrayBuffer(), await metaRes.json());
