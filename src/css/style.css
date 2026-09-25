@@ -331,6 +331,7 @@ a.icon-button { color: inherit; }
 .notice { text-align: left; padding: 16px 20px; }
 .notice--spaced { margin-bottom: 12px; }
 .notice--compact { padding: 8px 12px; margin: 0 0 10px; }
+.notice__actions { margin: 12px 0 0; }
 .notice--error { border-color: var(--crimson); background: var(--crimson-tint); color: var(--text); }
 .notice--warn { border-color: var(--gold-bright); background: var(--gold-tint); color: var(--text); }
 
