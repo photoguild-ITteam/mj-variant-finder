@@ -13,7 +13,7 @@ import { isFilterable, renderResult } from './ui/results.js';
 import { setupSessionWatch, showSessionExpired } from './ui/session.js';
 import { setupTheme } from './ui/theme.js';
 
-const DEFAULT_TITLE = '異体字検索 — IPAmj明朝・MJ文字情報一覧表';
+const DEFAULT_TITLE = '異体字検索 MJ Variant Finder — IPAmj明朝・MJ文字情報一覧表';
 const wide = matchMedia('(min-width: 1000px)');
 
 init().catch((err) => {
@@ -46,7 +46,11 @@ async function init() {
   renderQuickAccess();
   renderDataMeta();
 
-  window.addEventListener('hashchange', () => search(queryFromHash(), { fromHash: true }));
+  window.addEventListener('hashchange', () => {
+    const byUser = navigating;
+    navigating = false;
+    search(queryFromHash(), { fromHash: !byUser });
+  });
   await search(queryFromHash(), { fromHash: true });
   if (!queryFromHash() && wide.matches) $('#q').focus();
 }
@@ -55,6 +59,9 @@ async function init() {
 
 const queryFromHash = () => new URLSearchParams(location.hash.slice(1)).get('q') ?? '';
 
+/** navigate() で URL を変えた直後か（戻る/進む・リンクから開いた場合と区別する） */
+let navigating = false;
+
 /** 検索語を URL に反映する（hashchange で search が走る）。同じ語なら描き直すだけ */
 function navigate(rawQuery) {
   const query = rawQuery.trim();
@@ -62,6 +69,7 @@ function navigate(rawQuery) {
   if (query === queryFromHash() && (hash || !location.hash || location.hash === '#')) {
     search(query);
   } else {
+    navigating = true;
     location.hash = hash;
   }
 }

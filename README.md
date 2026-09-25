@@ -54,7 +54,7 @@ ES Modules と fetch を使うので、`file://` では動きません（HTTPサ
 
 ### 自分のサイトに置く
 
-`index.html` と `src/` を、任意の静的ホスティングに置くだけです（GitHub Pages、Netlify、S3 など）。**`LICENSE`・`LICENSES.md`・`licenses/` も一緒に置いてください**（画面からリンクしており、データのライセンスの条件でもあります。→ [ライセンス](#ライセンス)）。相対パスなので、サブパスに置いても動きます。認証付きのサーバーの後ろに置く場合は、`src/js/config.js` の `sessionWatch` を設定すると、ログイン切れの案内を出せます。
+`index.html` と `src/` を、任意の静的ホスティングに置くだけです（GitHub Pages、Netlify、S3 など）。**`LICENSE`・`LICENSES.md`・`licenses/` も一緒に置いてください**（画面からリンクしており、データのライセンスの条件でもあります。→ [ライセンス](#ライセンス)）。`index.html` の `og:url`・`og:image`（リンクを共有したときのプレビュー）は、置いた先の URL に書き換えてください。相対パスなので、サブパスに置いても動きます。認証付きのサーバーの後ろに置く場合は、`src/js/config.js` の `sessionWatch` を設定すると、ログイン切れの案内を出せます。
 
 ## 開発
 
@@ -90,7 +90,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 | Webフォント | `src/fonts/` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | 情報処理推進機構（IPAmj明朝）。名称を「MJ Variant Mincho」に変えた派生フォント |
 | 画像検索のデータ | `src/data/image-index.*` | IPAフォントライセンス v1.0 | IPAmj明朝で描いた字形から計算した特徴量（フォントそのものではない） |
 | 同梱ライブラリ | `src/vendor/` | [MIT](src/vendor/kanji-canvas.LICENSE.txt)・[Apache-2.0・0BSD ほか](src/vendor/THIRD_PARTY_LICENSES.txt) | Kanji Canvas、fontkit と依存パッケージ |
-| 説明用の画面写真 | `docs/images/` | CC BY-SA 2.1 JP | 画面に MJ文字情報一覧表のデータを含むため |
+| 説明用の画面写真 | `docs/images/`, `src/images/og.png` | CC BY-SA 2.1 JP | 画面に MJ文字情報一覧表のデータを含むため |
 
 ファイル単位の対応は [LICENSES.md](LICENSES.md) に、表示が条件になっている条文の原文は [licenses/](licenses/) と [src/fonts/LICENSE_IPA_Font_v1.0.txt](src/fonts/LICENSE_IPA_Font_v1.0.txt) にあります。
 

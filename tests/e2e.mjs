@@ -416,6 +416,37 @@ if (isLocal) {
   await context.close();
 }
 
+// --- OSS としての表示（ソースへのリンク・非公式の明記・共有用の画像）
+{
+  const { page, context } = await newPage();
+  await page.goto(BASE);
+  await page.waitForSelector('#q:not([disabled])');
+  await check('ソースへのリンク・非公式の明記・共有用の画像', async () => {
+    const repo = 'https://github.com/photoguild-ITteam/mj-variant-finder';
+    assert.equal(await page.getAttribute('.site-header #source-link', 'href'), repo);
+    assert.equal(await page.locator(`.site-footer a[href="${repo}"]`).count(), 1);
+    // 提供元の公式ツールと誤解されないよう、フッターとモーダルの両方に書く
+    assert.match(await page.textContent('.site-footer'), /無関係の非公式のツール/);
+    assert.match(await page.textContent('#license-dialog'), /無関係の非公式のツール/);
+    assert.match(await page.textContent('.site-footer'), /MJ Variant Finder/);
+    // 検索欄の例が途中で切れない
+    const clipped = await page.locator('#q').evaluate((input) => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      const style = getComputedStyle(input, '::placeholder');
+      ctx.font = `${style.fontSize} ${style.fontFamily}`;
+      const padding = parseFloat(getComputedStyle(input).paddingLeft) + parseFloat(getComputedStyle(input).paddingRight);
+      return ctx.measureText(input.placeholder).width > input.clientWidth - padding;
+    });
+    assert.equal(clipped, false, '検索欄の例が切れている');
+    // 共有用の画像（og:image）は公開先の絶対URL。同じ画像がリポジトリにある
+    const image = await page.getAttribute('meta[property="og:image"]', 'content');
+    assert.match(image, /^https:\/\/.+\/src\/images\/og\.png$/);
+    assert.equal(await page.getAttribute('meta[name="twitter:card"]', 'content'), 'summary_large_image');
+    assert.equal((await page.request.get(BASE + 'src/images/og.png')).status(), 200);
+  });
+  await context.close();
+}
+
 // --- スマホ幅
 {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -426,6 +457,16 @@ if (isLocal) {
     const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     assert.ok(sw <= iw, `${sw} > ${iw}`);
   });
+  await check('スマホ幅で検索すると結果までスクロールする', async () => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.fill('#q', '斎藤');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.result-header h2:has-text("斎藤")');
+    await page.waitForFunction(() => Math.abs(document.querySelector('#results').getBoundingClientRect().top) < 80, null, { timeout: 5000 });
+  });
+  await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
+  await page.waitForSelector('.result-header h2:has-text("渡邉")');
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: OUT + '08-mobile.png' });
   await page.evaluate(() => document.querySelector('#results').scrollIntoView());
   await page.screenshot({ path: OUT + '09-mobile-results.png' });

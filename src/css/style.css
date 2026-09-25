@@ -122,6 +122,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surfac
 .muted { color: var(--text-muted); }
 
 .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon--solid { fill: currentColor; stroke: none; }
 
 .glyph { font-family: var(--font-glyph); font-weight: 400; line-height: 1; }
 
@@ -179,6 +180,8 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surfac
   border: 1px solid var(--border); background: var(--surface); cursor: pointer;
 }
 .icon-button:hover { border-color: var(--border-strong); }
+a.icon-button { color: inherit; }
+#source-link .icon { width: 18px; height: 18px; }
 #theme-toggle .icon--sun,
 :root[data-theme="dark"] #theme-toggle .icon--moon { display: none; }
 :root[data-theme="dark"] #theme-toggle .icon--sun { display: block; }
@@ -628,6 +631,9 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surfac
 .site-footer__inner { max-width: var(--max-width); margin: 0 auto; padding: 20px var(--gutter) 28px; font-size: 12.5px; color: var(--text-muted); }
 .site-footer p { margin: 0; }
 .site-footer__disclaimer { font-size: 12px; margin-bottom: 4px !important; }
+.site-footer__project { margin-bottom: 4px !important; }
+.site-footer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.site-footer a:hover { color: var(--text); }
 .header-link {
   padding: 6px 4px; border: 0; background: none; color: var(--text-muted);
   font-size: 12.5px; cursor: pointer; white-space: nowrap;
