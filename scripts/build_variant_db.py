@@ -322,6 +322,16 @@ def to_int(value: str | None) -> int | None:
     return int(value) if value and value.isdigit() else None
 
 
+def to_version(value: str | None) -> int | float | None:
+    if not value:
+        return None
+    try:
+        f = round(float(value), 4)
+        return int(f) if f.is_integer() else f
+    except ValueError:
+        return None
+
+
 def build_glyph(rec: dict[str, str], ivd_by_mj: dict[str, list[str]]) -> dict:
     g: dict = {}
     for src_key, key in MJ_COLUMNS.items():
@@ -356,7 +366,7 @@ def build_glyph(rec: dict[str, str], ivd_by_mj: dict[str, list[str]]) -> dict:
     if "strokes" in g:
         g["strokes"] = to_int(g["strokes"])
     if "version" in g:
-        g["version"] = to_int(g["version"])
+        g["version"] = to_version(g["version"])
     if "readings" in g:
         g["readings"] = [r for r in g["readings"].split("・") if r]
     level = jis_level(g.get("x0213"))

@@ -85,6 +85,7 @@ async function search(query, { fromHash = false } = {}) {
   // 読み検索では人名・地名の辞書（遅延読み込み）を待つ。読めなくても検索は続ける
   if (KANA_ONLY.test(query.trim())) {
     await Promise.all([app.db.ensureNames(), app.db.ensureNicknames()].map((p) => p.catch((err) => console.warn(err))));
+    if (app.query !== query) return;
   }
   app.result = app.db.search(query, app.filters);
   await renderResult(app.result);
