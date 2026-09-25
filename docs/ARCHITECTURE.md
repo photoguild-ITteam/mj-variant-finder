@@ -50,7 +50,7 @@ Python 3.10 以上、標準ライブラリのみ。
 | `mji.00602.xlsx` | MJ文字情報一覧表 Ver.006.02（CITPC） | CC BY-SA 2.1 JP |
 | `MJShrinkMap.1.2.0.json` | MJ縮退マップ Ver.1.2.0（IPA） | CC BY-SA 2.1 JP |
 | `IVD_Sequences.txt` | Unicode IVD 2026-08-03 | Unicode License v3 |
-| `Unihan.zip` | Unihan Database 17.0.0（`Unihan_Variants.txt` のみ使用） | Unicode License v3 |
+| `Unihan.zip` | Unihan Database 18.0.0（`Unihan_Variants.txt` のみ使用） | Unicode License v3 |
 
 字形カードの「ゴシック○/△/×」は、ビルド時にゴシック体フォントの cmap を読んで判定する（`GOTHIC_FONTS`。SIL Open Font License の Noto Sans JP で ○/△ を判定し、BIZ UDゴシックは参考として表示する（BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。`--gothic-font noto=path/to/font` で場所を指定でき、フォントが見つからなければ判定を省く。フォント自体は配布しない）。Moji_Joho の IVS に対応したゴシック体は無いため、実装したUCS を持たない字形は ×（IVD 上も Moji_Joho と Adobe-Japan1 の共通シーケンスは 0 件）。
 
