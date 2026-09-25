@@ -131,6 +131,8 @@ function setupDialogs() {
 }
 
 function renderDataMeta() {
-  const { generatedAt, counts } = app.db.meta;
-  $('#data-meta').textContent = `データ生成: ${new Date(generatedAt).toLocaleDateString('ja-JP')} · ${counts.mjGlyphs.toLocaleString()} 字形 / ${counts.ucsChars.toLocaleString()} 文字`;
+  const { generatedAt, counts, sources } = app.db.meta;
+  // 元データの版（例: MJ文字情報一覧表 Ver.006.02・IVD 2026-08-03）
+  const versions = [sources.mji?.title, sources.ivd?.title?.replace('Ideographic Variation Database', 'IVD')].filter(Boolean);
+  $('#data-meta').textContent = `データ: ${versions.join('・')}（${counts.mjGlyphs.toLocaleString()} 字形・${counts.ucsChars.toLocaleString()} 文字、${new Date(generatedAt).toLocaleDateString('ja-JP')} 生成）`;
 }

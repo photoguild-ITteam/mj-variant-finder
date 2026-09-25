@@ -693,12 +693,19 @@ body:has(dialog[open]) .compare-tray { display: none; }
 
 /* フッター */
 .site-footer { border-top: 1px solid var(--border); background: var(--bg-accent); padding-bottom: var(--tray-space, 0px); }
-.site-footer__inner { max-width: var(--max-width); margin: 0 auto; padding: 20px var(--gutter) 28px; font-size: 12.5px; color: var(--text-muted); }
+.site-footer__inner {
+  max-width: var(--max-width); margin: 0 auto; padding: 24px var(--gutter) 28px;
+  display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; color: var(--text-muted);
+}
 .site-footer p { margin: 0; }
-.site-footer__disclaimer { font-size: 12px; margin-bottom: 4px !important; }
-.site-footer__project { margin-bottom: 4px !important; }
+.site-footer__top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.site-footer__brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.site-footer__brand strong { color: var(--text); font-size: 14px; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .site-footer a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .site-footer a:hover { color: var(--text); }
+/* 免責は区切り線の下に小さく（全文はライセンスのモーダルにある） */
+.site-footer__disclaimer { padding-top: 10px; border-top: 1px solid var(--border); font-size: 11.5px; line-height: 1.7; }
 .header-link {
   padding: 6px 4px; border: 0; background: none; color: var(--text-muted);
   font-size: 12.5px; cursor: pointer; white-space: nowrap;
