@@ -1,0 +1,10 @@
+{
+  "records": 58843,
+  "recordBytes": 106,
+  "box": 64,
+  "grayMesh": 8,
+  "binMesh": 16,
+  "binThreshold": 0.22,
+  "font": "IPAmj明朝 Ver.006.01",
+  "note": "IPAmj明朝の字形を画像化した特徴（scripts/build_image_index.py で生成）。字形そのものではない。"
+}

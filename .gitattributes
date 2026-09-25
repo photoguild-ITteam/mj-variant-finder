@@ -1,0 +1,5 @@
+# 改行は LF に固定する（Windows の autocrlf で、生成データ・スクリプト・ワークフローが変わらないように）
+* text=auto eol=lf
+*.woff2 binary
+*.bin binary
+*.png binary

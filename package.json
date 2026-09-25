@@ -1,0 +1,42 @@
+{
+  "name": "mj-variant-finder",
+  "version": "0.1.0",
+  "description": "MJ Variant Finder — IPAmj明朝の異体字（IVS）をブラウザだけで検索・比較・画像化する静的Webツール",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR-ORG/mj-variant-finder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR-ORG/mj-variant-finder/issues"
+  },
+  "homepage": "https://YOUR-ORG.github.io/mj-variant-finder/",
+  "author": "YOUR-COMPANY <https://YOUR-COMPANY.example>",
+  "keywords": [
+    "kanji",
+    "ivs",
+    "ipamj-mincho",
+    "moji-joho",
+    "font",
+    "webfont",
+    "japanese"
+  ],
+  "scripts": {
+    "build:data": "python scripts/build_variant_db.py",
+    "build:font": "python scripts/build_webfont.py",
+    "serve": "python -m http.server 8765 --bind 127.0.0.1",
+    "test": "node --test tests/db.test.mjs tests/glyph-info.test.mjs tests/handwriting.test.mjs tests/image-search.test.mjs && python -m unittest scripts/test_variant_db.py",
+    "test:e2e": "node tests/e2e.mjs",
+    "build:vendor": "node scripts/vendor/build.mjs",
+    "build:handwriting": "node scripts/build_handwriting_db.mjs",
+    "build:imageindex": "python scripts/build_image_index.py",
+    "build:names": "python scripts/build_names_db.py"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "fontkit": "^2.0.4",
+    "playwright-core": "^1.63.0"
+  }
+}

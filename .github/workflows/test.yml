@@ -1,0 +1,53 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: 単体テスト + データ検証
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      # Node の単体テスト（検索・表示ラベル・手書き認識・画像照合）+ 生成データの整合性（Python unittest）
+      - run: npm test
+
+  e2e:
+    name: ブラウザテスト
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # tests/e2e.mjs は playwright-core を使う。CI では Playwright の Chromium を入れて使う
+      - run: npx playwright-core install --with-deps chromium
+      - name: 静的サーバーを起動
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8765/ >/dev/null && break; sleep 0.5; done
+      - name: E2E
+        run: node tests/e2e.mjs
+        env:
+          BROWSER_CHANNEL: chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots
+          path: tests/screenshots/
+          if-no-files-found: ignore

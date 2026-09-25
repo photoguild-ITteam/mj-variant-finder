@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 個別の文字の調査・解釈のご相談
+    url: https://moji.or.jp/
+    about: このプロジェクトでは個別の文字の調査・解釈のご相談はお受けできません。文字情報技術促進協議会や、各手続きの窓口にご確認ください。
+  - name: 脆弱性の報告（非公開）
+    url: https://github.com/YOUR-ORG/mj-variant-finder/security/advisories/new
+    about: セキュリティ上の問題は、公開の Issue ではなくこちらから非公開でご連絡ください。

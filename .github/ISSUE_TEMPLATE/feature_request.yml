@@ -1,0 +1,31 @@
+name: 機能の要望
+description: 新しい機能・改善のご提案
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **お願い**: 個別の文字の調査・解釈のご相談はお受けできません。メンテナンスはベストエフォートで、採否や時期のお約束はできません。
+  - type: textarea
+    id: problem
+    attributes:
+      label: どんな場面で困っていますか
+      description: 機能そのものより先に、解決したい課題を書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: 提案する機能・変更
+    validations:
+      required: true
+  - type: textarea
+    id: alt
+    attributes:
+      label: 代わりの方法・検討したこと
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: 貢献
+      options:
+        - label: この機能の Pull Request を自分で出せます

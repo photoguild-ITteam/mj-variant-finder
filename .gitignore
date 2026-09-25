@@ -1,0 +1,7 @@
+# 公式配布元からダウンロードする元データ（scripts/ が自動取得。再配布しない）
+data/raw/
+__pycache__/
+node_modules/
+tests/screenshots/
+.DS_Store
+Thumbs.db

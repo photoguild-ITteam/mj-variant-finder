@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>異体字検索 — IPAmj明朝・MJ文字情報一覧表</title>
+  <meta name="description" content="MJ文字情報一覧表・MJ縮退マップ・Unicode IVD をもとに、IPAmj明朝の異体字（IVS）を検索・比較・コピーできるWebアプリ。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="異体字検索 — IPAmj明朝・MJ文字情報一覧表">
+  <meta property="og:description" content="渡辺・邉・邊、斎藤・齋藤、髙・𠮷 などの異体字をIVS付きでコピー。">
+  <meta name="theme-color" content="#0f172a">
+  <script src="src/js/theme-init.js"></script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f172a'/%3E%3Ctext x='16' y='23' font-size='22' text-anchor='middle' fill='%23f6f3ec' font-family='serif'%3E%E7%95%B0%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/fonts/fonts.css">
+  <link rel="stylesheet" href="src/css/style.css">
+  <script type="module" src="src/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#results">検索結果へ移動</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="./" aria-label="異体字検索 トップ">
+        <span class="brand__mark" aria-hidden="true">異</span>
+        <span class="brand__text">
+          <span class="brand__title">異体字検索</span>
+          <span class="brand__sub">IPAmj明朝 · MJ文字情報一覧表</span>
+        </span>
+      </a>
+      <div class="header-actions">
+        <button type="button" class="header-link" id="license-open" aria-haspopup="dialog">データ出典<span class="header-link__long">・ライセンス</span></button>
+        <button type="button" class="font-status" id="font-status" data-state="checking" aria-haspopup="dialog">
+          <span class="font-status__dot" aria-hidden="true"></span>
+          <span class="font-status__label">フォント確認中…</span>
+        </button>
+        <button type="button" class="icon-button" id="theme-toggle" aria-label="ダークモードに切り替え">
+          <svg class="icon icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="search-panel" aria-label="検索">
+      <form class="search-form" id="search-form" role="search">
+        <label class="visually-hidden" for="q">文字・読み・MJ文字図形名・Unicode</label>
+        <div class="search-box">
+          <svg class="search-box__icon icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" name="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search"
+                 placeholder="渡辺 / さいとう / MJ026190 / U+8FBB" disabled>
+          <button type="submit" class="button button--primary" disabled>検索</button>
+        </div>
+        <div class="search-tools">
+          <button type="button" class="button button--small" id="handwriting-open" title="手書きで探す">✍ 手書きで探す</button>
+          <button type="button" class="button button--small" id="image-open" title="画像から探す（スクリーンショットの貼り付けも可）">🖼 画像から探す</button>
+        </div>
+      </form>
+
+      <div class="examples" aria-label="入力例">
+        <span class="examples__label">例:</span>
+        <button type="button" class="chip chip--ghost" data-query="渡辺">渡辺</button>
+        <button type="button" class="chip chip--ghost" data-query="さいとう">さいとう</button>
+        <button type="button" class="chip chip--ghost" data-query="MJ026190">MJ026190</button>
+        <button type="button" class="chip chip--ghost" data-query="U+8FBB">U+8FBB</button>
+        <button type="button" class="chip chip--ghost" data-query="葛飾">葛飾</button>
+      </div>
+
+      <details class="filters" id="filters">
+        <summary>絞り込み（部首・画数・漢字施策）<span class="filters__count" id="filter-count" hidden></span></summary>
+        <div class="filters__grid">
+          <label class="field">
+            <span class="field__label">部首</span>
+            <select id="f-radical"><option value="">すべて</option></select>
+          </label>
+          <div class="field">
+            <span class="field__label" id="strokes-label">総画数</span>
+            <div class="field__range" role="group" aria-labelledby="strokes-label">
+              <input id="f-strokes-min" type="number" min="1" max="84" inputmode="numeric" placeholder="最小" aria-label="最小画数">
+              <span aria-hidden="true">〜</span>
+              <input id="f-strokes-max" type="number" min="1" max="84" inputmode="numeric" placeholder="最大" aria-label="最大画数">
+            </div>
+          </div>
+          <label class="field">
+            <span class="field__label">漢字施策</span>
+            <select id="f-policy">
+              <option value="all">すべて</option>
+              <option value="jouyou">常用漢字</option>
+              <option value="jinmei">人名用漢字</option>
+              <option value="hyougai">表外字</option>
+            </select>
+          </label>
+          <label class="field field--check">
+            <input id="f-ivs" type="checkbox">
+            <span>IVS異体字のある文字だけ</span>
+          </label>
+          <button type="button" class="button button--ghost" id="filter-reset">リセット</button>
+        </div>
+        <p class="filters__note">読み検索の結果と、検索語が空のときの一覧に適用されます。</p>
+      </details>
+
+      <div class="quick-access">
+        <h2 class="section-label">よく検索される異体字</h2>
+        <div class="quick-access__list" id="quick-access"></div>
+      </div>
+    </section>
+
+    <section class="results" id="results" aria-live="polite" tabindex="-1">
+      <div class="loading" id="loading">
+        <span class="loading__spinner" aria-hidden="true"></span>
+        異体字データベースを読み込んでいます…
+      </div>
+    </section>
+  </main>
+
+  <aside class="compare-tray" id="compare-tray" aria-label="比較リスト" hidden>
+    <div class="compare-tray__inner">
+      <span class="compare-tray__label">比較 <span id="compare-count">0</span>/8</span>
+      <ul class="compare-tray__list" id="compare-list"></ul>
+      <div class="compare-tray__actions">
+        <button type="button" class="button button--ghost" id="compare-clear">クリア</button>
+        <button type="button" class="button button--primary" id="compare-open">比較する</button>
+      </div>
+    </div>
+  </aside>
+
+  <dialog class="dialog dialog--wide" id="compare-dialog" aria-labelledby="compare-title">
+    <div class="dialog__header">
+      <h2 id="compare-title">字形比較</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="compare-controls">
+      <label class="field field--inline">
+        <span class="field__label">大きさ</span>
+        <input type="range" id="compare-size" min="96" max="360" step="8" value="200">
+      </label>
+      <label class="field field--check"><input type="checkbox" id="compare-guides" checked><span>補助線</span></label>
+      <label class="field field--check"><input type="checkbox" id="compare-overlay"><span>先頭2字を重ねる</span></label>
+    </div>
+    <div class="compare-stage" id="compare-stage"></div>
+  </dialog>
+
+  <dialog class="dialog" id="glyph-dialog" aria-labelledby="glyph-dialog-title">
+    <div class="dialog__header">
+      <h2 id="glyph-dialog-title">字形の詳細</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div id="glyph-dialog-body"></div>
+  </dialog>
+
+  <dialog class="dialog" id="handwriting-dialog" aria-labelledby="handwriting-title">
+    <div class="dialog__header">
+      <h2 id="handwriting-title">手書きで探す</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="handwriting">
+      <canvas id="hw-canvas" class="handwriting__canvas" aria-label="手書き入力"></canvas>
+      <div class="handwriting__actions">
+        <button type="button" class="button button--small" id="hw-undo" disabled>1画もどす</button>
+        <button type="button" class="button button--small" id="hw-clear" disabled>消す</button>
+      </div>
+      <p class="handwriting__status" id="hw-status">枠の中に、なるべく大きく1文字書いてください。</p>
+      <div class="handwriting__candidates" id="hw-candidates"></div>
+      <p class="handwriting__note">書き順・画数が多少違っても認識します。データは <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a>（6,702字）で、MJ の異体字そのもの（髙・𠮷 など）は候補に出ません。元の字を書いて、結果の「関連する異体字」から選んでください。</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog dialog--wide" id="image-dialog" aria-labelledby="image-title">
+    <div class="dialog__header">
+      <h2 id="image-title">画像から探す</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="image-search">
+      <div class="image-search__drop" id="img-drop">
+        <p>スクリーンショットを <strong>Ctrl+V</strong> で貼り付け、画像をここにドラッグ、または</p>
+        <label class="button button--small">ファイルを選ぶ<input type="file" id="img-file" accept="image/*" hidden></label>
+      </div>
+      <div class="image-search__stage" id="img-stage" hidden>
+        <canvas id="img-canvas" class="image-search__canvas"></canvas>
+        <div class="image-search__actions">
+          <button type="button" class="button button--small" id="img-reset">範囲をリセット</button>
+          <label class="button button--small">別の画像<input type="file" id="img-file2" accept="image/*" hidden></label>
+        </div>
+      </div>
+      <p class="image-search__status" id="img-status">画像を貼り付け（Ctrl+V）、ドラッグ、または「ファイルを選ぶ」で読み込んでください。</p>
+      <div class="handwriting__candidates" id="img-candidates"></div>
+      <p class="handwriting__note">IPAmj明朝の全 58,843 字形と照合します。印刷物や画面の文字が対象で、明朝体ほどよく当たります（同じ IPAmj明朝なら 1位 90% / 上位10 98%、他フォントは上位10 79〜100%）。写真に写った手書き文字は「✍ 手書き」の方が向いています。画像は端末の外に出ません。</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="font-dialog" aria-labelledby="font-dialog-title">
+    <div class="dialog__header">
+      <h2 id="font-dialog-title">IPAmj明朝フォントについて</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="prose">
+      <div class="font-check" id="font-check"></div>
+      <p>このサイトでは、IPAmj明朝をもとにした Webフォント「MJ Variant Mincho」で異体字を表示しています。そのため、フォントをインストールしていなくても字形を確認できます。</p>
+      <p><strong>コピーした異体字を Word・Excel・Illustrator などに貼り付けて正しく表示するには、その端末に IPAmj明朝をインストールする必要があります。</strong>インストールしていない環境では、通常の字形で表示されるか、文字の後ろに記号（□など）が表示されます。</p>
+      <h3>入手</h3>
+      <p><a href="https://moji.or.jp/mojikiban/font/" target="_blank" rel="noopener">文字情報技術促進協議会「IPAmj明朝フォント」</a>で IPAフォントライセンス v1.0 を確認し、Ver.006.01 をダウンロードします（配布は窓の杜）。</p>
+      <h3>インストール方法</h3>
+      <dl class="os-steps">
+        <dt>Windows</dt>
+        <dd>ZIP を展開し、<code>ipamjm.ttf</code> を右クリックして「インストール」（全ユーザー向けは「すべてのユーザーに対してインストール」）を選びます。</dd>
+        <dt>macOS</dt>
+        <dd><code>ipamjm.ttf</code> をダブルクリックし、Font Book の「インストール」を押します。</dd>
+        <dt>Linux</dt>
+        <dd><code>~/.local/share/fonts/</code> にコピーし、<code>fc-cache -f</code> を実行します。</dd>
+        <dt>iPhone / Android</dt>
+        <dd>OS標準の機能ではインストールできません。このサイトでの表示確認には Webフォントが使われます。</dd>
+      </dl>
+      <p class="muted">インストール後にブラウザを再起動すると、状態表示が「端末のIPAmj明朝」に変わります。Safari はプライバシー保護のため、インストールしたフォントを検出できないことがあります。</p>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="license-dialog" aria-labelledby="license-title">
+    <div class="dialog__header">
+      <h2 id="license-title">データ出典・ライセンス</h2>
+      <button type="button" class="icon-button" data-close aria-label="閉じる">✕</button>
+    </div>
+    <div class="prose license">
+      <p class="notice notice--warn notice--compact"><strong>免責事項</strong><br>本ツールは公的機関のデータを機械処理したものであり、字形の同一性・正確性を保証するものではありません。印刷や公的申請への利用は利用者の自己責任で行ってください。<br>このソフトウェアは MIT ライセンスのもと「現状のまま」提供され、動作や結果について一切の保証はありません。</p>
+      <h3>ライセンスの構成</h3>
+      <ul>
+        <li>プログラム（<code>index.html</code>、<code>src/js/</code>、<code>src/css/</code>、<code>scripts/</code>、<code>tests/</code>）— <strong>MIT License</strong>（<a href="LICENSE">LICENSE</a>）</li>
+        <li>文字データ（<code>src/data/</code>）— 由来ごとに異なります。MJ文字情報一覧表・MJ縮退マップの加工物は <strong>CC BY-SA 2.1 JP</strong>、KanjiVG の加工物は <strong>CC BY-SA 3.0</strong>（対応表: <a href="LICENSES.md">LICENSES.md</a>）</li>
+        <li>派生Webフォント（<code>src/fonts/</code>）— <strong>IPAフォントライセンス v1.0</strong></li>
+      </ul>
+      <h3>文字のデータ</h3>
+      <ul>
+        <li><a href="https://moji.or.jp/mojikiban/mjlist/" target="_blank" rel="noopener">MJ文字情報一覧表 Ver.006.02</a>（一般社団法人 文字情報技術促進協議会）— <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/" target="_blank" rel="noopener">CC BY-SA 2.1 JP</a></li>
+        <li><a href="https://moji.or.jp/mojikiban/map/" target="_blank" rel="noopener">MJ縮退マップ Ver.1.2.0</a>（独立行政法人 情報処理推進機構）— CC BY-SA 2.1 JP</li>
+        <li><a href="https://www.unicode.org/ivd/" target="_blank" rel="noopener">Ideographic Variation Database 2026-08-03</a>、<a href="https://www.unicode.org/reports/tr38/" target="_blank" rel="noopener">Unihan Database 17.0.0</a>（Unicode, Inc.）— <a href="https://www.unicode.org/license.txt" target="_blank" rel="noopener">Unicode License v3</a></li>
+      </ul>
+      <p>MJ文字情報一覧表・MJ縮退マップを加工したデータ（<code>src/data/chars/</code>、<code>search-index.json</code>、<code>meta.json</code>）は <strong>CC BY-SA 2.1 JP</strong> で提供します。</p>
+
+      <h3>フォント</h3>
+      <ul>
+        <li>MJ Variant Mincho — <a href="https://moji.or.jp/mojikiban/font/" target="_blank" rel="noopener">IPAmj明朝 Ver.006.01</a> を分割・WOFF2 化した派生フォント。<a href="src/fonts/LICENSE_IPA_Font_v1.0.txt">IPAフォントライセンス v1.0</a> / <a href="src/fonts/README.md">作成方法とオリジナルへの置き換え</a></li>
+      </ul>
+
+      <h3>手書き認識</h3>
+      <ul>
+        <li>筆画データ: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener">KanjiVG</a> r20250816 — <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>（加工したデータ <code>handwriting-patterns.json</code> も同じライセンス）</li>
+        <li>照合: <a href="https://github.com/asdfjkl/kanjicanvas" target="_blank" rel="noopener">Kanji Canvas</a> — <a href="src/vendor/kanji-canvas.LICENSE.txt">MIT</a>（無改変で同梱）</li>
+      </ul>
+
+      <h3>画像から探す</h3>
+      <ul>
+        <li>照合用の索引は IPAmj明朝の字形を画像化した特徴量（字形そのものは含みません）。フォントのライセンスは上記のとおり</li>
+      </ul>
+
+      <h3>人名・地名の読み</h3>
+      <ul>
+        <li>姓・名: <a href="https://taku910.github.io/mecab/" target="_blank" rel="noopener">mecab-ipadic</a> 2.7.0-20070801 — ipadic ライセンス（BSD 系）</li>
+        <li>市区町村・町域: <a href="https://www.post.japanpost.jp/zipcode/dl/utf-zip.html" target="_blank" rel="noopener">郵便番号データ</a>（日本郵便。著作権を主張せず自由に利用可）</li>
+        <li>異体字に置き換えた表記は、上記をもとに機械的に作ったものです（実在の確認はしていません）</li>
+      </ul>
+
+      <h3>ソフトウェア</h3>
+      <ul>
+        <li>SVG 書き出し: <a href="src/vendor/THIRD_PARTY_LICENSES.txt">fontkit ほか（MIT / Apache-2.0 / 0BSD）</a></li>
+      </ul>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p class="site-footer__disclaimer">本ツールは公的機関のデータを機械処理したものであり、字形の同一性・正確性を保証するものではありません。印刷や公的申請への利用は利用者の自己責任で行ってください。</p>
+      <p class="muted" id="data-meta"></p>
+    </div>
+  </footer>
+</body>
+</html>

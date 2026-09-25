@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-09-14T16:24:05+00:00",
+  "sources": {
+    "mji": {
+      "url": "https://moji.or.jp/wp-content/uploads/2024/01/mji.00602.xlsx",
+      "title": "MJ文字情報一覧表 Ver.006.02",
+      "publisher": "一般社団法人 文字情報技術促進協議会 (CITPC)",
+      "license": "CC BY-SA 2.1 JP",
+      "page": "https://moji.or.jp/mojikiban/mjlist/"
+    },
+    "shrink": {
+      "url": "https://moji.or.jp/wp-content/mojikiban/oscdl/MJShrinkMap.1.2.0.json",
+      "title": "MJ縮退マップ Ver.1.2.0",
+      "publisher": "独立行政法人 情報処理推進機構 (IPA) / CITPC",
+      "license": "CC BY-SA 2.1 JP",
+      "page": "https://moji.or.jp/mojikiban/map/"
+    },
+    "ivd": {
+      "url": "https://www.unicode.org/ivd/data/2026-08-03/IVD_Sequences.txt",
+      "title": "Ideographic Variation Database 2026-08-03",
+      "publisher": "Unicode, Inc.",
+      "license": "Unicode License v3",
+      "page": "https://www.unicode.org/ivd/"
+    },
+    "unihan": {
+      "url": "https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip",
+      "title": "Unihan Database (Unicode 17.0.0)",
+      "publisher": "Unicode, Inc.",
+      "license": "Unicode License v3",
+      "page": "https://www.unicode.org/reports/tr38/"
+    }
+  },
+  "fontNote": "IPAmj明朝 Ver.006.01 は MJ文字情報一覧表 Ver.006.01 相当。ivdOnly の IVS はフォントに字形が無い場合があります。",
+  "flags": {
+    "jouyou": 1,
+    "jinmei": 2,
+    "hasIVS": 4
+  },
+  "relationTypes": {
+    "jis": "JIS包摂規準・UCS統合規則",
+    "kokuji582": "法務省告示582号別表第四",
+    "koseki": "法務省戸籍法関連通達・通知",
+    "dict": "辞書類等による関連字",
+    "analogy": "読み・字形による類推",
+    "compat": "互換漢字（実装したUCS）",
+    "ivs": "別UCSを基底とするIVSで登録された字形",
+    "unihanSemantic": "Unihan kSemanticVariant（参考・中国語圏の対応を含む）",
+    "unihanSpecialized": "Unihan kSpecializedSemanticVariant（参考・中国語圏の対応を含む）",
+    "unihanZ": "Unihan kZVariant（参考・中国語圏の対応を含む）",
+    "unihanTraditional": "Unihan kTraditionalVariant（参考・中国語圏の対応を含む）",
+    "unihanSimplified": "Unihan kSimplifiedVariant（参考・中国語圏の対応を含む）"
+  },
+  "gothic": {
+    "note": "Moji_Joho の IVS に対応したゴシック体は無い。ゴシック体で出せるのは実装したUCSを持つ字形だけで、IVS でしか区別できない字形は通常の字形になる。",
+    "fonts": [
+      {
+        "key": "yu",
+        "name": "游ゴシック",
+        "ok": true,
+        "file": "YuGothR.ttc",
+        "version": "Version 1.95"
+      },
+      {
+        "key": "noto",
+        "name": "Noto Sans JP",
+        "ok": true,
+        "file": "NotoSansJP-VF.ttf",
+        "version": "Version 2.04;241114210129;non-release"
+      },
+      {
+        "key": "biz",
+        "name": "BIZ UDゴシック",
+        "ok": false,
+        "file": "BIZ-UDGothicR.ttc",
+        "version": "Version 2.02"
+      }
+    ],
+    "counts": {
+      "ok": 13350,
+      "partial": 39257,
+      "ivsOnly": 6252
+    }
+  },
+  "counts": {
+    "mjGlyphs": 58862,
+    "ucsChars": 52518,
+    "glyphsWithIVS": 11390,
+    "ivdOnlySequences": 8,
+    "noCharGlyphs": 3,
+    "shards": 88,
+    "readings": 4988,
+    "ivdCollections": {
+      "Adobe-Japan1": 14684,
+      "Hanyo-Denshi": 13045,
+      "Moji_Joho": 11392,
+      "CAAPH": 198,
+      "MSARG": 154,
+      "KRName": 36
+    }
+  },
+  "checks": {
+    "ivdMojiJohoMissingInMJ": [],
+    "mjIvsNotInIVD": []
+  }
+}

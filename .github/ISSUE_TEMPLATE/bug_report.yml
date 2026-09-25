@@ -1,0 +1,44 @@
+name: バグ報告
+description: 動作の不具合（表示が崩れる、検索結果が出ない、エラーが出る など）
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **お願い**: このプロジェクトは、**個別の文字の調査・解釈のご相談はお受けできません**（「この字はどれが正しいか」等は Issue にしないでください）。
+        字形の正確性は保証されません。動作の不具合のみをご報告ください。メンテナンスはベストエフォートです。
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きましたか
+      description: 期待した動作と、実際の動作を書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1. 検索窓に「…」と入力する
+        2. 「…」を押す
+        3. …になる
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: ブラウザ・OS
+      placeholder: Chrome 140 / Windows 11
+    validations:
+      required: true
+  - type: dropdown
+    id: font
+    attributes:
+      label: 端末に IPAmj明朝 をインストールしていますか
+      description: 画面右上のフォント表示（「端末のIPAmj明朝」「Webフォントで表示中」）で確認できます。
+      options: [はい, いいえ, わからない]
+  - type: textarea
+    id: shot
+    attributes:
+      label: スクリーンショット・コンソールのエラー
+      description: 画像を貼り付けられます。ブラウザの開発者ツール（F12）のコンソールにエラーがあれば貼ってください。
