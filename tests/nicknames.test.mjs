@@ -48,6 +48,12 @@ test('呼び名で検索できる（完全一致・前方一致・IVS の字形�
   assert.deepEqual(nishi.targets, [{ query: '897F_E0102', char: '西\u{E0102}', mj: 'MJ024197' }]);
   assert.equal(db.search(nishi.targets[0].query).chars[0].focus.ivs, '897F_E0102');
 
+  // 社内で使っている呼び名
+  assert.equal(db.search('みずはら').nicknames[0].targets[0].char, '厡');
+  for (const name of ['いちてんつじ', 'しんにょうつじ']) {
+    assert.equal(db.search(name).nicknames[0].targets[0].query, '8FBB_E0102', name);
+  }
+
   // 「はしご」は読み（梯）でもあり、呼び名の前方一致も出す
   const ladder = db.search('はしご');
   assert.ok(ladder.candidates.length > 0);
