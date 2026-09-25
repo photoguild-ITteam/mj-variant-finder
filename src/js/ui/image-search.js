@@ -12,6 +12,7 @@ const PREVIEW_MAX = 420;
 const MATCH_DELAY_MS = 200;
 
 let matcherModule = null;
+let featuresModule = null;
 let index = null;
 /** @type {ImageBitmap | null} */
 let sourceImage = null;
@@ -58,13 +59,15 @@ async function loadIndex() {
   loadIndex.pending = true;
   setStatus('照合データを読み込んでいます…', true);
   try {
-    const [module, metaRes, binRes] = await Promise.all([
+    const [module, featModule, metaRes, binRes] = await Promise.all([
       import('../image-search/matcher.js'),
+      import('../image-search/features.js'),
       fetch(INDEX_META),
       fetch(INDEX_BIN),
     ]);
     if (!metaRes.ok || !binRes.ok) throw new Error(`照合データを読み込めません (${metaRes.status || binRes.status})`);
     matcherModule = module;
+    featuresModule = featModule;
     index = module.createIndex(await binRes.arrayBuffer(), await metaRes.json());
     setStatus(sourceImage ? '調べたい1文字をドラッグで囲んでください。' : readyMessage());
     if (sourceImage) runMatch();
@@ -216,7 +219,8 @@ function runMatch() {
 /** 候補を実際のフォントで描き直して、入力画像と比べ直すための下請け */
 async function renderGlyph(char) {
   const size = matcherModule.BOX;
-  const canvas = renderGlyph.canvas ??= document.createElement('canvas');
+  // 並行して実行されるため、呼び出しごとに個別の canvas で描画する
+  const canvas = document.createElement('canvas');
   canvas.width = size * 2;
   canvas.height = size * 2;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -231,8 +235,9 @@ async function renderGlyph(char) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(char, canvas.width / 2, canvas.height / 2);
-  const { normalizeImage } = await import('../image-search/features.js');
-  return normalizeImage(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const { normalizeImage } = featuresModule ?? await import('../image-search/features.js');
+  return normalizeImage(imageData);
 }
 
 function showCandidates(candidates, ms) {

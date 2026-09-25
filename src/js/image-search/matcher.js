@@ -1,8 +1,8 @@
 // 画像の特徴と索引（src/data/image-index.bin）を照合して、似ている字形を返す。
 //   段1: 8x8 濃淡の内積で全 58,843 字形から POOL_SIZE 件に絞る（数十ミリ秒）
 //   段2: 16x16 白黒のハミング距離で並べ替え
-//   段3: 上位だけ実際のフォントで描き直し、64x64 の画像どうしで比べ直す（呼び出し側が renderGlyph を渡したとき）
-import { BOX, GRAY_MESH, binaryFeature, grayFeature, normalizeImage } from './features.js';
+//   段3: 上位だけ実際のフォントで描き直し、64x64 の画像どうしを（ぼかしてから）比べ直す（呼び出し側が renderGlyph を渡したとき）
+import { BOX, GRAY_MESH, binaryFeature, blur, grayFeature, normalizeImage } from './features.js';
 
 const POOL_SIZE = 200;
 const GRAY_WEIGHT = 0.6; // 段2 の点数配分（濃淡 : 白黒）
@@ -89,7 +89,7 @@ export async function matchImage(index, image, { limit = 12, renderGlyph } = {})
   if (renderGlyph) {
     const scored = await Promise.all(candidates.map(async (candidate) => {
       const rendered = await renderGlyph(candidate.char);
-      return { ...candidate, score: rendered ? correlation(norm, rendered) : candidate.score - 1 };
+      return { ...candidate, score: rendered ? similarity(norm, rendered) : candidate.score - 1 };
     }));
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, limit);
@@ -125,6 +125,14 @@ function hamming(a, b) {
   let total = 0;
   for (let i = 0; i < a.length; i++) total += POPCOUNT[a[i] ^ b[i]];
   return total;
+}
+
+/**
+ * 段3 の似ている度（-1〜1）。段1・段2 と同じくぼかしてから比べる。
+ * ぼかさないと、同じ字形でも描いたときの1画素のずれ（環境ごとのアンチエイリアスの違いなど）で大きく下がる
+ */
+export function similarity(a, b) {
+  return correlation(blur(a), blur(b));
 }
 
 /** 平均を引いた相関（-1〜1） */
