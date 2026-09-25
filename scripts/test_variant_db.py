@@ -14,7 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_variant_db import ROOT, SOURCES, jis_level, kata_to_hira, read_ivd  # noqa: E402
+from build_variant_db import ROOT, SOURCES, jis_level, kata_to_hira, read_ivd, to_version  # noqa: E402
 
 DATA = ROOT / "src" / "data"
 RAW = ROOT / "data" / "raw"
@@ -63,6 +63,22 @@ class TestUnits(unittest.TestCase):
 
     def test_kata_to_hira(self):
         self.assertEqual(kata_to_hira("ヘン・あたり"), "へん・あたり")
+
+    def test_to_version(self):
+        cases = {
+            "1": 1,
+            "1.1000000000000001": 1.1,
+            "2": 2,
+            "3.1": 3.1,
+            "2.2000000000000002": 2.2,
+            "4.0999999999999996": 4.1,
+            "5.2": 5.2,
+            None: None,
+            "": None,
+            "invalid": None,
+        }
+        for s, expected in cases.items():
+            self.assertEqual(to_version(s), expected, s)
 
 
 @unittest.skipUnless((DATA / "search-index.json").exists(), "src/data が未生成")
@@ -145,6 +161,15 @@ class TestDatabase(unittest.TestCase):
             self.assertFalse(seen_mj & set(mjs), key)
             seen_mj.update(mjs)
         self.assertEqual(len(seen_mj) + len(idx["noChar"]), load(DATA / "meta.json")["counts"]["mjGlyphs"])
+
+    def test_no_null_version_in_glyphs(self):
+        for path in (DATA / "chars").glob("*.json"):
+            data = load(path)
+            entries = data.values() if "glyphs" not in data else [data]
+            for entry in entries:
+                for g in entry.get("glyphs", []):
+                    if "version" in g:
+                        self.assertIsNotNone(g["version"], f"null version in {g.get('mj')}")
 
     @unittest.skipUnless((RAW / SOURCES["ivd"]["file"]).exists(), "IVD 元データが無い")
     def test_every_ivs_is_registered_moji_joho(self):
