@@ -40,7 +40,14 @@ jobs:
       - name: 静的サーバーを起動
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 &
-          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8765/ >/dev/null && break; sleep 0.5; done
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8765/ >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          echo "静的サーバーの起動に失敗しました" >&2
+          exit 1
       - name: E2E
         run: node tests/e2e.mjs
         env:

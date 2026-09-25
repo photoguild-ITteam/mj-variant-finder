@@ -51,10 +51,10 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   });
   const firstFonts = [];
   page.on('request', (req) => { if (req.url().endsWith('.woff2')) firstFonts.push(req.url().split('/').pop()); });
-  await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForSelector('#q:not([disabled])');
 
   await check('最初の画面では大きなフォントを読まない', async () => {
+    await page.goto(BASE, { waitUntil: 'networkidle' });
+    await page.waitForSelector('#q:not([disabled])');
     // 最初の画面の字は mjv-preset.woff2 に入れてある。mjv-0020（英数字、50KB）は検索欄の入力用
     const unexpected = firstFonts.filter((name) => !['mjv-preset.woff2', 'mjv-0020.woff2'].includes(name));
     assert.deepEqual(unexpected, []);
@@ -149,7 +149,24 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     await page.waitForSelector('.glyph-card.is-focus');
   });
 
+  const ensureGlyphDialog = async () => {
+    if (await page.locator('#glyph-dialog[open]').count() === 0) {
+      if (await page.locator('.glyph-card.is-focus').count() === 0) {
+        await page.fill('#q', 'MJ026190');
+        await page.press('#q', 'Enter');
+        await page.waitForSelector('.glyph-card.is-focus');
+      }
+      await page.click('.glyph-card.is-focus .glyph-card__face');
+      await page.waitForSelector('#glyph-dialog[open]');
+    }
+  };
+
   await check('4. IVS 文字のクリップボードコピー', async () => {
+    if (await page.locator('.glyph-card.is-focus').count() === 0) {
+      await page.fill('#q', 'MJ026190');
+      await page.press('#q', 'Enter');
+      await page.waitForSelector('.glyph-card.is-focus');
+    }
     await page.click('.glyph-card.is-focus .glyph-card__actions .button:first-child');
     await page.waitForSelector('.toast.is-visible');
     const text = await page.evaluate(() => navigator.clipboard.readText());
@@ -157,8 +174,7 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   });
 
   await check('字形詳細ダイアログ（コピー形式・縮退マップ）', async () => {
-    await page.click('.glyph-card.is-focus .glyph-card__face');
-    await page.waitForSelector('#glyph-dialog[open]');
+    await ensureGlyphDialog();
     const values = await page.$$eval('.copy-row__value', (els) => els.map((e) => e.textContent));
     assert.deepEqual(values.slice(1), ['MJ026190', 'U+9089 U+E010F', '&#x9089;&#xE010F;', '\\u{9089}\\u{E010F}']);
     assert.ok((await page.textContent('#glyph-dialog')).includes('445000'));
@@ -166,6 +182,8 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   await page.screenshot({ path: OUT + '04-glyph-dialog.png' });
 
   await check('画像でコピー（透明PNGがクリップボードに入る）', async () => {
+    await ensureGlyphDialog();
+    await page.bringToFront();
     await page.click('#glyph-dialog .export-box button:has-text("画像でコピー")');
     await page.waitForSelector('#glyph-dialog .toast.is-visible:has-text("画像をコピーしました")');
     const info = await page.evaluate(async () => {
@@ -187,6 +205,7 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   });
 
   await check('SVGで保存（MJ026190.svg、アウトライン）', async () => {
+    await ensureGlyphDialog();
     const [download] = await Promise.all([
       page.waitForEvent('download'),
       page.click('#glyph-dialog .export-box button:has-text("SVGで保存")'),
@@ -196,8 +215,9 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.match(svg, /<svg [^>]*viewBox="0 0 2048 2048"/);
     assert.match(svg, /<path [^>]*d="M[^"]{200,}"/);
     await page.click('#glyph-dialog .export-box button:has-text("PNGで保存")');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#glyph-dialog', { state: 'hidden' });
   });
-  await page.keyboard.press('Escape');
 
   await check('SVG/PNG は IVS ごとに別の字形（辺 VS18 と VS19）', async () => {
     const result = await page.evaluate(async () => {
@@ -293,9 +313,10 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.equal(await page.$$eval('#compare-stage .compare-item', (e) => e.length), 4);
     await page.check('#compare-overlay');
     assert.equal(await page.$$eval('#compare-stage .compare-item', (e) => e.length), 5);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('#compare-dialog', { state: 'hidden' });
   });
   await page.screenshot({ path: OUT + '05-compare.png' });
-  await page.keyboard.press('Escape');
 
   await check('部首・画数フィルター（辶 17画 IVSあり）', async () => {
     await page.fill('#q', '');
@@ -310,6 +331,9 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   await page.screenshot({ path: OUT + '06-filter.png' });
 
   await check('検索窓の幅とライセンスのモーダル', async () => {
+    if (await page.locator('#filters[open]').count() > 0) {
+      await page.click('#filters summary');
+    }
     // 手書き・画像のボタンは検索窓の外に出したので、入力欄がつぶれない
     const input = await page.locator('#q').boundingBox();
     assert.ok(input.width > 150, `入力欄 ${Math.round(input.width)}px`);
@@ -373,9 +397,9 @@ if (isLocal) {
   {
     // 既定: sessionWatch 無効。401 でも「ログイン」ではなく通常の読み込み失敗として扱う
     const { page, context } = await newPage();
-    await page.goto(BASE);
-    await page.waitForSelector('#q:not([disabled])');
     await check('既定ではログイン切れの案内を出さない（sessionWatch 無効）', async () => {
+      await page.goto(BASE);
+      await page.waitForSelector('#q:not([disabled])');
       assert.equal(await page.locator('.session-banner').count(), 0);
       await stubUnauthorized(context);
       await page.fill('#q', '齋');
@@ -393,9 +417,9 @@ if (isLocal) {
       contentType: 'text/javascript',
       body: "export const config = { sessionWatch: { message: 'ログインが切れました。', loginUrl: '/login/', loginLabel: 'ログイン' } };",
     }));
-    await page.goto(BASE);
-    await page.waitForSelector('#q:not([disabled])');
     await check('sessionWatch を有効にするとバナーを表示（データ取得・タブ復帰）', async () => {
+      await page.goto(BASE);
+      await page.waitForSelector('#q:not([disabled])');
       assert.equal(await page.isHidden('.session-banner'), true);
       await stubUnauthorized(context);
       await page.fill('#q', '齋');
@@ -415,8 +439,9 @@ if (isLocal) {
 {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  await page.goto(BASE);
+  currentPage = page;
   await check('フォント状態を判定（端末に IPAmj明朝 があれば local、無ければ webfont）', async () => {
+    await page.goto(BASE);
     await page.waitForFunction(() => document.querySelector('#font-status').dataset.state !== 'checking', null, { timeout: 30000 });
     // 端末に入っているかは環境による。CI では入っていないので webfont、入っている PC では local
     const state = await page.getAttribute('#font-status', 'data-state');
@@ -428,11 +453,12 @@ if (isLocal) {
 // --- 字形の一覧の使いやすさ（違いを色で表示・絞り込み・見つからないとき・比較トレイ）
 {
   const { page, errors, context } = await newPage();
-  await page.goto(BASE + '#q=' + encodeURIComponent('邉'));
-  await page.waitForSelector('.glyph-card');
-  const main = page.locator('.char-panel .panel-section').first();
+  const getPanelSection = () => page.locator('.char-panel .panel-section').first();
 
   await check('違いを色で表示（通常の字形と同じ字形には印）', async () => {
+    await page.goto(BASE + '#q=' + encodeURIComponent('邉'));
+    await page.waitForSelector('.glyph-card');
+    const main = getPanelSection();
     await main.locator('.diff-toggle').click();
     await page.waitForFunction(() => document.querySelectorAll('.char-panel .panel-section:first-of-type .glyph-card__face.is-diff canvas').length >= 10);
     // 邉（U+9089）を IVS なしで表示すると MJ026190 の字形になる
@@ -452,11 +478,13 @@ if (isLocal) {
     await page.fill('#q', '邉');
     await page.press('#q', 'Enter');
     await page.waitForSelector('.char-hero__code:text("U+9089")');
+    const main = getPanelSection();
     const chip = main.locator('.glyph-tools__filters .chip', { hasText: '戸籍' });
     const expected = Number(await chip.locator('.chip__count').textContent());
     await chip.click();
     assert.equal(await main.locator('.glyph-card:not(.is-filtered-out)').count(), expected);
-    assert.match(await main.locator('.glyph-tools__status').textContent(), new RegExp(`16 字形中 ${expected} 字形`));
+    const total = await main.locator('.glyph-card').count();
+    assert.match(await main.locator('.glyph-tools__status').textContent(), new RegExp(`${total} 字形中 ${expected} 字形`));
     await chip.click();
     assert.equal(await main.locator('.glyph-card.is-filtered-out').count(), 0);
   });
@@ -478,24 +506,27 @@ if (isLocal) {
     await page.waitForSelector('#compare-tray:not([hidden])');
     // フッターの余白は次の描画で付くので、付いてから最下部へ
     await page.waitForFunction(() => parseFloat(document.body.style.getPropertyValue('--tray-space')) > 0);
-    // フォントの読み込みや、画面に入ってから描くカードで高さが変わるので、高さが落ち着くまで最下部へ送る
-    await page.evaluate(async () => {
-      for (let i = 0; i < 30; i++) {
-        const height = document.documentElement.scrollHeight;
-        window.scrollTo(0, height);
-        await new Promise((resolve) => setTimeout(resolve, 150));
-        if (document.documentElement.scrollHeight === height && Math.ceil(window.scrollY + innerHeight) >= height) break;
-      }
-    });
+    // フォントの読み込みや、画面に入ってから描くカードで高さが変わるので、フッターがトレイより上に来るまで待つ
+    await page.waitForFunction(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      const meta = document.querySelector('#data-meta');
+      const tray = document.querySelector('#compare-tray');
+      if (!meta || !tray) return false;
+      return meta.getBoundingClientRect().bottom <= tray.getBoundingClientRect().top;
+    }, null, { timeout: 10000 });
     const [textBottom, trayTop] = await page.evaluate(() => [
       document.querySelector('#data-meta').getBoundingClientRect().bottom,
       document.querySelector('#compare-tray').getBoundingClientRect().top,
     ]);
     assert.ok(textBottom <= trayTop, `フッター ${textBottom} > トレイ ${trayTop}`);
     await page.click('#compare-clear');
+    await page.waitForSelector('#compare-tray', { state: 'hidden' });
   });
 
   await check('比較画面の中から外す・すべてクリア（開いている間はトレイを隠す）', async () => {
+    if (await page.locator('#compare-tray:not([hidden])').count() > 0) {
+      await page.click('#compare-clear').catch(() => {});
+    }
     await page.fill('#q', '邉');
     await page.press('#q', 'Enter');
     await page.waitForSelector('.glyph-card .glyph-card__compare');
@@ -550,9 +581,9 @@ if (isLocal) {
 // --- OSS としての表示（ソースへのリンク・非公式の明記・共有用の画像）
 {
   const { page, context } = await newPage();
-  await page.goto(BASE);
-  await page.waitForSelector('#q:not([disabled])');
   await check('ソースへのリンク・非公式の明記・共有用の画像', async () => {
+    await page.goto(BASE);
+    await page.waitForSelector('#q:not([disabled])');
     const repo = 'https://github.com/photoguild-ITteam/mj-variant-finder';
     assert.equal(await page.getAttribute('.site-header #source-link', 'href'), repo);
     assert.equal(await page.locator(`.site-footer a[href="${repo}"]`).count(), 1);
@@ -582,13 +613,19 @@ if (isLocal) {
 {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const page = await context.newPage();
-  await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
-  await page.waitForSelector('.glyph-card');
+  currentPage = page;
+
   await check('スマホ幅で横スクロールなし', async () => {
+    await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
+    await page.waitForSelector('.glyph-card');
     const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     assert.ok(sw <= iw, `${sw} > ${iw}`);
   });
   await check('スマホ幅では検索中「よく検索される異体字」を畳む', async () => {
+    if (await page.locator('.glyph-card').count() === 0) {
+      await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
+      await page.waitForSelector('.glyph-card');
+    }
     assert.equal(await page.locator('#quick-access-box[open]').count(), 0);
   });
   await check('スマホ幅で検索すると結果までスクロールする', async () => {
@@ -598,13 +635,16 @@ if (isLocal) {
     await page.waitForSelector('.result-header h2:has-text("斎藤")');
     await page.waitForFunction(() => Math.abs(document.querySelector('#results').getBoundingClientRect().top) < 80, null, { timeout: 5000 });
   });
-  await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
-  await page.waitForSelector('.result-header h2:has-text("渡邉")');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: OUT + '08-mobile.png' });
-  await page.evaluate(() => document.querySelector('#results').scrollIntoView());
-  await page.screenshot({ path: OUT + '09-mobile-results.png' });
-  await context.close();
+  try {
+    await page.goto(BASE + '#q=' + encodeURIComponent('渡邉'));
+    await page.waitForSelector('.result-header h2:has-text("渡邉")');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: OUT + '08-mobile.png' });
+    await page.evaluate(() => document.querySelector('#results').scrollIntoView());
+    await page.screenshot({ path: OUT + '09-mobile-results.png' });
+  } finally {
+    await context.close();
+  }
 }
 
 await browser.close();
