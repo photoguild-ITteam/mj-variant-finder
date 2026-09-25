@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>異体字・IVS 完全活用ガイド — 文字化けの理由から Canva での利用法まで | MJ Variant Finder</title>
+  <meta name="description" content="IVS（異体字セレクタ）の仕組み、異体字をコピーしたときに文字化けする理由、Canvaやデザインツールで透明PNG・SVGを使って確実に異体字を配置する方法を詳しく解説します。">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="MJ Variant Finder">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="異体字・IVS 完全活用ガイド — 文字化けの理由から Canva での利用法まで">
+  <meta property="og:description" content="IVS（異体字セレクタ）の仕組み、コピーしても化ける理由、CanvaやOfficeで思い通りの字形を使うテクニックを徹底解説。">
+  <meta property="og:url" content="https://photoguild-itteam.github.io/mj-variant-finder/guide.html">
+  <meta property="og:image" content="https://photoguild-itteam.github.io/mj-variant-finder/src/images/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="異体字・IVS 完全活用ガイド">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#0f172a">
+  <script src="src/js/theme-init.js"></script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f172a'/%3E%3Ctext x='16' y='23' font-size='22' text-anchor='middle' fill='%23f6f3ec' font-family='serif'%3E%E7%95%B0%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/fonts/fonts.css">
+  <link rel="stylesheet" href="src/css/style.css">
+  <script src="src/js/guide.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand">
+        <a class="brand__mark" href="./" aria-label="異体字検索 トップ"><span aria-hidden="true">異</span></a>
+        <div class="brand__text">
+          <a class="brand__title" href="./">異体字検索</a>
+          <span class="brand__sub">IPAmj明朝 · MJ文字情報一覧表<span class="brand__company"> — Developed by <a href="https://photoguild.jp/" target="_blank" rel="noopener noreferrer">株式会社フォトギルド</a></span></span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="button button--small button--primary guide-header-btn" href="./">← 検索ツールへ</a>
+        <a class="icon-button" id="source-link" href="https://github.com/photoguild-ITteam/mj-variant-finder" target="_blank" rel="noopener noreferrer" aria-label="ソースコード（GitHub）" title="ソースコード（GitHub）">
+          <svg class="icon icon--solid" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+        </a>
+        <button type="button" class="icon-button" id="theme-toggle" aria-label="ダークモードに切り替え">
+          <svg class="icon icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="guide-layout">
+    <aside class="guide-sidebar" aria-label="目次">
+      <nav class="guide-toc">
+        <div class="guide-toc__title">目次</div>
+        <ul>
+          <li><a href="#about">1. MJ Variant Finder とは</a></li>
+          <li><a href="#what-is-ivs">2. IVS（異体字セレクタ）とは</a></li>
+          <li><a href="#why-corrupted">3. コピーしても化ける理由</a></li>
+          <li><a href="#how-to-use-in-canva">4. Canva 等で異体字を使う方法</a></li>
+          <li><a href="#app-features">5. ツールの便利な使い方</a></li>
+          <li><a href="#faq">6. よくある質問（FAQ）</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <article class="guide-content">
+      <div class="guide-hero">
+        <span class="guide-hero__badge">実践ガイド</span>
+        <h1>異体字・IVS 完全活用ガイド</h1>
+        <p class="lead">「コピーしても普通の字に戻ってしまう」「Canva や SNS で正しく異体字を使いたい」「戸籍や住民票の正確な字形を出したい」——そんな疑問と困りごとを解決するための総合手引きです。</p>
+      </div>
+
+      <details class="guide-toc-mobile">
+        <summary>目次を表示する</summary>
+        <ul>
+          <li><a href="#about">1. MJ Variant Finder とは</a></li>
+          <li><a href="#what-is-ivs">2. IVS（異体字セレクタ）とは</a></li>
+          <li><a href="#why-corrupted">3. コピーしても化ける理由</a></li>
+          <li><a href="#how-to-use-in-canva">4. Canva 等で異体字を使う方法</a></li>
+          <li><a href="#app-features">5. ツールの便利な使い方</a></li>
+          <li><a href="#faq">6. よくある質問（FAQ）</a></li>
+        </ul>
+      </details>
+
+      <section class="guide-section" id="about">
+        <h2>1. MJ Variant Finder とは</h2>
+        <p><strong>MJ Variant Finder（異体字検索）</strong>は、日本の公的文字規格である「文字情報基盤（MJ文字情報一覧表）」と、その約6万文字を収録した「IPAmj明朝」フォントの異体字（IVS）を、<strong>ブラウザだけで検索・比較・コピー・画像書き出しできる静的Webツール</strong>です。</p>
+        <p>PC やスマートフォンに特別なフォントをインストールしていなくても、独自の分割Webフォント技術により、画面上で正確な異体字を表示・見比べることができます。インストール不要、完全無料で利用できます。</p>
+
+        <div class="guide-box guide-box--tip">
+          <strong>主な特徴</strong>
+          <ul>
+            <li><strong>インストール不要</strong>: ブラウザを開くだけで約6万字の異体字を正確にレンダリング</li>
+            <li><strong>多彩な探し方</strong>: 漢字、読み（ひらがな）、字の通称（「はしごだか」「たてにし」など）、手書き認識、写真やスクショからの画像検索</li>
+            <li><strong>文字の違いを可視化</strong>: 標準字形とどこが違うかを赤・青のハイライトで色分け表示</li>
+            <li><strong>デザイン・印刷に直結</strong>: 背景透明 PNG の画像コピー、ベクター SVG の書き出しに対応</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="guide-section" id="what-is-ivs">
+        <h2>2. IVS（異体字セレクタ）とは</h2>
+        <p>人名や地名には、同じ「ワタナベ」「サイトウ」でも、しんにょうの点の数や部首の払いの長さ、線の繋がり方が異なる膨大な「異体字」が存在します。</p>
+
+        <h3>Unicode と「同じ文字」のジレンマ</h3>
+        <p>世界共通の文字コード規格である Unicode では、文字の意味や起源が同じ漢字には、原則としてひとつのコードポイント（番号）を割り当てて統合しました（例: 一般的な「辺」は <code>U+8FBA</code>）。</p>
+        <p>しかし、日本の戸籍、住民基本台帳、法務省の登記などの公的業務、あるいは個人の名義表記では、「1点しんにょう」と「2点しんにょう」、「自の横棒が突き抜ける・抜けない」などの細かな字形の差異を厳格に区別する必要があります。</p>
+
+        <div class="guide-compare-grid">
+          <div class="guide-compare-card">
+            <div class="guide-compare-card__visual glyph">辺&#xE0101;</div>
+            <div class="guide-compare-card__title">1点しんにょう</div>
+            <div class="guide-compare-card__desc">点（丶）が1つ。現代の一般的な当用漢字・常用漢字の字形。</div>
+          </div>
+          <div class="guide-compare-card">
+            <div class="guide-compare-card__visual glyph">辺&#xE0102;</div>
+            <div class="guide-compare-card__title">2点しんにょう</div>
+            <div class="guide-compare-card__desc">点（冫）が2つ。伝統的な旧字体や人名で重視される字形。</div>
+          </div>
+        </div>
+
+        <h3>IVS（Ideographic Variation Sequence）の仕組み</h3>
+        <p>かつては文字コードにない異体字を「外字（ガイジ）」として各社バラバラに登録していたため、メールで送ると文字化けしたり、別のパソコンで開くと消えてしまう問題がありました。</p>
+        <p>この問題を国際標準で解決するために策定された仕組みが <strong>IVS（異体字シーケンス）</strong> です。</p>
+        <p>IVS では、通常の漢字（基底文字）の後ろに、目に見えない特殊な補助コードである<strong>「異体字セレクタ（Variation Selector: VS17〜VS256、<code>U+E0100</code>〜<code>U+E01EF</code>）」</strong>を1文字連結します。</p>
+
+        <div class="guide-table-wrap">
+          <table class="guide-table">
+            <thead>
+              <tr>
+                <th>表示される字形</th>
+                <th>基底文字（親文字）</th>
+                <th>異体字セレクタ</th>
+                <th>MJ文字図形名</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="glyph">辺&#xE0101;</span>（1点しんにょう）</td>
+                <td><code>U+8FBA</code>（辺）</td>
+                <td><code>U+E0101</code>（VS18）</td>
+                <td>MJ025758</td>
+              </tr>
+              <tr>
+                <td><span class="glyph">辺&#xE0102;</span>（2点しんにょう）</td>
+                <td><code>U+8FBA</code>（辺）</td>
+                <td><code>U+E0102</code>（VS19）</td>
+                <td>MJ025759</td>
+              </tr>
+              <tr>
+                <td><span class="glyph">邉&#xE010F;</span>（渡邉の代表字形）</td>
+                <td><code>U+9089</code>（邉）</td>
+                <td><code>U+E010F</code>（VS32）</td>
+                <td>MJ026190</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>文字情報基盤（MJ文字）と IPAmj明朝</h3>
+        <p>日本政府（経済産業省・IPA等）は、自治体や行政機関で使われる約6万文字に及ぶ漢字の字形を網羅・整理し、「MJ文字情報一覧表」として公開しました。そして、その約6万文字すべての異体字を正しく画面に表示・印刷できるように無償提供されている公式フォントが<strong>「IPAmj明朝」</strong>です。</p>
+      </section>
+
+      <section class="guide-section" id="why-corrupted">
+        <h2>3. コピーしても化ける理由</h2>
+        <p>「MJ Variant Finder で見つけた異体字をコピーしたのに、別のアプリやSNSに貼り付けたら普通の文字に戻ってしまった…」という経験はありませんか？</p>
+        <p>これは不具合ではなく、<strong>デジタルフォントとアプリケーションが IVS を処理する仕組み</strong>に原因があります。</p>
+
+        <h3>原因 1: 貼り付け先で選んでいるフォントが IVS に非対応</h3>
+        <p>IVS は「基底文字 ＋ 異体字セレクタ」という2文字の組み合わせを、フォント内のプログラム（OpenType の <code>cmap</code> format 14 テーブル）が解釈して、1つの特殊な絵柄（グリフ）にすり替えて画面に描画します。</p>
+        <p>Windows や Mac に最初から入っている一般的なフォント（MS明朝、游明朝、メイリオ、ヒラギノ通常版など）には、数千〜1万字程度の字形しか収録されておらず、すべての IVS 異体字の絵柄を持っているわけではありません。</p>
+        <p><strong>フォント内にその IVS の字形が存在しない場合、フォントはセレクタ部分を単に無視し、基底文字（通常の漢字）の形だけで描画します。</strong>その結果、「コピーしたはずの異体字が、普通の字に戻ってしまった」ように見えます。</p>
+
+        <h3>原因 2: アプリケーションがセレクタを削除または分断する</h3>
+        <p>Twitter（X）、Instagram、LINE、一部のブログや入力フォーム、デザインツール（Canva等）では、セキュリティ上の理由やシステム設計により、見慣れない不可視コード（<code>U+E0100</code>〜）を「制御文字」「不正な入力」と判定して、<strong>貼り付けた瞬間に自動的に削除（サニタイズ）</strong>してしまうことがあります。</p>
+        <p>また、古いテキストエディタでは、不可視のセレクタを解釈できず、文字の後ろに「□（豆腐）」や「？」、謎の空白が表示されることがあります。</p>
+
+        <h3>どう対策すればいいのか？</h3>
+        <div class="guide-table-wrap">
+          <table class="guide-table">
+            <thead>
+              <tr>
+                <th>やりたいこと</th>
+                <th>推奨される方法</th>
+                <th>ポイント</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Canva や SNS で使いたい</strong></td>
+                <td><strong>「画像でコピー」または「SVG保存」</strong></td>
+                <td>文字テキストではなく、画像・ベクター素材として貼り付ければ、相手の環境に関わらず絶対に形が崩れません。</td>
+              </tr>
+              <tr>
+                <td><strong>Word / Excel で使いたい</strong></td>
+                <td><strong>フォントに「IPAmj明朝」を指定</strong></td>
+                <td>PC に IPAmj明朝をインストールし、貼り付けた文字のフォントを「IPAmj明朝」に変更します。相手に送る際は PDF 化が安全です。</td>
+              </tr>
+              <tr>
+                <td><strong>Illustrator / 印刷物で使いたい</strong></td>
+                <td><strong>「SVGで保存」して配置</strong></td>
+                <td>ベクターパスとして配置されるため、拡大しても劣化せず、アウトライン化の手間も不要です。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="guide-section" id="how-to-use-in-canva">
+        <h2>4. Canva やデザインツールで異体字を使う方法</h2>
+        <p>Canva などのグラフィックツールで異体字を扱うベストプラクティスを、手順付きで解説します。</p>
+
+        <h3>方法 A: 「画像でコピー」してそのまま貼り付け（最短・おすすめ！）</h3>
+        <p>MJ Variant Finder の最大の強みである<strong>「画像でコピー」</strong>機能を使えば、わずか数秒で Canva 上に正確な異体字を配置できます。</p>
+
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="guide-step__num">1</div>
+            <div class="guide-step__body">
+              <h4>MJ Variant Finder で文字を検索</h4>
+              <p><a href="./">トップページ</a>の検索欄に目的の文字（例: 「渡辺」「さいとう」「はしごだか」）を入力して検索します。</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step__num">2</div>
+            <div class="guide-step__body">
+              <h4>目的の字形カードの詳細を開く</h4>
+              <p>一覧から使いたい字形のカードをクリックすると、詳細ダイアログが開きます。</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step__num">3</div>
+            <div class="guide-step__body">
+              <h4>「画像でコピー」ボタンを押す</h4>
+              <p>エクスポート欄の<strong>「画像でコピー」</strong>をクリックします。クリップボードに、<strong>1024×1024ピクセルの超高解像度・背景透明PNG</strong> がコピーされます。</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="guide-step__num">4</div>
+            <div class="guide-step__body">
+              <h4>Canva のデザイン画面で貼り付け（Ctrl + V）</h4>
+              <p>Canva の編集画面を開き、キーボードの <kbd>Ctrl</kbd> + <kbd>V</kbd>（Mac は <kbd>Cmd</kbd> + <kbd>V</kbd>）を押すだけ！キャンバス上に異体字が透過画像として瞬時に配置されます。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-box guide-box--tip">
+          <strong>なぜ「画像でコピー」が優れているのか？</strong>
+          <ul>
+            <li><strong>背景が透明（アルファチャンネル）</strong>: 写真やグラデーション、カラー背景の上に重ねても背景を邪魔しません。</li>
+            <li><strong>1024px の高解像度</strong>: ポスターやチラシなどの印刷用途に引き伸ばしても、文字の輪郭がボケずにくっきり美しく印刷できます。</li>
+            <li><strong>フォントの有無に左右されない</strong>: Canva 側に IPAmj明朝フォントがなくても、100% 正確な字形がそのまま使えます。</li>
+          </ul>
+        </div>
+
+        <h3>方法 B: 「SVGで保存」してベクター素材として利用（商業印刷・拡大向け）</h3>
+        <p>看板、大型ポスター、プロのDTPワークフローなど、無限に拡大しても一切劣化しないベクターデータが必要な場合は、SVG 形式でのエクスポートが最適です。</p>
+        <ol>
+          <li>詳細ダイアログの<strong>「SVGで保存」</strong>をクリックします（例: <code>MJ026190.svg</code> がダウンロードされます）。</li>
+          <li>フォントファイルではなく、文字の輪郭線（アウトラインパス）そのものが SVG 化されています。</li>
+          <li>Canva の「アップロード」メニューに SVG ファイルをドラッグ＆ドロップすると、ベクターイラスト素材として自由に着色・拡大・縮小ができます。</li>
+          <li>Adobe Illustrator や InDesign でも、そのまま配置して編集できます。</li>
+        </ol>
+
+        <h3>方法 C: Word・Excel・PowerPoint で文字として使いたい場合</h3>
+        <ol>
+          <li>パソコンに公式の <a href="https://moji.or.jp/mojikiban/font/" target="_blank" rel="noopener">IPAmj明朝フォント</a> をダウンロード・インストールします。</li>
+          <li>MJ Variant Finder で「コピー（IVS文字）」ボタンを押して、クリップボードに文字をコピーします。</li>
+          <li>Word や Excel に貼り付け、貼り付けた文字のフォントを<strong>「IPAmj明朝」</strong>に指定します。</li>
+          <li><strong>相手にファイルを送る場合の注意点</strong>: 相手のパソコンに IPAmj明朝が入っていないと文字の形が変わってしまうため、完成した文書は<strong>「PDF 形式で保存」</strong>して配布するか、文字の代わりに「画像でコピー」を貼り付けることを強く推奨します。</li>
+        </ol>
+      </section>
+
+      <section class="guide-section" id="app-features">
+        <h2>5. ツールの便利な使い方</h2>
+        <p>MJ Variant Finder には、日常の業務やデザイン作業を快適にする多彩な機能が備わっています。</p>
+
+        <h3>入力できない字も探せる 5 つの検索方法</h3>
+        <ul>
+          <li><strong>1. 漢字・単語検索</strong>: 「渡辺」のように複数文字を一気に入力すると、文字ごとのタブに分解され、関連する異体字（邉・邊）まで自動で一覧表示されます。</li>
+          <li><strong>2. 読み検索（ひらがな）</strong>: 「さいとう」と入れると、姓・地名の辞書と照合し、「斉藤」「斎藤」「齊藤」「齋藤」などの代表的な表記候補がサジェストされます。</li>
+          <li><strong>3. 字の通称・呼び名検索</strong>: 業界や現場でよく使われる「はしごだか」「たてにし」「たつさき」「やまへんのさき（部首名＋の＋読み）」などの通称で検索できます。</li>
+          <li><strong>4. 手書き認識で探す</strong>: 読み方が分からない字は、検索欄下の「手書きで探す」をクリックし、マウスやスマホのタッチで文字を描けば、類似する漢字を瞬時に推定します。</li>
+          <li><strong>5. 写真やスクショから探す</strong>: 名刺や書類の写真を撮って貼り付ける（またはドラッグ＆ドロップする）だけで、画像処理アルゴリズムが合致するMJ字形を特定します。</li>
+        </ul>
+
+        <h3>違いを色で表示（グリフ差分ハイライト）</h3>
+        <p>「標準の字とどこが違うのかパッと見ではわからない…」という時に役立つのが「違いを色で表示」ボタンです。</p>
+        <p>IVS を付けない通常の字形と重ね合わせ、<strong>この異体字にだけ存在する線を「赤」</strong>、<strong>通常の字形にある線を「青」</strong>でハイライトします。線の長さの違いや点の位置の差異が一瞬で見分けられます。</p>
+
+        <h3>ゴシック体判定バッジ（○ / △ / ×）</h3>
+        <p>「明朝体ではなくゴシック体でデザインしたいが、この異体字はゴシック体でも使えるのか？」を判別できるバッジです。</p>
+        <ul>
+          <li><span class="badge badge--ok">ゴシック○</span>: 代表的なゴシック体（Noto Sans JP や BIZ UDゴシック）にも同じ字形が存在し、ゴシック体でも安全に使えます。</li>
+          <li><span class="badge badge--warn">ゴシック△</span>: 一部のゴシック体フォントで字形が欠けている可能性があります。</li>
+          <li><span class="badge badge--muted">ゴシック×</span>: IVS でのみ区別される字形で、一般的なゴシック体では通常の字形に戻ってしまいます（明朝体の使用、または画像での利用を推奨）。</li>
+        </ul>
+      </section>
+
+      <section class="guide-section" id="faq">
+        <h2>6. よくある質問（FAQ）</h2>
+        <div class="guide-faq">
+          <details>
+            <summary>Q. 書き出した画像や SVG は商用利用できますか？</summary>
+            <div class="guide-faq__answer">
+              <p><strong>はい、商用利用を含め自由にお使いいただけます。</strong></p>
+              <p>本ツールが生成する PNG・SVG 画像は、IPAmj明朝の派生フォントから描画されています。IPAフォントライセンス第2条に基づき、フォントを使用して作成されたデジタル成果物（画像・ベクター・印刷物など）は、営利・非営利を問わず自由に利用・配布できます。</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Q. スマートフォンでも使えますか？</summary>
+            <div class="guide-faq__answer">
+              <p><strong>はい、スマートフォン・タブレットのブラウザでも完全動作します。</strong></p>
+              <p>スマホの狭い画面に最適化したレイアウトを採用しており、タッチ操作での手書き入力や、スマホで撮影したスクリーンショットの画像検索もそのまま行えます。</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Q. ツールを使うためにフォントをインストールする必要はありますか？</summary>
+            <div class="guide-faq__answer">
+              <p><strong>インストールは一切不要です。</strong></p>
+              <p>本ツールは必要な字形だけをその場で分割ダウンロードする Web フォント（WOFF2）を自動で読み込むため、フォントが一切入っていないパソコンやスマートフォンでも正確な字形が表示されます。</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Q. Webサイトの制作で異体字を表示するにはどうすればいいですか？</summary>
+            <div class="guide-faq__answer">
+              <p>HTML に直接 IVS 文字を記述するか、数値文字参照（例: <code>&amp;#x9089;&amp;#xE010F;</code>）を使用し、CSS の <code>font-family</code> に IVS 対応フォント（または本ツールのように subset された Web フォント）を指定します。閲覧者の環境に依存せず100%確実に表示させたい場合は、本ツールの「SVGで保存」を活用してインライン SVG として埋め込む方法も非常に効果的です。</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Q. MJ Variant Finder は公的機関の公式ツールですか？</summary>
+            <div class="guide-faq__answer">
+              <p>いいえ、文字情報技術促進協議会や情報処理推進機構（IPA）とは無関係の、<strong>株式会社フォトギルドが開発・提供するオープンソース（MIT License）の非公式ツール</strong>です。公的機関のオープンデータを機械処理して構築されています。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div class="site-footer__top">
+        <p class="site-footer__brand"><strong>MJ Variant Finder</strong><span>IPAmj明朝の異体字を探すオープンソースのツール（MIT License）</span></p>
+        <nav class="site-footer__links" aria-label="関連リンク">
+          <a href="./">異体字検索トップ</a>
+          <a href="guide.html">使い方ガイド</a>
+          <a href="https://github.com/photoguild-ITteam/mj-variant-finder" target="_blank" rel="noopener noreferrer">ソースコード（GitHub）</a>
+          <a href="https://photoguild.jp/" target="_blank" rel="noopener noreferrer">開発: 株式会社フォトギルド</a>
+        </nav>
+      </div>
+      <p class="site-footer__disclaimer">MJ文字情報一覧表・IPAmj明朝の提供元（文字情報技術促進協議会・情報処理推進機構）とは無関係の<strong>非公式のツール</strong>です。字形の同一性・正確性は保証しません。印刷や公的申請への利用は自己責任でお願いします。</p>
+    </div>
+  </footer>
+</body>
+</html>
