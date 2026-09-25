@@ -672,6 +672,10 @@ if (isLocal) {
     await page.click('#theme-toggle');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
     await page.screenshot({ path: OUT + '13-guide-dark.png' });
+    // 選んだテーマは保存され、開き直してもボタンの説明が今のテーマに合っている
+    await page.reload();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    assert.equal(await page.getAttribute('#theme-toggle', 'aria-label'), 'ライトモードに切り替え');
     await page.click('#theme-toggle');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
 

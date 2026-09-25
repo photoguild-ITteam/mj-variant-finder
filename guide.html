@@ -11,6 +11,8 @@
   <meta property="og:locale" content="ja_JP">
   <meta property="og:title" content="異体字・IVS 完全活用ガイド — 文字化けの理由から Canva での利用法まで">
   <meta property="og:description" content="IVS（異体字セレクタ）の仕組み、コピーしても化ける理由、CanvaやOfficeで思い通りの字形を使うテクニックを徹底解説。">
+  <!-- 自分のサイトに置くときは、canonical と og:url・og:image を置いた先の URL に書き換える（index.html と同じ） -->
+  <link rel="canonical" href="https://photoguild-itteam.github.io/mj-variant-finder/guide.html">
   <meta property="og:url" content="https://photoguild-itteam.github.io/mj-variant-finder/guide.html">
   <meta property="og:image" content="https://photoguild-itteam.github.io/mj-variant-finder/src/images/og.png">
   <meta property="og:image:width" content="1200">
@@ -22,7 +24,8 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f172a'/%3E%3Ctext x='16' y='23' font-size='22' text-anchor='middle' fill='%23f6f3ec' font-family='serif'%3E%E7%95%B0%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="src/fonts/fonts.css">
   <link rel="stylesheet" href="src/css/style.css">
-  <script src="src/js/guide.js" defer></script>
+  <link rel="stylesheet" href="src/css/guide.css">
+  <script type="module" src="src/js/guide.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -83,14 +86,14 @@
 
       <section class="guide-section" id="about">
         <h2>1. MJ Variant Finder とは</h2>
-        <p><strong>MJ Variant Finder（異体字検索）</strong>は、日本の公的文字規格である「文字情報基盤（MJ文字情報一覧表）」と、その約6万文字を収録した「IPAmj明朝」フォントの異体字（IVS）を、<strong>ブラウザだけで検索・比較・コピー・画像書き出しできる静的Webツール</strong>です。</p>
-        <p>PC やスマートフォンに特別なフォントをインストールしていなくても、独自の分割Webフォント技術により、画面上で正確な異体字を表示・見比べることができます。インストール不要、完全無料で利用できます。</p>
+        <p><strong>MJ Variant Finder（異体字検索）</strong>は、戸籍や住民基本台帳などで使われる漢字の字形を整理した「文字情報基盤（MJ文字情報一覧表）」と、その約6万の字形を収録した「IPAmj明朝」の異体字（IVS）を、<strong>ブラウザだけで検索・比較・コピー・画像書き出しできる静的Webツール</strong>です。</p>
+        <p>PC やスマートフォンに特別なフォントをインストールしていなくても、必要な分だけ読み込む Web フォントを使って、画面上で異体字を表示・見比べることができます。インストール不要、完全無料で利用できます。</p>
 
         <div class="guide-box guide-box--tip">
           <strong>主な特徴</strong>
           <ul>
-            <li><strong>インストール不要</strong>: ブラウザを開くだけで約6万字の異体字を正確にレンダリング</li>
-            <li><strong>多彩な探し方</strong>: 漢字、読み（ひらがな）、字の通称（「はしごだか」「たてにし」など）、手書き認識、写真やスクショからの画像検索</li>
+            <li><strong>インストール不要</strong>: ブラウザを開くだけで約6万の字形を表示</li>
+            <li><strong>多彩な探し方</strong>: 漢字、読み（ひらがな）、字の通称（「はしごだか」「たてにし」など）、手書き、スクリーンショットからの画像検索</li>
             <li><strong>文字の違いを可視化</strong>: 標準字形とどこが違うかを赤・青のハイライトで色分け表示</li>
             <li><strong>デザイン・印刷に直結</strong>: 背景透明 PNG の画像コピー、ベクター SVG の書き出しに対応</li>
           </ul>
@@ -147,7 +150,7 @@
                 <td>MJ025759</td>
               </tr>
               <tr>
-                <td><span class="glyph">邉&#xE010F;</span>（渡邉の代表字形）</td>
+                <td><span class="glyph">邉&#xE010F;</span>（IVS を付けないときと同じ字形）</td>
                 <td><code>U+9089</code>（邉）</td>
                 <td><code>U+E010F</code>（VS32）</td>
                 <td>MJ026190</td>
@@ -157,7 +160,7 @@
         </div>
 
         <h3>文字情報基盤（MJ文字）と IPAmj明朝</h3>
-        <p>日本政府（経済産業省・IPA等）は、自治体や行政機関で使われる約6万文字に及ぶ漢字の字形を網羅・整理し、「MJ文字情報一覧表」として公開しました。そして、その約6万文字すべての異体字を正しく画面に表示・印刷できるように無償提供されている公式フォントが<strong>「IPAmj明朝」</strong>です。</p>
+        <p>情報処理推進機構（IPA）は、戸籍や住民基本台帳などの行政で使われる約6万の漢字の字形を整理し、「MJ文字情報一覧表」としてまとめました（現在は一般社団法人 文字情報技術促進協議会が公開・維持しています）。そのすべての字形を収録し、無償で公開されているフォントが<strong>「IPAmj明朝」</strong>です。</p>
       </section>
 
       <section class="guide-section" id="why-corrupted">
@@ -167,11 +170,11 @@
 
         <h3>原因 1: 貼り付け先で選んでいるフォントが IVS に非対応</h3>
         <p>IVS は「基底文字 ＋ 異体字セレクタ」という2文字の組み合わせを、フォント内のプログラム（OpenType の <code>cmap</code> format 14 テーブル）が解釈して、1つの特殊な絵柄（グリフ）にすり替えて画面に描画します。</p>
-        <p>Windows や Mac に最初から入っている一般的なフォント（MS明朝、游明朝、メイリオ、ヒラギノ通常版など）には、数千〜1万字程度の字形しか収録されておらず、すべての IVS 異体字の絵柄を持っているわけではありません。</p>
-        <p><strong>フォント内にその IVS の字形が存在しない場合、フォントはセレクタ部分を単に無視し、基底文字（通常の漢字）の形だけで描画します。</strong>その結果、「コピーしたはずの異体字が、普通の字に戻ってしまった」ように見えます。</p>
+        <p>IVS には、字形を登録した団体ごとの「登録集（コレクション）」があります。MJ文字情報一覧表の字形は <strong>Moji_Joho</strong> という登録集です。パソコンに最初から入っているフォントの中には IVS に対応したものもありますが、対応しているのは別の登録集で、Moji_Joho の IVS にはほとんど対応していません。</p>
+        <p><strong>フォントがその IVS に対応していない場合、セレクタは無視され、基底文字（通常の漢字）の形で表示されます。</strong>その結果、「コピーしたはずの異体字が、普通の字に戻ってしまった」ように見えます。</p>
 
         <h3>原因 2: アプリケーションがセレクタを削除または分断する</h3>
-        <p>Twitter（X）、Instagram、LINE、一部のブログや入力フォーム、デザインツール（Canva等）では、セキュリティ上の理由やシステム設計により、見慣れない不可視コード（<code>U+E0100</code>〜）を「制御文字」「不正な入力」と判定して、<strong>貼り付けた瞬間に自動的に削除（サニタイズ）</strong>してしまうことがあります。</p>
+        <p>アプリや Web サービスによっては、貼り付けや保存のときに、目に見えない文字である異体字セレクタ（<code>U+E0100</code>〜）を<strong>取り除いてしまう</strong>ことがあります。この場合は、どのフォントを選んでも通常の字形になります。</p>
         <p>また、古いテキストエディタでは、不可視のセレクタを解釈できず、文字の後ろに「□（豆腐）」や「？」、謎の空白が表示されることがあります。</p>
 
         <h3>どう対策すればいいのか？</h3>
@@ -188,7 +191,7 @@
               <tr>
                 <td><strong>Canva や SNS で使いたい</strong></td>
                 <td><strong>「画像でコピー」または「SVG保存」</strong></td>
-                <td>文字テキストではなく、画像・ベクター素材として貼り付ければ、相手の環境に関わらず絶対に形が崩れません。</td>
+                <td>文字ではなく画像・ベクター素材として貼り付ければ、相手の環境やフォントに関係なく、同じ形で表示されます。</td>
               </tr>
               <tr>
                 <td><strong>Word / Excel で使いたい</strong></td>
@@ -231,14 +234,14 @@
             <div class="guide-step__num">3</div>
             <div class="guide-step__body">
               <h4>「画像でコピー」ボタンを押す</h4>
-              <p>エクスポート欄の<strong>「画像でコピー」</strong>をクリックします。クリップボードに、<strong>1024×1024ピクセルの超高解像度・背景透明PNG</strong> がコピーされます。</p>
+              <p>エクスポート欄の<strong>「画像でコピー」</strong>をクリックします。クリップボードに、<strong>背景が透明な PNG（1024×1024 ピクセル）</strong>がコピーされます。</p>
             </div>
           </div>
           <div class="guide-step">
             <div class="guide-step__num">4</div>
             <div class="guide-step__body">
               <h4>Canva のデザイン画面で貼り付け（Ctrl + V）</h4>
-              <p>Canva の編集画面を開き、キーボードの <kbd>Ctrl</kbd> + <kbd>V</kbd>（Mac は <kbd>Cmd</kbd> + <kbd>V</kbd>）を押すだけ！キャンバス上に異体字が透過画像として瞬時に配置されます。</p>
+              <p>Canva の編集画面を開き、キーボードの <kbd>Ctrl</kbd> + <kbd>V</kbd>（Mac は <kbd>Cmd</kbd> + <kbd>V</kbd>）を押すと、背景が透明な画像として貼り付けられます。</p>
             </div>
           </div>
         </div>
@@ -247,24 +250,24 @@
           <strong>なぜ「画像でコピー」が優れているのか？</strong>
           <ul>
             <li><strong>背景が透明（アルファチャンネル）</strong>: 写真やグラデーション、カラー背景の上に重ねても背景を邪魔しません。</li>
-            <li><strong>1024px の高解像度</strong>: ポスターやチラシなどの印刷用途に引き伸ばしても、文字の輪郭がボケずにくっきり美しく印刷できます。</li>
-            <li><strong>フォントの有無に左右されない</strong>: Canva 側に IPAmj明朝フォントがなくても、100% 正確な字形がそのまま使えます。</li>
+            <li><strong>1024 ピクセル</strong>: 画面やチラシの見出し程度の大きさなら十分です。ポスターなどに大きく引き伸ばす場合は、次の SVG を使ってください。</li>
+            <li><strong>フォントの有無に左右されない</strong>: Canva 側に IPAmj明朝が無くても、ツールで表示した字形のまま使えます。</li>
           </ul>
         </div>
 
         <h3>方法 B: 「SVGで保存」してベクター素材として利用（商業印刷・拡大向け）</h3>
-        <p>看板、大型ポスター、プロのDTPワークフローなど、無限に拡大しても一切劣化しないベクターデータが必要な場合は、SVG 形式でのエクスポートが最適です。</p>
+        <p>看板、大型ポスター、プロのDTPワークフローなど、拡大しても劣化しないベクターデータが必要な場合は、SVG 形式でのエクスポートが最適です。</p>
         <ol>
           <li>詳細ダイアログの<strong>「SVGで保存」</strong>をクリックします（例: <code>MJ026190.svg</code> がダウンロードされます）。</li>
           <li>フォントファイルではなく、文字の輪郭線（アウトラインパス）そのものが SVG 化されています。</li>
-          <li>Canva の「アップロード」メニューに SVG ファイルをドラッグ＆ドロップすると、ベクターイラスト素材として自由に着色・拡大・縮小ができます。</li>
-          <li>Adobe Illustrator や InDesign でも、そのまま配置して編集できます。</li>
+          <li>Canva の「アップロード」から SVG ファイルを読み込むと、拡大・縮小しても劣化しない素材として使えます。</li>
+          <li>Adobe Illustrator などのベクター編集ソフトでも開けます。</li>
         </ol>
 
         <h3>方法 C: Word・Excel・PowerPoint で文字として使いたい場合</h3>
         <ol>
           <li>パソコンに公式の <a href="https://moji.or.jp/mojikiban/font/" target="_blank" rel="noopener">IPAmj明朝フォント</a> をダウンロード・インストールします。</li>
-          <li>MJ Variant Finder で「コピー（IVS文字）」ボタンを押して、クリップボードに文字をコピーします。</li>
+          <li>MJ Variant Finder で字形カードの「コピー」ボタンを押して、IVS 付きの文字をクリップボードにコピーします。</li>
           <li>Word や Excel に貼り付け、貼り付けた文字のフォントを<strong>「IPAmj明朝」</strong>に指定します。</li>
           <li><strong>相手にファイルを送る場合の注意点</strong>: 相手のパソコンに IPAmj明朝が入っていないと文字の形が変わってしまうため、完成した文書は<strong>「PDF 形式で保存」</strong>して配布するか、文字の代わりに「画像でコピー」を貼り付けることを強く推奨します。</li>
         </ol>
@@ -279,20 +282,20 @@
           <li><strong>1. 漢字・単語検索</strong>: 「渡辺」のように複数文字を一気に入力すると、文字ごとのタブに分解され、関連する異体字（邉・邊）まで自動で一覧表示されます。</li>
           <li><strong>2. 読み検索（ひらがな）</strong>: 「さいとう」と入れると、姓・地名の辞書と照合し、「斉藤」「斎藤」「齊藤」「齋藤」などの代表的な表記候補がサジェストされます。</li>
           <li><strong>3. 字の通称・呼び名検索</strong>: 業界や現場でよく使われる「はしごだか」「たてにし」「たつさき」「やまへんのさき（部首名＋の＋読み）」などの通称で検索できます。</li>
-          <li><strong>4. 手書き認識で探す</strong>: 読み方が分からない字は、検索欄下の「手書きで探す」をクリックし、マウスやスマホのタッチで文字を描けば、類似する漢字を瞬時に推定します。</li>
-          <li><strong>5. 写真やスクショから探す</strong>: 名刺や書類の写真を撮って貼り付ける（またはドラッグ＆ドロップする）だけで、画像処理アルゴリズムが合致するMJ字形を特定します。</li>
+          <li><strong>4. 手書き認識で探す</strong>: 読み方が分からない字は、検索欄下の「手書きで探す」をクリックし、マウスやスマホのタッチで文字を描けば、似ている漢字を候補として出します。</li>
+          <li><strong>5. スクリーンショットから探す</strong>: 画面のスクリーンショットを貼り付け（またはドラッグ＆ドロップし）、1文字を囲むと、似ている MJ 字形を候補として出します。明朝体で表示された文字が得意で、写真の手書き文字や小さな文字は苦手です。</li>
         </ul>
 
         <h3>違いを色で表示（グリフ差分ハイライト）</h3>
         <p>「標準の字とどこが違うのかパッと見ではわからない…」という時に役立つのが「違いを色で表示」ボタンです。</p>
-        <p>IVS を付けない通常の字形と重ね合わせ、<strong>この異体字にだけ存在する線を「赤」</strong>、<strong>通常の字形にある線を「青」</strong>でハイライトします。線の長さの違いや点の位置の差異が一瞬で見分けられます。</p>
+        <p>IVS を付けない通常の字形と重ね合わせ、<strong>この字形にだけある部分を赤</strong>、<strong>通常の字形にだけある部分を青</strong>で示し、共通の部分は薄く表示します。通常の字形と同じ字形には「IVSなしと同じ」の印が付きます。</p>
 
         <h3>ゴシック体判定バッジ（○ / △ / ×）</h3>
         <p>「明朝体ではなくゴシック体でデザインしたいが、この異体字はゴシック体でも使えるのか？」を判別できるバッジです。</p>
         <ul>
-          <li><span class="badge badge--ok">ゴシック○</span>: 代表的なゴシック体（Noto Sans JP や BIZ UDゴシック）にも同じ字形が存在し、ゴシック体でも安全に使えます。</li>
-          <li><span class="badge badge--warn">ゴシック△</span>: 一部のゴシック体フォントで字形が欠けている可能性があります。</li>
-          <li><span class="badge badge--muted">ゴシック×</span>: IVS でのみ区別される字形で、一般的なゴシック体では通常の字形に戻ってしまいます（明朝体の使用、または画像での利用を推奨）。</li>
+          <li><span class="badge badge--ok">ゴシック○</span>: 文字コードだけで表せる字形で、判定に使ったゴシック体（Noto Sans JP）にもその字があります。ゴシック体でもその字として表示できます（字のデザインはゴシック体のものになります）。</li>
+          <li><span class="badge badge--warn">ゴシック△</span>: 文字コードだけで表せる字形ですが、ゴシック体のフォントにその字が無いことがあります。</li>
+          <li><span class="badge badge--muted">ゴシック×</span>: IVS でしか区別できない字形です。ゴシック体では通常の字形で表示されるので、明朝体（IPAmj明朝）で使うか、画像で使ってください。</li>
         </ul>
       </section>
 
@@ -304,14 +307,15 @@
             <div class="guide-faq__answer">
               <p><strong>はい、商用利用を含め自由にお使いいただけます。</strong></p>
               <p>本ツールが生成する PNG・SVG 画像は、IPAmj明朝の派生フォントから描画されています。IPAフォントライセンス第2条に基づき、フォントを使用して作成されたデジタル成果物（画像・ベクター・印刷物など）は、営利・非営利を問わず自由に利用・配布できます。</p>
+              <p>ただし、字形が正しいかどうかは保証しません。公的な書類などに使う場合は、必ず確認してください。</p>
             </div>
           </details>
 
           <details>
             <summary>Q. スマートフォンでも使えますか？</summary>
             <div class="guide-faq__answer">
-              <p><strong>はい、スマートフォン・タブレットのブラウザでも完全動作します。</strong></p>
-              <p>スマホの狭い画面に最適化したレイアウトを採用しており、タッチ操作での手書き入力や、スマホで撮影したスクリーンショットの画像検索もそのまま行えます。</p>
+              <p><strong>はい、スマートフォン・タブレットのブラウザでも使えます。</strong></p>
+              <p>スマホの狭い画面に最適化したレイアウトを採用しており、タッチ操作での手書き入力や、スクリーンショットの画像検索もそのまま行えます。「画像でコピー」はブラウザによって使えないことがあるので、その場合は「PNGで保存」を使ってください。</p>
             </div>
           </details>
 
@@ -319,14 +323,14 @@
             <summary>Q. ツールを使うためにフォントをインストールする必要はありますか？</summary>
             <div class="guide-faq__answer">
               <p><strong>インストールは一切不要です。</strong></p>
-              <p>本ツールは必要な字形だけをその場で分割ダウンロードする Web フォント（WOFF2）を自動で読み込むため、フォントが一切入っていないパソコンやスマートフォンでも正確な字形が表示されます。</p>
+              <p>本ツールは、必要な字形の分だけを読み込む Web フォント（WOFF2）を自動で使うため、IPAmj明朝が入っていないパソコンやスマートフォンでも、ツールの画面では字形を見分けられます。</p>
             </div>
           </details>
 
           <details>
             <summary>Q. Webサイトの制作で異体字を表示するにはどうすればいいですか？</summary>
             <div class="guide-faq__answer">
-              <p>HTML に直接 IVS 文字を記述するか、数値文字参照（例: <code>&amp;#x9089;&amp;#xE010F;</code>）を使用し、CSS の <code>font-family</code> に IVS 対応フォント（または本ツールのように subset された Web フォント）を指定します。閲覧者の環境に依存せず100%確実に表示させたい場合は、本ツールの「SVGで保存」を活用してインライン SVG として埋め込む方法も非常に効果的です。</p>
+              <p>HTML に直接 IVS 文字を記述するか、数値文字参照（例: <code>&amp;#x9089;&amp;#xE010F;</code>）を使用し、CSS の <code>font-family</code> に IVS 対応フォント（または本ツールのように subset された Web フォント）を指定します。閲覧者の環境に左右されずに表示したい場合は、本ツールの「SVGで保存」で書き出した SVG を埋め込む方法もあります。</p>
             </div>
           </details>
 
