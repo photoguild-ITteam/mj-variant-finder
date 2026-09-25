@@ -89,6 +89,8 @@ async function renderChars(result) {
   const panelHost = h('div', { id: 'char-panel-host' });
   const tabs = items.length > 1 ? charTabs(items, (i, focusTab) => selectTab(i, focusTab).catch(renderLoadError)) : null;
 
+  let tabToken = 0; // 最後に選んだタブの番号。読み込み中に切り替えたら、前のタブの結果は捨てる
+
   async function selectTab(i, focusTab = false) {
     if (tabs) {
       [...tabs.children].forEach((tab, j) => {
@@ -99,8 +101,16 @@ async function renderChars(result) {
       panelHost.setAttribute('aria-labelledby', tabs.children[i].id);
     }
     panelHost.replaceChildren(loading());
-    const panel = await charPanel(items[i]);
-    if (app.result !== result) return; // 読み込み中に別の検索をした
+    const token = ++tabToken;
+    const isCurrent = () => app.result === result && token === tabToken; // 読み込み中に別の検索・別のタブにしていない
+    let panel;
+    try {
+      panel = await charPanel(items[i]);
+    } catch (err) {
+      if (isCurrent()) throw err;
+      return;
+    }
+    if (!isCurrent()) return;
     panelHost.replaceChildren(panel);
     panel.querySelector('.glyph-card.is-focus')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }

@@ -12,6 +12,7 @@ const LINE_WIDTH = 6;
 
 /** @type {Worker | null} */
 let worker = null;
+let workerReady = false;
 let requestId = 0;
 let strokes = [];
 let timer;
@@ -42,22 +43,32 @@ function open() {
 
 function startWorker() {
   if (worker) return;
+  workerReady = false;
   setStatus('認識データを読み込んでいます…', true);
   worker = new Worker(WORKER_URL, { type: 'module' });
   worker.addEventListener('message', ({ data }) => {
     if (data.type === 'ready') {
+      workerReady = true;
       setStatus(`枠の中に、なるべく大きく1文字書いてください。（${data.count.toLocaleString()} 字から探します）`);
+      if (strokes.length > 0) recognizeSoon();
+    } else if (data.type === 'init-error') {
+      if (/\b(401|403)\b/.test(data.message)) showSessionExpired();
+      setStatus(`${data.message}。閉じて開き直すと、もう一度読み込みます。`); // 次に開いたとき startWorker() が読み込み直す
+      worker.terminate();
+      worker = null;
+      workerReady = false;
     } else if (data.type === 'result' && data.id === requestId) {
       showCandidates(data.candidates);
     } else if (data.type === 'error') {
       // 認識データも認証の対象になりうるので、切れていたら案内を出す（sessionWatch が有効なときだけ表示される）
-      if (/(401|403)/.test(data.message)) showSessionExpired();
+      if (/\b(401|403)\b/.test(data.message)) showSessionExpired();
       setStatus(`認識できませんでした: ${data.message}`);
     }
   });
   worker.addEventListener('error', (e) => {
     setStatus(`手書き認識を読み込めませんでした: ${e.message}`);
     worker = null;
+    workerReady = false;
   });
   worker.postMessage({ type: 'init', url: PATTERNS_URL.href });
 }
@@ -69,6 +80,7 @@ function recognizeSoon() {
     return;
   }
   timer = setTimeout(() => {
+    if (!workerReady) return;
     setStatus('認識中…', true);
     requestId += 1;
     worker?.postMessage({ type: 'recognize', id: requestId, strokes });
