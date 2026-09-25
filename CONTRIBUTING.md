@@ -30,6 +30,7 @@ npm run test:e2e         # ブラウザテスト（別ターミナルで serve �
 - PR を出す前に `npm test` を通してください（CI でも自動実行されます）。
 - 画面の変更は `npm run test:e2e` も通し、スクリーンショットを PR に添えてください。
 - 既存のコードの書き方（コメントの量、命名、DOM は `h()` で組み立てて `innerHTML` を使わない、など）に合わせてください。
+- AI のコーディングエージェント（Jules、Antigravity、Claude Code など）で作業する場合は、[AGENTS.md](AGENTS.md) のルール（ブランチの切り方、PR 前の確認、データを作り直すときの注意など）にも従ってください。
 - **`src/data/`（手作業で編集する `src/data/nicknames.json` を除く）と `src/fonts/` は生成物です。** 直接編集せず、`scripts/` を直して再生成し、生成し直した結果をコミットしてください（手順は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)）。
 
 ### 辞書データの追加
