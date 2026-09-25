@@ -100,7 +100,7 @@ def main() -> None:
             "|---|---|---|---|",
             *lines,
             "",
-            "手順は docs/ARCHITECTURE.md を参照。"
+            "手順は docs/ARCHITECTURE.md を参照。`sha256` の書き換えも必要です。"
             "作り直したら `npm test` と `npm run test:e2e` を通し、差分（件数の変化など）を PR に書いてください。",
             "ライセンスや配布条件が変わっていないかも、配布ページで確認してください。",
         ]

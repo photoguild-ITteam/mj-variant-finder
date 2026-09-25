@@ -36,6 +36,13 @@
 
 元データの新しい版は `scripts/check_updates.py` が配布元のページから調べる（`.github/workflows/check-data-updates.yml` が毎月1日に実行し、新しい版があれば Issue「元データの新しい版が出ています」を立てる。開いたままなら本文を更新する）。
 
+新しい版に上げる手順:
+1. スクリプトの書き換え: `SOURCES`（`scripts/build_variant_db.py`）や `KANJIVG`（`scripts/build_handwriting_db.mjs`）の `url`・`file`（または `version`）・`sha256` を新しい版に合わせて書き換える。
+   - `sha256` の計算例: `python -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" data/raw/<file>` または `sha256sum data/raw/<file>`
+2. データの作り直し（`npm run build:data` など）。
+3. テストの実行（`npm test` と e2e テスト）。
+4. PR に差分（件数の変化など）を記載する。
+
 ```sh
 python scripts/build_variant_db.py          # data/raw/ に元データが無ければ自動ダウンロード
 python -m unittest scripts/test_variant_db.py -v
