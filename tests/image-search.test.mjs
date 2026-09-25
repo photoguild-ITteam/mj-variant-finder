@@ -4,8 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { BIN_MESH, GRAY_MESH, binaryFeature, grayFeature, normalizeImage } from '../src/js/image-search/features.js';
-import { createIndex, matchImage } from '../src/js/image-search/matcher.js';
+import { BIN_MESH, BOX, GRAY_MESH, binaryFeature, grayFeature, normalizeImage } from '../src/js/image-search/features.js';
+import { createIndex, matchImage, similarity } from '../src/js/image-search/matcher.js';
 
 const meta = JSON.parse(readFileSync(new URL('../src/data/image-index.json', import.meta.url), 'utf8'));
 const buffer = readFileSync(new URL('../src/data/image-index.bin', import.meta.url));
@@ -93,6 +93,24 @@ test('十字の画像 → 縦横1本ずつの字が候補に出る', async () =>
   assert.ok(candidates.length > 0);
   const chars = candidates.map((c) => c.char[0]).join('');
   assert.match(chars, /[十干士土手]/, chars); // 合成画像なので似た字が並ぶ
+});
+
+/** BOX×BOX の墨の濃さ（段3 が比べるもの）に、細い縦線・横線を引く */
+function strokes({ vertical = [], horizontal = [] }) {
+  const norm = new Float32Array(BOX * BOX);
+  for (const x of vertical) for (let y = 8; y < BOX - 8; y++) norm[y * BOX + x] = 1;
+  for (const y of horizontal) for (let x = 8; x < BOX - 8; x++) norm[y * BOX + x] = 1;
+  return norm;
+}
+
+test('段3: 同じ字形が1画素ずれても、別の字形より似ていると判定する', () => {
+  // 環境（OS・ブラウザ）によって、同じ字形でも描いたときに1画素ずれることがある（CI の Linux で起きた）
+  const query = strokes({ vertical: [32], horizontal: [20, 44] });
+  const shifted = strokes({ vertical: [33], horizontal: [21, 45] });  // 同じ字形が1画素ずれたもの
+  const different = strokes({ vertical: [32], horizontal: [20] });    // 横線が1本少ない別の字形
+  const same = similarity(query, shifted);
+  const other = similarity(query, different);
+  assert.ok(same > other, `ずれた同じ字形 ${same.toFixed(3)} / 別の字形 ${other.toFixed(3)}`);
 });
 
 test('墨が無い画像は候補なし', async () => {

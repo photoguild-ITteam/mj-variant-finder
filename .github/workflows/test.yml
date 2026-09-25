@@ -41,12 +41,6 @@ jobs:
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 &
           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8765/ >/dev/null && break; sleep 0.5; done
-      # 【調査用・一時的】画像検索の段3が CI でだけ外れる原因を調べる。原因が分かったら消す
-      - name: 段3の調査
-        run: node tests/stage3-probe.mjs
-        continue-on-error: true
-        env:
-          BROWSER_CHANNEL: chromium
       - name: E2E
         run: node tests/e2e.mjs
         env:
