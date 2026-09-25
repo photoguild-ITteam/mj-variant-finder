@@ -32,6 +32,7 @@ jobs:
           cp -r src _site/
           # 各ライセンス文書はサイトから辿れるようにする（index.html のリンク先）
           cp LICENSE LICENSES.md _site/
+          cp -r licenses _site/
           # データ・フォントは Pages が gzip 配信するので、そのまま置く
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5

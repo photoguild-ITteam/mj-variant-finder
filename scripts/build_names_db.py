@@ -164,6 +164,8 @@ def main() -> None:
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sources": [
             {"title": "mecab-ipadic 2.7.0-20070801（人名: 姓・名）", "license": "ipadic ライセンス（BSD 系）",
+             "copyright": "Copyright 2000, 2001, 2002, 2003 Nara Institute of Science and Technology",
+             "notice": "licenses/IPADIC-COPYING.txt",
              "page": "https://taku910.github.io/mecab/"},
             {"title": "郵便番号データ（市区町村・町域）", "license": "日本郵便（著作権を主張せず、自由に利用可）",
              "page": "https://www.post.japanpost.jp/zipcode/dl/utf-zip.html"},

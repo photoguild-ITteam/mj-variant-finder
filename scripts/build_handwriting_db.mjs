@@ -158,7 +158,10 @@ async function main() {
 
   const data = {
     version: KANJIVG.version,
-    source: { title: `KanjiVG ${KANJIVG.version}`, license: KANJIVG.license, page: KANJIVG.page },
+    source: {
+      title: `KanjiVG ${KANJIVG.version}`, license: KANJIVG.license, page: KANJIVG.page,
+      copyright: 'Copyright (C) 2009-2013 Ulrich Apel', notice: 'licenses/KANJIVG-NOTICE.txt',
+    },
     algorithm: { name: 'Kanji Canvas', license: 'MIT', page: 'https://github.com/asdfjkl/kanjicanvas' },
     grid: GRID,
     chars,

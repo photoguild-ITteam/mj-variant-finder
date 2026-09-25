@@ -75,7 +75,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 ## ライセンス
 
-複合ライセンスです。**ファイルごとのライセンスは [LICENSES.md](LICENSES.md) を参照してください。**
+複合ライセンスです。**ファイルごとのライセンスは [LICENSES.md](LICENSES.md) を参照してください。**表示が条件になっている条文の原文は [licenses/](licenses/) にあります。
 
 | 対象 | ライセンス |
 |---|---|
@@ -87,7 +87,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 - [MJ文字情報一覧表](https://moji.or.jp/mojikiban/mjlist/)・[IPAmj明朝](https://moji.or.jp/mojikiban/font/)（文字情報技術促進協議会）、[MJ縮退マップ](https://moji.or.jp/mojikiban/map/)（情報処理推進機構）
 - [Unicode IVD](https://www.unicode.org/ivd/)・[Unihan](https://www.unicode.org/reports/tr38/)（Unicode, Inc.）
-- [KanjiVG](https://kanjivg.tagaini.net/)・[Kanji Canvas](https://github.com/asdfjkl/kanjicanvas)（手書き認識）
+- [KanjiVG](https://kanjivg.tagaini.net/)（Copyright (C) 2009-2013 Ulrich Apel、CC BY-SA 3.0）・[Kanji Canvas](https://github.com/asdfjkl/kanjicanvas)（手書き認識）
 - [mecab-ipadic](https://taku910.github.io/mecab/)・[郵便番号データ](https://www.post.japanpost.jp/zipcode/dl/utf-zip.html)（人名・地名の読み）
 
 ## クレジット
