@@ -9,12 +9,17 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import unittest
+import zipfile
 from functools import lru_cache
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_variant_db import ROOT, SOURCES, jis_level, kata_to_hira, read_ivd, to_version  # noqa: E402
+from build_variant_db import (  # noqa: E402
+    ROOT, SOURCES, build_glyph, jis_level, kata_to_hira, read_ivd, read_strict_xlsx, to_version
+)
+from build_names_db import make_variants, read_postal  # noqa: E402
 
 DATA = ROOT / "src" / "data"
 RAW = ROOT / "data" / "raw"
@@ -183,6 +188,162 @@ class TestDatabase(unittest.TestCase):
                         vs = int(seq.split("_")[1], 16)
                         self.assertTrue(0xE0100 <= vs <= 0xE01EF, seq)
                         self.assertEqual(registered.get(seq), g["mj"], seq)
+
+
+class TestStrictXlsx(unittest.TestCase):
+    def test_read_strict_xlsx_features(self):
+        """Strict OOXML の読み込み: 共有文字列、浮動小数値、ふりがな(<rPh>)の除外、インライン文字列."""
+        shared_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main">
+  <si><t>MJ文字図形名</t></si>
+  <si><t>総画数(参考)</t></si>
+  <si><t>MJ文字図形バージョン</t></si>
+  <si><t>備考</t></si>
+  <si><t>MJ000001</t></si>
+  <si>
+    <r><t>実装なし</t></r>
+    <rPh sb="0" eb="4"><t>ジッソウナシ</t></rPh>
+  </si>
+</sst>"""
+
+        sheet_xml = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://purl.oclc.org/ooxml/spreadsheetml/main">
+  <sheetData>
+    <row r="1">
+      <c r="A1" t="s"><v>0</v></c>
+      <c r="B1" t="s"><v>1</v></c>
+      <c r="C1" t="s"><v>2</v></c>
+      <c r="D1" t="s"><v>3</v></c>
+    </row>
+    <row r="2">
+      <c r="A2" t="s"><v>4</v></c>
+      <c r="B2"><v>12</v></c>
+      <c r="C2"><v>1.1000000000000001</v></c>
+      <c r="D2" t="s"><v>5</v></c>
+    </row>
+    <row r="3">
+      <c r="A3" t="s"><v>4</v></c>
+      <c r="B3"><v>5</v></c>
+      <c r="C3"><v>2</v></c>
+      <c r="D3" t="inlineStr">
+        <is>
+          <r><t>インライン</t></r>
+          <rPh sb="0" eb="5"><t>インラインルビ</t></rPh>
+        </is>
+      </c>
+    </row>
+  </sheetData>
+</worksheet>"""
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            xlsx_path = Path(tmpdir) / "test.xlsx"
+            with zipfile.ZipFile(xlsx_path, "w") as z:
+                z.writestr("xl/sharedStrings.xml", shared_xml)
+                z.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+
+            records = read_strict_xlsx(xlsx_path)
+            self.assertEqual(len(records), 2)
+
+            r1 = records[0]
+            self.assertEqual(r1["MJ文字図形名"], "MJ000001")
+            self.assertEqual(r1["総画数(参考)"], "12")
+            self.assertEqual(r1["MJ文字図形バージョン"], "1.1000000000000001")
+            # ふりがな（ジッソウナシ）が連結されず「実装なし」だけになること
+            self.assertEqual(r1["備考"], "実装なし")
+
+            r2 = records[1]
+            self.assertEqual(r2["備考"], "インライン")
+
+
+class TestBuildGlyph(unittest.TestCase):
+    def test_build_glyph_conversion(self):
+        """build_glyph による属性変換（画数・バージョン・読み・JIS水準・UCS・IVS・部首・辞書）."""
+        rec = {
+            "MJ文字図形名": "MJ026190",
+            "対応するUCS": "U+9089",
+            "実装したUCS": "U+9089",
+            "実装したMoji_JohoコレクションIVS": "9089_E010F",
+            "対応する互換漢字": "U+FA10",
+            "X0213": "1-78-21",
+            "MJ文字図形バージョン": "1.1000000000000001",
+            "総画数(参考)": "17",
+            "読み(参考)": "ヘン・あたり",
+            "部首1(参考)": "162",
+            "内画数1(参考)": "13",
+            "部首2(参考)": "1",
+            "内画数2(参考)": "16",
+            "大漢和": "38843",
+        }
+        ivd_by_mj = {"MJ026190": ["9089_E010F", "9089_E0110"]}
+        g = build_glyph(rec, ivd_by_mj)
+
+        self.assertEqual(g["mj"], "MJ026190")
+        self.assertEqual(g["mjNum"], 26190)
+        self.assertEqual(g["ucs"], "9089")
+        self.assertEqual(g["impl"], "9089")
+        self.assertEqual(g["compat"], "FA10")
+        self.assertEqual(g["ivs"], ["9089_E010F", "9089_E0110"])
+        self.assertEqual(g["ivdOnly"], ["9089_E0110"])
+        self.assertEqual(g["char"], "邉\U000E010F")  # 登録済み IVS を優先
+        self.assertEqual(g["strokes"], 17)
+        self.assertEqual(g["version"], 1.1)
+        self.assertEqual(g["readings"], ["ヘン", "あたり"])
+        self.assertEqual(g["jisLevel"], "第2水準")
+        self.assertEqual(g["radicals"], [[162, 13], [1, 16]])
+        self.assertEqual(g["dict"], {"daikanwa": "38843"})
+
+
+class TestNamesDbParsers(unittest.TestCase):
+    def test_make_variants(self):
+        """異体字置き換え表から表記を生成する処理."""
+        words = {"高崎", "吉田", "田中"}
+        mapping = {"高": ["髙"], "吉": ["𠮷"], "崎": ["﨑", "嵜"]}
+        variants = make_variants(words, mapping)
+
+        self.assertIn("髙崎", variants)
+        self.assertIn("高﨑", variants)
+        self.assertIn("髙﨑", variants)
+        self.assertIn("高嵜", variants)
+        self.assertIn("髙嵜", variants)
+        self.assertIn("𠮷田", variants)
+        self.assertNotIn("高崎", variants)
+        self.assertNotIn("吉田", variants)
+        self.assertNotIn("田中", variants)
+
+    def test_read_postal(self):
+        """郵便番号データ（CSV）から市区町村と異体字を含む町域を読み込む処理."""
+        csv_content = (
+            '"13101","100  ","1000001","トウキョウト","チヨダク","チヨダ","東京都","千代田区","千代田"\n'
+            '"13101","101  ","1010061","トウキョウト","チヨダク","カンダミサキチョウ","東京都","千代田区","神田三崎町"\n'
+            '"13101","100  ","1000014","トウキョウト","チヨダク","ナガタチョウ","東京都","千代田区","永田町"\n'
+            '"13101","100  ","1000000","トウキョウト","チヨダク","イカニケイサイガナイバアイ","東京都","千代田区","以下に掲載がない場合"\n'
+            '"08201","314  ","3140000","イバラキケン","カシマシ","","茨城県","鹿嶋市",""\n'
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            postal_zip = Path(tmpdir) / "utf_ken_all.zip"
+            with zipfile.ZipFile(postal_zip, "w") as z:
+                z.writestr("utf_ken_all.csv", csv_content.encode("utf-8"))
+
+            variant_chars = {"崎"}
+            places = read_postal(variant_chars, postal_path=postal_zip)
+
+            # 市区町村: 千代田区（全件入る。接尾語「区」あり・なし両方で引ける）
+            self.assertIn("千代田区", places["ちよだく"])
+            self.assertIn("千代田区", places["ちよだ"])
+
+            # 市区町村: 鹿嶋市（接尾語「市」あり・なし両方で引ける）
+            self.assertIn("鹿嶋市", places["かしまし"])
+            self.assertIn("鹿嶋市", places["かしま"])
+
+            # 町域: 神田三崎町（「崎」が variant_chars に含まれるため入る。「町」あり・なし両方）
+            self.assertIn("神田三崎町", places["かんだみさきちょう"])
+            self.assertIn("神田三崎町", places["かんだみさき"])
+
+            # 町域: 永田町（variant_chars を含まないためスキップ）
+            self.assertNotIn("永田町", places.get("ながたちょう", set()))
+
+            # スキップ語句: 以下に掲載がない場合
+            self.assertFalse(any("以下に掲載がない場合" in s for s in places.values()))
 
 
 if __name__ == "__main__":

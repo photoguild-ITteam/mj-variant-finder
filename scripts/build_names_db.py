@@ -73,14 +73,14 @@ def read_ipadic() -> tuple[dict[str, set[str]], dict[str, set[str]]]:
     return surnames, given
 
 
-def read_postal(variant_chars: set[str]) -> dict[str, set[str]]:
+def read_postal(variant_chars: set[str], postal_path: Path = POSTAL) -> dict[str, set[str]]:
     """郵便番号データから 市区町村（全部）と 町域（異体字を含むものだけ）を読む.
 
     町域は 85,000 件あり全部入れると 3.5MB になる。このアプリの目的（異体字を調べる）に沿って、
     異体字の置き換え表に出てくる字を含む地名だけを残す。
     """
     places: dict[str, set[str]] = collections.defaultdict(set)
-    with zipfile.ZipFile(POSTAL) as zf:
+    with zipfile.ZipFile(postal_path) as zf:
         text = zf.read(zf.namelist()[0]).decode("utf-8", errors="replace")
     for row in csv.reader(io.StringIO(text)):
         if len(row) < 9:

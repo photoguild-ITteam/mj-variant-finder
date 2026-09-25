@@ -178,7 +178,18 @@ def read_strict_xlsx(path: Path) -> list[dict[str, str]]:
         return el.tag in (ns + name, ns_transitional + name)
 
     def text_of(el: ET.Element) -> str:
-        return "".join(t.text or "" for t in el.iter() if tag(t, "t"))
+        pieces: list[str] = []
+
+        def walk(node: ET.Element) -> None:
+            if tag(node, "rPh"):
+                return
+            if tag(node, "t") and node.text:
+                pieces.append(node.text)
+            for child in node:
+                walk(child)
+
+        walk(el)
+        return "".join(pieces)
 
     def col_index(ref: str) -> int:
         n = 0
@@ -188,33 +199,35 @@ def read_strict_xlsx(path: Path) -> list[dict[str, str]]:
 
     with zipfile.ZipFile(path) as z:
         shared: list[str] = []
-        for _, el in ET.iterparse(z.open("xl/sharedStrings.xml")):
-            if tag(el, "si"):
-                shared.append(text_of(el))
-                el.clear()
+        with z.open("xl/sharedStrings.xml") as s_file:
+            for _, el in ET.iterparse(s_file):
+                if tag(el, "si"):
+                    shared.append(text_of(el))
+                    el.clear()
 
         header: dict[int, str] | None = None
         records: list[dict[str, str]] = []
-        for _, el in ET.iterparse(z.open("xl/worksheets/sheet1.xml")):
-            if not tag(el, "row"):
-                continue
-            cells: dict[int, str] = {}
-            for c in el:
-                if not tag(c, "c"):
+        with z.open("xl/worksheets/sheet1.xml") as sheet_file:
+            for _, el in ET.iterparse(sheet_file):
+                if not tag(el, "row"):
                     continue
-                v = next((x for x in c if tag(x, "v")), None)
-                if v is not None:
-                    value = shared[int(v.text)] if c.get("t") == "s" else (v.text or "")
+                cells: dict[int, str] = {}
+                for c in el:
+                    if not tag(c, "c"):
+                        continue
+                    v = next((x for x in c if tag(x, "v")), None)
+                    if v is not None:
+                        value = shared[int(v.text)] if c.get("t") == "s" else (v.text or "")
+                    else:
+                        inline = next((x for x in c if tag(x, "is")), None)
+                        value = text_of(inline) if inline is not None else ""
+                    if value != "":
+                        cells[col_index(c.get("r"))] = value
+                el.clear()
+                if header is None:
+                    header = cells
                 else:
-                    inline = next((x for x in c if tag(x, "is")), None)
-                    value = text_of(inline) if inline is not None else ""
-                if value != "":
-                    cells[col_index(c.get("r"))] = value
-            el.clear()
-            if header is None:
-                header = cells
-            else:
-                records.append({header[i]: v for i, v in cells.items() if i in header})
+                    records.append({header[i]: v for i, v in cells.items() if i in header})
     return records
 
 
