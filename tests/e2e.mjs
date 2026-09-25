@@ -476,6 +476,8 @@ if (isLocal) {
     await page.waitForSelector('.glyph-card .glyph-card__compare');
     await page.locator('.glyph-card .glyph-card__compare').first().click();
     await page.waitForSelector('#compare-tray:not([hidden])');
+    // フッターの余白は次の描画で付くので、付いてから最下部へ
+    await page.waitForFunction(() => parseFloat(document.body.style.getPropertyValue('--tray-space')) > 0);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await page.waitForTimeout(300);
     const [textBottom, trayTop] = await page.evaluate(() => [
