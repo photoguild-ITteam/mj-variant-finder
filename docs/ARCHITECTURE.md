@@ -78,7 +78,9 @@ pip install fonttools brotli
 python scripts/build_webfont.py --font path/to/ipamjm.ttf   # 既定は data/raw/ipamjm.ttf
 ```
 
-IPAmj明朝 Ver.006.01（MD5 を検証）を 1024 コードポイント単位で分割し、79 個の WOFF2（合計約 12MB）にする。ブラウザは `unicode-range` で表示に必要なファイルだけを読み込む。IVS の対応表（cmap format 14）を残すため、サブセット時に異体字セレクタも要求に含めている。IPAフォントライセンス v1.0 第3条に従い、改名、ライセンス同梱、オリジナルへの置き換え方法の提示を行っている。
+IPAmj明朝 Ver.006.01（MD5 を検証）を 1024 コードポイント単位で分割し、79 個の WOFF2（合計約 12MB）にする。ブラウザは `unicode-range` で表示に必要なファイルだけを読み込む。
+
+最初の画面（ロゴ・ようこそ・よく検索される異体字）の字はばらばらのブロックにあり、そのままだと十数ファイル（約3MB）を読む。そこでこれらの字と、IVS 表示の判定（`font-detector.js`）に使う2字形だけを入れた `mjv-preset.woff2`（約7KB、フォント名「MJ Variant Mincho Preset」）を別に作り、最初の画面の字はこのフォントで表示する。判定用の字形もここに入れてあるので、最初の画面では大きなフォントを読まない。入れる字は `search-index.json` の `quickAccess` と `build_webfont.py` の `PRESET_EXTRA`・`PRESET_IVS` で、`tests/fonts.test.mjs` が漏れを検出する（quickAccess を変えたらフォントも作り直す）。検索結果の字形カードは本体のフォントで表示するので、IVS の描き分けには影響しない。IVS の対応表（cmap format 14）を残すため、サブセット時に異体字セレクタも要求に含めている。IPAフォントライセンス v1.0 第3条に従い、改名、ライセンス同梱、オリジナルへの置き換え方法の提示を行っている。
 
 ## 人名・地名の読み辞書
 

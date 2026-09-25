@@ -3,6 +3,7 @@
 このフォルダの `mjv-*.woff2` は、**IPAmj明朝 Ver.006.01**（`ipamjm.ttf`、MD5 `BEEE256D4FFEC4C40493805A4D7E5CDD`）から作った**派生フォント**です。ブラウザ表示用に、次の変更を加えています。
 
 - Unicode ブロック単位で分割（`unicode-range` で必要なファイルだけを読み込む）
+- 最初の画面に出る字だけを入れた小さなフォント `mjv-preset.woff2`（フォント名「MJ Variant Mincho Preset」）も作る
 - WOFF2 形式に変換し、ヒンティングとグリフ名を削除
 - IPAフォントライセンス v1.0 第3条1項(4) に従い、フォント名を「MJ Variant Mincho」に変更
 
@@ -25,10 +26,11 @@ python scripts/build_webfont.py --font path/to/ipamjm.ttf
 
 1. 文字情報技術促進協議会の配布ページ <https://moji.or.jp/mojikiban/font/> で IPAフォントライセンスを確認し、IPAmj明朝 Ver.006.01 をダウンロードします（配布は窓の杜から）。
 2. **端末にインストールする場合**: `ipamjm.ttf` をOSにインストールします。`fonts.css` は `local("IPAmjMincho")` を先に参照するので、ブラウザは派生フォントをダウンロードせず、オリジナルを使います。
-3. **サーバーで配信する場合**: `fonts.css` の `@font-face` を次の1つに置き換え、`ipamjm.ttf` を同じフォルダに置きます。
+3. **サーバーで配信する場合**: `fonts.css` の `@font-face` をすべて次の2つに置き換え、`ipamjm.ttf` を同じフォルダに置きます。
 
    ```css
    @font-face { font-family: "MJ Variant Mincho"; src: url("ipamjm.ttf") format("truetype"); }
+   @font-face { font-family: "MJ Variant Mincho Preset"; src: url("ipamjm.ttf") format("truetype"); }
    ```
 
 Word や Excel などほかのアプリに IVS 付きの文字を貼り付けて正しく表示するには、その端末に IPAmj明朝をインストールする必要があります。

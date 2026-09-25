@@ -27,7 +27,7 @@
     "build:data": "python scripts/build_variant_db.py",
     "build:font": "python scripts/build_webfont.py",
     "serve": "python -m http.server 8765 --bind 127.0.0.1",
-    "test": "node --test tests/db.test.mjs tests/glyph-info.test.mjs tests/handwriting.test.mjs tests/image-search.test.mjs && python -m unittest scripts/test_variant_db.py",
+    "test": "node --test tests/db.test.mjs tests/fonts.test.mjs tests/glyph-info.test.mjs tests/handwriting.test.mjs tests/image-search.test.mjs && python -m unittest scripts/test_variant_db.py",
     "test:e2e": "node tests/e2e.mjs",
     "build:vendor": "node scripts/vendor/build.mjs",
     "build:handwriting": "node scripts/build_handwriting_db.mjs",

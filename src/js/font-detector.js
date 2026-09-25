@@ -1,6 +1,9 @@
 // IPAmj明朝の導入状況と、ブラウザで IVS が描き分けられるかを判定する。
 
 export const WEB_FONT_FAMILY = 'MJ Variant Mincho';
+// 最初の画面の字だけを入れた小さなフォント（scripts/build_webfont.py の PRESET_*）。
+// 下の IVS_SAMPLE_A/B も入っているので、判定のために大きなフォントを読まずに済む
+export const PRESET_FONT_FAMILY = 'MJ Variant Mincho Preset';
 const LOCAL_FAMILIES = ['IPAmjMincho', 'IPAmj明朝'];
 
 // 邉 の IVS 違い（MJ026190 と MJ026191）。フォントが IVS に対応していれば字形が変わる
@@ -68,7 +71,8 @@ export async function testIvsRendering(family) {
  */
 export async function detectFontStatus() {
   const local = detectLocalFont();
-  const webFontIvs = await testIvsRendering(WEB_FONT_FAMILY);
+  // 同じ作り方の Webフォントなので、小さなフォントで描き分けられれば本体でも描き分けられる
+  const webFontIvs = await testIvsRendering(PRESET_FONT_FAMILY);
   const status = webFontIvs ? (local ? 'local' : 'webfont') : 'unsupported';
   return { local, webFontIvs, status };
 }

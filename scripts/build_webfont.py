@@ -8,6 +8,7 @@ IPAフォントライセンス v1.0 第3条1項に従い:
 
 入力: data/raw/ipamjm.ttf（IPAmj明朝 Ver.006.01。窓の杜から取得: https://moji.or.jp/mojikiban/font/）
 出力: src/fonts/mjv-<先頭コードポイント>.woff2, src/fonts/fonts.css
+      src/fonts/mjv-preset.woff2 … 最初の画面に出る字だけのフォント（下の PRESET_EXTRA を参照）
 
 依存: pip install fonttools brotli
 使い方: python scripts/build_webfont.py [--font data/raw/ipamjm.ttf] [--out src/fonts] [--jobs 8]
@@ -34,6 +35,14 @@ FILE_PREFIX = "mjv"
 BLOCK_BITS = 10          # データのシャードと同じ 1024 コードポイント単位で区切る
 MIN_GLYPHS = 400         # これより小さいブロックは隣と結合する
 VARIATION_SELECTORS = [*range(0xFE00, 0xFE10), *range(0xE0100, 0xE01F0)]
+# 最初の画面（ロゴ・ようこそ・よく検索される異体字）の字は、ばらばらのブロックにあるので
+# ブロック単位のフォントだと十数ファイル（約3MB）を読む。そこだけ小さなフォントで表示する。
+# よく検索される異体字は search-index.json の quickAccess から読み、ほかの字をここに書く
+PRESET_FAMILY = "MJ Variant Mincho Preset"
+PRESET_FILE = f"{FILE_PREFIX}-preset.woff2"
+PRESET_EXTRA = "異邊"  # ロゴ（index.html の .brand__mark）、ようこそ画面の字（src/js/ui/results.js）
+# IVS を描き分けられるかの判定（src/js/font-detector.js の IVS_SAMPLE_A/B）もこのフォントで行うので、その2字形も入れる
+PRESET_IVS = ["邉󠄏", "邉󠄙"]
 
 NAME_OVERRIDES = {
     1: FAMILY,
@@ -90,8 +99,14 @@ def rename(font: TTFont) -> None:
     font["post"].formatType = 3.0  # グリフ名を持たせない（サイズ削減）
 
 
-def build_one(args: tuple[str, str, list[int]]) -> tuple[str, int]:
-    font_path, out_path, codepoints = args
+def preset_codepoints() -> list[int]:
+    """最初の画面用のフォントに入れる字（異体字セレクタを含む。unicode-range には異体字セレクタを書かない）."""
+    index = json.loads((ROOT / "src" / "data" / "search-index.json").read_text(encoding="utf-8"))
+    return sorted({ord(ch) for ch in "".join(index["quickAccess"]) + PRESET_EXTRA + "".join(PRESET_IVS)})
+
+
+def build_one(args: tuple[str, str, list[int], bool]) -> tuple[str, int]:
+    font_path, out_path, codepoints, with_ivs = args
     options = subset.Options()
     options.flavor = "woff2"
     options.layout_features = ["*"]
@@ -100,10 +115,12 @@ def build_one(args: tuple[str, str, list[int]]) -> tuple[str, int]:
     options.notdef_outline = True
     options.hinting = False
     options.glyph_names = False
-    font = TTFont(font_path, lazy=True)
+    # 作成日時を元のフォントのままにする（作り直しても中身が同じならファイルも同じになる）
+    font = TTFont(font_path, lazy=True, recalcTimestamp=False)
     subsetter = subset.Subsetter(options)
     # 異体字セレクタを要求に含めないと cmap format 14（IVS/SVS の対応表）が捨てられる
-    subsetter.populate(unicodes=codepoints + VARIATION_SELECTORS)
+    # （最初の画面用は通常の字形だけを表示するので要らない）
+    subsetter.populate(unicodes=codepoints + (VARIATION_SELECTORS if with_ivs else []))
     subsetter.subset(font)
     rename(font)
     subset.save_font(font, out_path, options)
@@ -132,22 +149,24 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     for old in args.out.glob(f"{FILE_PREFIX}-*.woff2"):
         old.unlink()
-    jobs = [(str(args.font), str(args.out / f"{FILE_PREFIX}-{g[0]:04X}.woff2"), g) for g in groups]
+    jobs = [(str(args.font), str(args.out / f"{FILE_PREFIX}-{g[0]:04X}.woff2"), g, True) for g in groups]
+    preset = preset_codepoints()
+    preset_job = (str(args.font), str(args.out / PRESET_FILE), preset, False)
 
     total = 0
     with ProcessPoolExecutor(max_workers=args.jobs) as pool:
-        for path, size in pool.map(build_one, jobs):
+        for path, size in pool.map(build_one, [*jobs, preset_job]):
             total += size
             log(f"  {Path(path).name} {size / 1024:.0f} KB")
 
     faces = []
-    for _, path, group in jobs:
+    for family, (_, path, group, _) in [*((FAMILY, job) for job in jobs), (PRESET_FAMILY, preset_job)]:
         faces.append(
             "@font-face{"
-            f'font-family:"{FAMILY}";font-style:normal;font-weight:400;font-display:swap;'
+            f'font-family:"{family}";font-style:normal;font-weight:400;font-display:swap;'
             # 端末に IPAmj明朝 があればダウンロードせずそちらを使う
             f'src:local("IPAmjMincho"),local("IPAmj明朝"),url("{Path(path).name}") format("woff2");'
-            f"unicode-range:{css_range(to_ranges(group))};"
+            f"unicode-range:{css_range(to_ranges([cp for cp in group if cp not in VARIATION_SELECTORS]))};"
             "}"
         )
     header = (
@@ -156,7 +175,7 @@ def main() -> None:
     )
     (args.out / "fonts.css").write_text(header + "\n".join(faces) + "\n", encoding="utf-8", newline="\n")
     # SVG 書き出し（src/js/glyph-export.js）が、文字 → woff2 ファイルを引くための対応表
-    font_map = [[g[0], g[-1], Path(path).name] for _, path, g in jobs]
+    font_map = [[g[0], g[-1], Path(path).name] for _, path, g, _ in jobs]
     (args.out / "fonts-map.json").write_text(json.dumps(font_map, separators=(",", ":")), encoding="utf-8", newline="\n")
     log(f"total {total / 1024 / 1024:.1f} MB")
 

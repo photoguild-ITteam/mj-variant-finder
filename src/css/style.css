@@ -37,6 +37,8 @@
 
   --font-ui: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", "Noto Sans JP", sans-serif;
   --font-glyph: "MJ Variant Mincho", "IPAmjMincho", "IPAmj明朝", serif;
+  /* 最初の画面の字だけを入れた小さなフォント（scripts/build_webfont.py の PRESET_EXTRA）。無い字は通常のフォントで表示 */
+  --font-glyph-preset: "MJ Variant Mincho Preset", var(--font-glyph);
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Consolas", monospace;
 
   --radius-sm: 6px;
@@ -149,7 +151,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surfac
   display: grid; place-items: center; flex: none;
   width: 40px; height: 40px; border-radius: 9px;
   background: #0f172a; color: #f6f3ec;
-  font-family: var(--font-glyph); font-size: 26px; line-height: 1;
+  font-family: var(--font-glyph-preset); font-size: 26px; line-height: 1;
   box-shadow: inset 0 -3px 0 #b91c1c;
 }
 .brand__text { display: flex; flex-direction: column; min-width: 0; }
@@ -280,6 +282,8 @@ a.icon-button { color: inherit; }
   border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--surface);
 }
 .field select { font-family: var(--font-glyph), var(--font-ui); }
+/* 閉じている間も選択中の文字のフォントが読み込まれるので、開くまでは UI のフォントにする（最初の画面を軽くする） */
+.filters:not([open]) .field select { font-family: var(--font-ui); }
 .field__range { display: flex; align-items: center; gap: 6px; }
 .field__range input { min-width: 0; }
 .field--check { flex-direction: row; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; }
@@ -291,6 +295,7 @@ a.icon-button { color: inherit; }
 .quick-access { margin-top: 20px; }
 .quick-access__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
 .quick-access__list button {
+  font-family: var(--font-glyph-preset);
   aspect-ratio: 1; display: grid; place-items: center; padding: 0;
   border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface);
   font-size: 24px; cursor: pointer;
@@ -318,7 +323,7 @@ a.icon-button { color: inherit; }
 .notice--warn { border-color: var(--gold-bright); background: var(--gold-tint); color: var(--text); }
 
 .empty-state { padding: 40px 24px; }
-.empty-state__glyph { font-size: 88px; color: var(--text); margin-bottom: 12px; }
+.empty-state__glyph { font-family: var(--font-glyph-preset); font-size: 88px; color: var(--text); margin-bottom: 12px; }
 .empty-state h2 { color: var(--text); margin: 0 0 8px; font-size: 20px; }
 .empty-state ul { display: inline-grid; gap: 4px; text-align: left; margin: 16px auto 0; padding-left: 20px; }
 

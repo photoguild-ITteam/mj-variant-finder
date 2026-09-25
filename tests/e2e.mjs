@@ -49,8 +49,17 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     const res = await route.fetch();
     route.fulfill({ response: res, body: (await res.text()).replace(/local\("[^"]+"\),/g, '') });
   });
-  await page.goto(BASE);
+  const firstFonts = [];
+  page.on('request', (req) => { if (req.url().endsWith('.woff2')) firstFonts.push(req.url().split('/').pop()); });
+  await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.waitForSelector('#q:not([disabled])');
+
+  await check('最初の画面では大きなフォントを読まない', async () => {
+    // 最初の画面の字は mjv-preset.woff2 に入れてある。mjv-0020（英数字、50KB）は検索欄の入力用
+    const unexpected = firstFonts.filter((name) => !['mjv-preset.woff2', 'mjv-0020.woff2'].includes(name));
+    assert.deepEqual(unexpected, []);
+    assert.ok(firstFonts.includes('mjv-preset.woff2'), firstFonts.join(','));
+  });
 
   await check('フォント状態が判定される（IVS描き分け可）', async () => {
     await page.waitForFunction(() => document.querySelector('#font-status').dataset.state !== 'checking', null, { timeout: 30000 });
