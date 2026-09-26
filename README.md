@@ -37,6 +37,7 @@
 - 「異体字に置き換えた表記」（人名・地名の読み検索）は機械的に作ったもので、実在の確認はしていません
 - 手書き・画像からの認識は候補を出すもので、結果の正しさは保証しません
 - 本ソフトウェアは MIT ライセンスのもと**現状のまま**提供され、サポート（SLA）はありません。**個別の文字の調査・解釈のご相談にはお応えできません**
+- 字形や文字コードが正しいかは、[公式の確認先](#公式の確認先)の検索で確かめてください
 
 ## 使い方
 
@@ -129,6 +130,13 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 - [KanjiVG](https://kanjivg.tagaini.net/)（Copyright (C) 2009-2013 Ulrich Apel、CC BY-SA 3.0）・[Kanji Canvas](https://github.com/asdfjkl/kanjicanvas)（手書き認識）
 - [mecab-ipadic](https://taku910.github.io/mecab/)・[郵便番号データ](https://www.post.japanpost.jp/zipcode/dl/utf-zip.html)（人名・地名の読み）
 
+## 公式の確認先
+
+字形や文字コードが正しいかは、公的機関やデータの提供元が公開している次の検索で確かめてください。本ツールはこれらの検索システムとは無関係で、データも使っていません。
+
+- [戸籍統一文字情報](https://houmukyoku.moj.go.jp/KOSEKIMOJIDB/M01.html)（法務省）: 戸籍で使う字を、読み・画数・部首・文字コード・戸籍統一文字番号で検索できます
+- [文字情報基盤検索システム](https://moji.or.jp/mojikibansearch/basic)（文字情報技術促進協議会）: MJ文字情報一覧表の字形を検索できます
+
 ## English summary
 
 **MJ Variant Finder** is a static web tool for searching, comparing, copying and exporting Japanese kanji variant glyphs (Ideographic Variation Sequences, IVS) of the **IPAmj Mincho** font, entirely in the browser — no font installation, server-side code or external API required.
@@ -143,7 +151,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 - In-app usage guide and keyboard navigation (`/` to focus search)
 
 The UI is in Japanese. Data sources are the MJ Character Information List (CC BY-SA 2.1 JP), Unicode IVD/Unihan, KanjiVG (CC BY-SA 3.0) and mecab-ipadic.
-This is an **unofficial** tool, not affiliated with the Character Information Technology Promotion Council (CITPC) or the Information-technology Promotion Agency, Japan (IPA), and the accuracy of the data is not guaranteed.
+This is an **unofficial** tool, not affiliated with the Character Information Technology Promotion Council (CITPC) or the Information-technology Promotion Agency, Japan (IPA), and the accuracy of the data is not guaranteed. For authoritative checks, use the official searches: the Ministry of Justice's [Koseki Unified Character Information](https://houmukyoku.moj.go.jp/KOSEKIMOJIDB/M01.html) and CITPC's [Moji Johō Kiban search](https://moji.or.jp/mojikibansearch/basic).
 
 **License**: mixed. The program is MIT; the data and fonts keep the licenses of their sources (CC BY-SA 2.1 JP, CC BY-SA 3.0, IPA Font License v1.0 and others). See [LICENSES.md](LICENSES.md) for the per-file list.
 
