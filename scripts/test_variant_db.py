@@ -69,6 +69,22 @@ class TestUnits(unittest.TestCase):
     def test_kata_to_hira(self):
         self.assertEqual(kata_to_hira("ヘン・あたり"), "へん・あたり")
 
+    def test_verify_sha256(self):
+        from scripts.build_variant_db import verify_sha256
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmpdir:
+            file_path = Path(tmpdir) / "test.txt"
+            content = b"hello"
+            file_path.write_bytes(content)
+            expected = hashlib.sha256(content).hexdigest()
+            # correct
+            verify_sha256(file_path, expected)
+            # incorrect
+            with self.assertRaises(SystemExit) as cm:
+                verify_sha256(file_path, "wrong_hash")
+            self.assertIn("SHA256 不一致", str(cm.exception))
+            self.assertIn("docs/ARCHITECTURE.md", str(cm.exception))
+
     def test_to_version(self):
         cases = {
             "1": 1,

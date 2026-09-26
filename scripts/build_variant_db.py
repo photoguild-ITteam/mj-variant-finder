@@ -4,8 +4,8 @@
 入力（data/raw/ に配置。無ければ公式配布元から自動ダウンロード）:
   - MJ文字情報一覧表 Ver.006.02 (mji.00602.xlsx)            CC BY-SA 2.1 JP / CITPC
   - MJ縮退マップ Ver.1.2.0 (MJShrinkMap.1.2.0.json)           CC BY-SA 2.1 JP / IPA
-  - Unicode IVD 2026-08-03 (IVD_Sequences.txt)                Unicode License
-  - Unihan Database (Unihan.zip, Unihan_Variants.txt のみ使用)  Unicode License
+  - Unicode IVD 2026-08-03 (IVD_Sequences.2026-08-03.txt)                Unicode License
+  - Unihan Database (Unihan.18.0.0.zip, Unihan_Variants.txt のみ使用)  Unicode License
 
 出力（src/data/）:
   - meta.json          ビルド情報・出典・ライセンス・件数
@@ -173,7 +173,8 @@ def verify_sha256(path: Path, expected: str) -> None:
             f"SHA256 不一致 ({path.name}):\n"
             f"  期待値: {expected}\n"
             f"  実際値: {actual}\n"
-            f"ファイルが破損しているか、新しい版に変更されている可能性があります。"
+            f"ファイルが破損しているか、新しい版に変更されている可能性があります。\n"
+            f"新しい版に上げた場合は SOURCES の sha256 を書き換えてください（docs/ARCHITECTURE.md）"
         )
 
 
@@ -196,16 +197,7 @@ def ensure_sources(raw: Path, offline: bool) -> None:
                 while chunk := res.read(65536):
                     out.write(chunk)
             if expected_sha:
-                actual_sha = sha256_of(tmp)
-                if actual_sha != expected_sha:
-                    if tmp.exists():
-                        tmp.unlink()
-                    sys.exit(
-                        f"SHA256 不一致 ({src['file']}):\n"
-                        f"  期待値: {expected_sha}\n"
-                        f"  実際値: {actual_sha}\n"
-                        f"ダウンロードしたファイルが破損しているか、内容が変更されています。"
-                    )
+                verify_sha256(tmp, expected_sha)
             tmp.replace(path)
         except BaseException:
             if tmp.exists():

@@ -10,6 +10,7 @@
 import { createReadStream, createWriteStream, existsSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createGunzip } from 'node:zlib';
 import { pipeline } from 'node:stream/promises';
+import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { createContext, runInContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -21,29 +22,48 @@ const KANJIVG = {
   version: 'r20250816',
   license: 'CC BY-SA 3.0',
   page: 'https://kanjivg.tagaini.net/',
-  gz: `${ROOT}data/raw/kanjivg.xml.gz`,
-  xml: `${ROOT}data/raw/kanjivg.xml`,
+  sha256: 'b36579789775ea912d5e98356bf243f54fb953fa3b58a16c2d6995f252e2a3e2',
 };
+KANJIVG.gz = `${ROOT}data/raw/kanjivg-${KANJIVG.version}.xml.gz`;
+KANJIVG.xml = `${ROOT}data/raw/kanjivg-${KANJIVG.version}.xml`;
 const SAMPLE_STEP = 6; // KanjiVG の 109x109 座標系での分割間隔
 const OUT = `${ROOT}src/data/handwriting-patterns.json`;
 
 // ---------------------------------------------------------------- KanjiVG の読み込み
 
+async function verifySha256(path, expected) {
+  const hash = createHash('sha256');
+  await pipeline(createReadStream(path), hash);
+  const actual = hash.digest('hex');
+  if (actual !== expected) {
+    throw new Error(
+      `SHA256 不一致 (${path.split('/').pop()}):\n` +
+      `  期待値: ${expected}\n` +
+      `  実際値: ${actual}\n` +
+      `新しい版に上げた場合は KANJIVG の sha256 を書き換えてください（docs/ARCHITECTURE.md）`
+    );
+  }
+}
+
 async function readKanjiVG() {
-  if (!existsSync(KANJIVG.xml) || statSync(KANJIVG.xml).size === 0) {
-    if (!existsSync(KANJIVG.gz)) {
-      console.error(`download ${KANJIVG.url}`);
-      const res = await fetch(KANJIVG.url);
-      if (!res.ok) throw new Error(`KanjiVG のダウンロードに失敗しました (${res.status})`);
-      const gzPart = `${KANJIVG.gz}.part`;
-      try {
-        await pipeline(Readable.fromWeb(res.body), createWriteStream(gzPart));
-        renameSync(gzPart, KANJIVG.gz);
-      } catch (err) {
-        if (existsSync(gzPart)) unlinkSync(gzPart);
-        throw err;
-      }
+  if (!existsSync(KANJIVG.gz)) {
+    console.error(`download ${KANJIVG.url}`);
+    const res = await fetch(KANJIVG.url);
+    if (!res.ok) throw new Error(`KanjiVG のダウンロードに失敗しました (${res.status})`);
+    const gzPart = `${KANJIVG.gz}.part`;
+    try {
+      await pipeline(Readable.fromWeb(res.body), createWriteStream(gzPart));
+      await verifySha256(gzPart, KANJIVG.sha256);
+      renameSync(gzPart, KANJIVG.gz);
+    } catch (err) {
+      if (existsSync(gzPart)) unlinkSync(gzPart);
+      throw err;
     }
+  } else {
+    await verifySha256(KANJIVG.gz, KANJIVG.sha256);
+  }
+
+  if (!existsSync(KANJIVG.xml) || statSync(KANJIVG.xml).size === 0) {
     const xmlPart = `${KANJIVG.xml}.part`;
     try {
       await pipeline(createReadStream(KANJIVG.gz), createGunzip(), createWriteStream(xmlPart));
