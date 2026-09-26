@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import tempfile
@@ -17,7 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import (  # noqa: E402
-    ROOT, SOURCES, build_glyph, jis_level, kata_to_hira, read_ivd, read_strict_xlsx, to_version
+    ROOT, SOURCES, build_glyph, jis_level, kata_to_hira, read_ivd, read_strict_xlsx, to_version,
+    verify_sha256
 )
 from build_names_db import make_variants, read_postal  # noqa: E402
 
@@ -70,8 +72,6 @@ class TestUnits(unittest.TestCase):
         self.assertEqual(kata_to_hira("ヘン・あたり"), "へん・あたり")
 
     def test_verify_sha256(self):
-        from scripts.build_variant_db import verify_sha256
-        import hashlib
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "test.txt"
             content = b"hello"

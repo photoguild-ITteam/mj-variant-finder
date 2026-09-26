@@ -8,6 +8,7 @@
 // 4つ目は 8x8 の「墨の量」を 0-15 で表した指紋（16進64桁）。総当たりは遅いので、
 // 画面側はまず画数と指紋で候補を数百字に絞り、その中だけ Kanji Canvas で照合する。
 import { createReadStream, createWriteStream, existsSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { basename } from 'node:path';
 import { createGunzip } from 'node:zlib';
 import { pipeline } from 'node:stream/promises';
 import { createHash } from 'node:crypto';
@@ -37,7 +38,7 @@ async function verifySha256(path, expected) {
   const actual = hash.digest('hex');
   if (actual !== expected) {
     throw new Error(
-      `SHA256 不一致 (${path.split('/').pop()}):\n` +
+      `SHA256 不一致 (${basename(path)}):\n` +
       `  期待値: ${expected}\n` +
       `  実際値: ${actual}\n` +
       `新しい版に上げた場合は KANJIVG の sha256 を書き換えてください（docs/ARCHITECTURE.md）`
