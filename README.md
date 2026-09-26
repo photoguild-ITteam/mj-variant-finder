@@ -58,7 +58,7 @@ ES Modules と fetch を使うので、`file://` では動きません（HTTPサ
 
 ### 自分のサイトに置く
 
-`index.html` と `src/` を、任意の静的ホスティングに置くだけです（GitHub Pages、Netlify、S3 など）。**`LICENSE`・`LICENSES.md`・`licenses/` も一緒に置いてください**（画面からリンクしており、データのライセンスの条件でもあります。→ [ライセンス](#ライセンス)）。`index.html` の `og:url`・`og:image`（リンクを共有したときのプレビュー）は、置いた先の URL に書き換えてください。相対パスなので、サブパスに置いても動きます。認証付きのサーバーの後ろに置く場合は、`src/js/config.js` の `sessionWatch` を設定すると、ログイン切れの案内を出せます。
+リポジトリ直下の HTML（`index.html`・`guide.html`）と `src/` を、任意の静的ホスティングに置くだけです（GitHub Pages、Netlify、S3 など）。**`LICENSE`・`LICENSES.md`・`licenses/` も一緒に置いてください**（画面からリンクしており、データのライセンスの条件でもあります。→ [ライセンス](#ライセンス)）。各 HTML の `og:url`・`og:image`（リンクを共有したときのプレビュー）と、`guide.html` の `canonical` は、置いた先の URL に書き換えてください。相対パスなので、サブパスに置いても動きます。認証付きのサーバーの後ろに置く場合は、`src/js/config.js` の `sessionWatch` を設定すると、ログイン切れの案内を出せます。
 
 ## 開発
 

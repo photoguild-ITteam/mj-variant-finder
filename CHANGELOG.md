@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-26
+
 ### データ
 
 - Unihan を 17.0.0 → 18.0.0 に更新（#3、#2 を解決）。Unihan だけに基づく関連（参考）が 40 件増え、4 件減った（例: 戀→恋・盜→盗 の意味上の異体、兌⇄兑）。MJ縮退マップに基づく関連は変わらない。ライセンス（Unicode License v3）も変更なし
@@ -74,5 +76,6 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/photoguild-ITteam/mj-variant-finder/releases/tag/v0.1.0
