@@ -19,17 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----------------------------------------------------------------------------
-このライセンスが適用されるのは、プログラム（index.html、src/js/、src/css/、
-scripts/、tests/）だけです。次のものは別のライセンスで提供されます。
-詳細は LICENSES.md を参照してください。
-
-  src/data/      文字データ（由来ごとに異なる）
-  src/fonts/     IPAmj明朝の派生フォント（IPAフォントライセンス v1.0）
-  src/vendor/    同梱している外部ライブラリ（それぞれのライセンス）
-
-手書き認識のデータ（src/data/handwriting-patterns.json）は KanjiVG
-（Copyright (C) 2009-2013 Ulrich Apel, CC BY-SA 3.0, https://kanjivg.tagaini.net）を
-加工したものです。条文の原文は licenses/ にあります。
----------------------------------------------------------------------------
