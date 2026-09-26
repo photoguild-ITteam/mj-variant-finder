@@ -28,7 +28,8 @@ jobs:
       - name: 公開するファイルを集める
         run: |
           mkdir _site
-          cp index.html _site/
+          # リポジトリ直下のページ（index.html・guide.html など）はすべて公開する
+          cp ./*.html _site/
           cp -r src _site/
           # 各ライセンス文書はサイトから辿れるようにする（index.html のリンク先）
           cp LICENSE LICENSES.md _site/

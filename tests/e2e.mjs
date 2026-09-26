@@ -647,6 +647,61 @@ if (isLocal) {
   }
 }
 
+// --- 静的ガイドページ（guide.html）
+{
+  const { page, errors, context } = await newPage();
+  await check('使い方ガイド（guide.html）の内容・目次・テーマ切り替え', async () => {
+    await page.goto(BASE + 'guide.html');
+    await page.waitForSelector('h1:has-text("異体字・IVS 完全活用ガイド")');
+
+    // 必須セクションの存在確認
+    assert.ok(await page.locator('#what-is-ivs').count() > 0, 'IVSとは セクション');
+    assert.ok(await page.locator('#why-corrupted').count() > 0, '化ける理由 セクション');
+    assert.ok(await page.locator('#how-to-use-in-canva').count() > 0, 'Canva で使う方法 セクション');
+    assert.ok(await page.locator('#app-features').count() > 0, 'ツールの便利な使い方 セクション');
+    assert.ok(await page.locator('#faq').count() > 0, 'FAQ セクション');
+
+    // 目次のリンクが正しく機能
+    const tocLinks = await page.$$eval('.guide-toc a', (els) => els.map((e) => e.getAttribute('href')));
+    assert.ok(tocLinks.includes('#how-to-use-in-canva'));
+
+    // トップへの戻りリンク
+    assert.ok(await page.locator('.header-actions a[href="./"]').count() > 0);
+
+    // テーマ切り替え
+    await page.click('#theme-toggle');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    await page.screenshot({ path: OUT + '13-guide-dark.png' });
+    // 選んだテーマは保存され、開き直してもボタンの説明が今のテーマに合っている
+    await page.reload();
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    assert.equal(await page.getAttribute('#theme-toggle', 'aria-label'), 'ライトモードに切り替え');
+    await page.click('#theme-toggle');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'light');
+
+    await page.screenshot({ path: OUT + '12-guide.png' });
+  });
+
+  await check('ガイドページでコンソールエラーなし', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
+// --- ガイドページのスマホ表示
+{
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  currentPage = page;
+  await check('ガイドページのスマホ幅表示と折りたたみ目次', async () => {
+    await page.goto(BASE + 'guide.html');
+    await page.waitForSelector('h1:has-text("異体字・IVS 完全活用ガイド")');
+    const [sw, iw] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+    assert.ok(sw <= iw, `横スクロール発生: ${sw} > ${iw}`);
+    assert.ok(await page.locator('.guide-toc-mobile summary').isVisible());
+    await page.screenshot({ path: OUT + '14-guide-mobile.png' });
+  });
+  await context.close();
+}
+
 await browser.close();
 for (const r of results) console.log(r.join(' | '));
 process.exitCode = results.some((r) => r[0] === 'FAIL') ? 1 : 0;

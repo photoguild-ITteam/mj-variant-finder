@@ -731,6 +731,18 @@ body:has(dialog[open]) .compare-tray { display: none; }
   .help-table td { padding: 0 0 8px; }
 }
 
+.help-guide-link {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.help-guide-link a {
+  font-weight: 600;
+}
+.help-guide-link .muted {
+  font-size: 12.5px;
+}
+
 .license h3 { margin: 18px 0 6px; }
 .license h3:first-child { margin-top: 0; }
 .license ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
