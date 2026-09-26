@@ -1,6 +1,6 @@
 {
   "name": "mj-variant-finder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MJ Variant Finder — IPAmj明朝の異体字（IVS）をブラウザだけで検索・比較・画像化する静的Webツール",
   "license": "MIT",
   "private": true,
