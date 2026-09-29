@@ -20,6 +20,7 @@
 
 ### 変更
 
+- README を改定: 検索履歴とお気に入り機能、および拡充された異体字の呼び名検索の説明を反映
 - `LICENSE` を MIT License の条文だけにした（GitHub がライセンスを「Other」ではなく MIT と判定するように）。プログラム以外（`src/data/`・`src/fonts/`・`src/vendor/`）のライセンスと KanjiVG の表示は、これまでどおり `LICENSES.md`・README・`licenses/` に記載
 
 ## [0.2.0] - 2026-09-26
