@@ -11,7 +11,8 @@
 
 「邉」と「邊」、「髙」と「高」のような**字形の違い**を、コードの違い（Unicode・IVS）ごと確認できます。戸籍・住基・入管など、文字の違いが問題になる業務で、どの字形を使うべきかを調べる用途を想定しています。
 
-- **検索**: 文字・単語（1文字ずつ展開）、読み（ひらがな。人名・地名の辞書つき）、字の呼び名（`はしごだか`・`つちよし`）や「部首名＋読み」（`やまへんのさき`）、MJ文字図形名（`MJ026190`）、コードポイント（`U+8FBB`、`9089_E010F`、HTML参照）、部首・画数・漢字施策での絞り込み
+- **検索**: 文字・単語（1文字ずつ展開）、読み（ひらがな。人名・地名の辞書つき）、字の呼び名（`はしごだか`・`つちよし`・`まゆはま`・`まのれい` など）や「部首名＋読み」（`やまへんのさき`）、MJ文字図形名（`MJ026190`）、コードポイント（`U+8FBB`、`9089_E010F`、HTML参照）、部首・画数・漢字施策での絞り込み
+- **履歴とお気に入り（ピン留め）**: 検索した文字を直近10件まで自動で履歴表示。よく使う文字は文字詳細から「☆ お気に入り」でピン留め（最大20件）でき、ワンクリックで再検索や解除が可能（すべてブラウザの `localStorage` で完結し、外部通信なし）
 - **異体字の関係**: 同じ文字コード内の IVS 異体字と、文字コードが異なる新旧字体・俗字（辺・邉・邊 など）を、MJ縮退マップをもとに一覧
 - **詳細情報**: MJ文字図形名、IVS、JIS水準、戸籍統一文字番号、住基ネット統一文字コード、入管コード、漢字施策、読み、画数、部首 など
 - **ワンクリックコピー**: IVS付きの文字、MJ番号、`U+9089 U+E010F`、HTML数値参照、JS/CSS エスケープ
@@ -141,7 +142,8 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 
 **MJ Variant Finder** is a static web tool for searching, comparing, copying and exporting Japanese kanji variant glyphs (Ideographic Variation Sequences, IVS) of the **IPAmj Mincho** font, entirely in the browser — no font installation, server-side code or external API required.
 
-- **Search** by character or word, reading (hiragana, with a name/place-name dictionary), glyph nicknames (`はしごだか`) and "radical + reading" (`やまへんのさき`), MJ glyph name (`MJ026190`), code point (`U+8FBB`, `9089_E010F`), radical and stroke count
+- **Search** by character or word, reading (hiragana, with a name/place-name dictionary), glyph nicknames (`はしごだか`, `まゆはま`) and "radical + reading" (`やまへんのさき`), MJ glyph name (`MJ026190`), code point (`U+8FBB`, `9089_E010F`), radical and stroke count
+- **History & Favorites**: locally saves recent search queries (up to 10) and allows pinning favorite kanji (up to 20) with one-click re-search via browser `localStorage` (no external network requests)
 - **Variants**: IVS variants of the same code point, and related characters with different code points (old/new forms, based on the MJ Shrink Map and Unihan)
 - **Diff & Compare**: highlight glyph differences in color against the default glyph; filter variants by official registry (Koseki, Juki, Immigration, JIS, Gothic coverage); compare multiple glyphs side-by-side or overlaid
 - **Gothic coverage**: check whether a glyph is supported in Gothic fonts (○/△/×)
