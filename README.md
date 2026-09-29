@@ -16,7 +16,7 @@
 - **異体字の関係**: 同じ文字コード内の IVS 異体字と、文字コードが異なる新旧字体・俗字（辺・邉・邊 など）を、MJ縮退マップをもとに一覧
 - **詳細情報**: MJ文字図形名、IVS、JIS水準、戸籍統一文字番号、住基ネット統一文字コード、入管コード、漢字施策、読み、画数、部首 など
 - **ワンクリックコピー**: IVS付きの文字、MJ番号、`U+9089 U+E010F`、HTML数値参照、JS/CSS エスケープ
-- **画像・ベクター書き出し**: 透明PNG（クリップボードへコピー可）、SVGアウトライン。IVS やフォントの扱いが不確かなアプリ（Canva など）に、字形を崩さず持ち込めます
+- **画像・ベクター書き出し**: 透明PNG（クリップボードへコピー可）、SVGアウトライン。複数文字（例: 「渡辺」）を横書き・縦書きで連結した高解像度書き出しにも対応。IVS やフォントの扱いが不確かなアプリ（Canva など）に、字形を崩さず持ち込めます
 - **Webフォント表示**: IPAmj明朝の派生フォント（`unicode-range` で必要な分だけ読み込み。最初の画面は約7KBの小さなフォントだけで表示）。フォント未導入の環境でも IVS を正しく表示
 - **違いを色で表示**: 各字形を、IVS を付けないときの通常の字形と重ね、違う部分に色を付ける（通常の字形と同じものには「IVSなしと同じ」の印）
 - **字形の絞り込み**: 戸籍・住基・入管・JIS・ゴシック○ などで、字形の一覧を業務に合うものだけに
@@ -147,7 +147,7 @@ Issue・Pull Request を歓迎します（[CONTRIBUTING.md](CONTRIBUTING.md)）�
 - **Variants**: IVS variants of the same code point, and related characters with different code points (old/new forms, based on the MJ Shrink Map and Unihan)
 - **Diff & Compare**: highlight glyph differences in color against the default glyph; filter variants by official registry (Koseki, Juki, Immigration, JIS, Gothic coverage); compare multiple glyphs side-by-side or overlaid
 - **Gothic coverage**: check whether a glyph is supported in Gothic fonts (○/△/×)
-- **Copy** the character with its IVS, the MJ number, code points or escapes; **export** a transparent PNG or an SVG outline
+- **Copy** the character with its IVS, the MJ number, code points or escapes; **export** a transparent PNG or an SVG outline (including high-resolution horizontal/vertical multi-character export)
 - **Web font**: a derived font of IPAmj Mincho ("MJ Variant Mincho"), split with `unicode-range`
 - **Handwriting** and **image (screenshot) search**
 - In-app usage guide and keyboard navigation (`/` to focus search)

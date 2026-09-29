@@ -715,6 +715,18 @@ body:has(dialog[open]) .compare-tray { display: none; }
 .compare-legend .a::before { background: var(--crimson-bright); }
 .compare-legend .b::before { background: var(--overlay-b); }
 
+/* 複数文字の連結書き出しコントロール */
+.compare-export {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 20px; border-top: 1px solid var(--border); background: var(--gold-tint);
+  border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;
+}
+.compare-export__label { font-size: 13px; font-weight: 600; color: var(--gold); }
+.compare-export__options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.compare-export__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.result-header__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
 /* トースト */
 .clipboard-proxy { position: fixed; top: 0; left: 0; opacity: 0; pointer-events: none; }
 

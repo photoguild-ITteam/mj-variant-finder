@@ -684,6 +684,82 @@ if (isLocal) {
   await context.close();
 }
 
+// --- 複数文字の連結画像・SVG書き出し
+{
+  const { page, errors, context } = await newPage();
+  await check('複数文字の連結書き出し（PNG・SVG、横書き・縦書き）', async () => {
+    await page.goto(BASE);
+    await page.waitForSelector('#q:not([disabled])');
+
+    await page.fill('#q', '渡辺');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.tab');
+
+    const exportBtn = page.locator('.result-header__title-row button:has-text("連結書き出し")');
+    assert.ok(await exportBtn.isVisible());
+    await exportBtn.click();
+
+    await page.waitForSelector('#compare-dialog[open]');
+    assert.equal(await page.locator('.compare-item').count(), 2);
+
+    const exportBox = page.locator('#compare-export');
+    assert.ok(await exportBox.isVisible());
+
+    await page.selectOption('#compare-export-dir', 'vertical');
+    await page.selectOption('#compare-export-size', '1024');
+
+    await page.screenshot({ path: OUT + '16-multi-char-export.png' });
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.click('#compare-download-svg'),
+    ]);
+    assert.ok(download.suggestedFilename().endsWith('.svg'));
+    const svg = await readFile(await download.path(), 'utf8');
+    assert.match(svg, /<svg [^>]*viewBox=/);
+    assert.match(svg, /<path /);
+    const pathCount = (svg.match(/<path /g) || []).length;
+    assert.equal(pathCount, 2);
+
+    await page.click('#compare-copy-png');
+
+    await page.click('#compare-dialog [data-close]');
+    await page.waitForFunction(() => !document.querySelector('#compare-dialog')?.open);
+  });
+
+  await check('buildMultiSvg と renderMultiPng の寸法・パス検証', async () => {
+    const res = await page.evaluate(async () => {
+      const ex = await import('./src/js/glyph-export.js');
+      const glyphs = [
+        { char: '渡', mj: 'MJ024213' },
+        { char: '邊\u{E0102}', mj: 'MJ026190' },
+      ];
+      const svgH = await ex.buildMultiSvg(glyphs, { direction: 'horizontal' });
+      const svgV = await ex.buildMultiSvg(glyphs, { direction: 'vertical' });
+      const pngH = await ex.renderMultiPng(glyphs, { direction: 'horizontal', size: 512 });
+      const pngV = await ex.renderMultiPng(glyphs, { direction: 'vertical', size: 512 });
+
+      const vbH = svgH.match(/viewBox="0 0 (\d+) (\d+)"/);
+      const vbV = svgV.match(/viewBox="0 0 (\d+) (\d+)"/);
+
+      return {
+        svgHWidth: Number(vbH[1]),
+        svgHHeight: Number(vbH[2]),
+        svgVWidth: Number(vbV[1]),
+        svgVHeight: Number(vbV[2]),
+        pngHSize: pngH.size,
+        pngVSize: pngV.size,
+      };
+    });
+    assert.ok(res.svgHWidth > res.svgHHeight, '横書きSVGの幅');
+    assert.ok(res.svgVHeight > res.svgVWidth, '縦書きSVGの高さ');
+    assert.ok(res.pngHSize > 0 && res.pngVSize > 0, 'PNGサイズ');
+  });
+
+  await check('複数文字書き出しでコンソールエラーなし', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
 // --- 静的ガイドページ（guide.html）
 {
   const { page, errors, context } = await newPage();

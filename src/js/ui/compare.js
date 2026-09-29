@@ -1,6 +1,7 @@
 // 字形の比較: 画面下のトレイと、比較ダイアログ（並べる／先頭2字を重ねる）。
 
 import { $, h } from './dom.js';
+import { exportMultiImage } from './export-actions.js';
 import { showToast } from './feedback.js';
 import { sequenceLabel } from './glyph-info.js';
 
@@ -31,6 +32,25 @@ export function setupCompare() {
   $('#compare-size').addEventListener('input', applySize);
   $('#compare-guides').addEventListener('change', renderStage);
   $('#compare-overlay').addEventListener('change', renderStage);
+
+  // 複数文字の連結書き出し
+  const getExportOptions = () => ({
+    direction: $('#compare-export-dir')?.value ?? 'horizontal',
+    size: Number($('#compare-export-size')?.value ?? 1024),
+  });
+
+  $('#compare-copy-png')?.addEventListener('click', () => {
+    if (glyphs.length < 2) return;
+    exportMultiImage('copyMultiPng', [...glyphs], getExportOptions());
+  });
+  $('#compare-download-png')?.addEventListener('click', () => {
+    if (glyphs.length < 2) return;
+    exportMultiImage('downloadMultiPng', [...glyphs], getExportOptions());
+  });
+  $('#compare-download-svg')?.addEventListener('click', () => {
+    if (glyphs.length < 2) return;
+    exportMultiImage('downloadMultiSvg', [...glyphs], getExportOptions());
+  });
 }
 
 /** @returns {boolean} 追加したか */
@@ -91,6 +111,18 @@ function renderStage() {
       onclick: () => toggleCompare(glyph),
     }, '外す'))));
   stage.replaceChildren(...(items.length ? items : [h('p', { class: 'muted' }, '字形カードの「比較」で追加してください。')]));
+
+  const exportBox = $('#compare-export');
+  if (exportBox) exportBox.hidden = glyphs.length < 2;
+}
+
+/** 指定した字形リストを比較リストにセットして比較ダイアログを開く */
+export function openCompareWithGlyphs(newGlyphs) {
+  for (const g of newGlyphs) {
+    addToCompare(g, { silent: true });
+  }
+  renderStage();
+  $('#compare-dialog').showModal();
 }
 
 function overlayItem(a, b) {

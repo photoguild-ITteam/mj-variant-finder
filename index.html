@@ -153,6 +153,31 @@
       <button type="button" class="button button--small compare-controls__clear" id="compare-clear-all">すべてクリア</button>
     </div>
     <div class="compare-stage" id="compare-stage"></div>
+    <div class="compare-export" id="compare-export" hidden>
+      <span class="compare-export__label">連結書き出し:</span>
+      <div class="compare-export__options">
+        <label class="field field--inline">
+          <span class="field__label">向き</span>
+          <select id="compare-export-dir" class="select select--small">
+            <option value="horizontal">横書き</option>
+            <option value="vertical">縦書き</option>
+          </select>
+        </label>
+        <label class="field field--inline">
+          <span class="field__label">解像度</span>
+          <select id="compare-export-size" class="select select--small">
+            <option value="512">標準 (512px)</option>
+            <option value="1024" selected>高解像度 (1024px)</option>
+            <option value="2048">超高解像度 (2048px)</option>
+          </select>
+        </label>
+      </div>
+      <div class="compare-export__actions">
+        <button type="button" class="button button--small" id="compare-copy-png">📋 画像をコピー</button>
+        <button type="button" class="button button--small" id="compare-download-png">💾 PNGで保存</button>
+        <button type="button" class="button button--small" id="compare-download-svg">📐 SVGで保存</button>
+      </div>
+    </div>
   </dialog>
 
   <dialog class="dialog" id="glyph-dialog" aria-labelledby="glyph-dialog-title">
