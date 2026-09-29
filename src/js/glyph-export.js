@@ -113,6 +113,162 @@ export async function downloadSvg(glyph, options) {
   saveBlob(new Blob([svg], { type: 'image/svg+xml' }), `${fileBase(glyph)}.svg`);
 }
 
+// ---------------------------------------------------------------------------- 複数文字の連結書き出し
+
+function multiFileBase(glyphs) {
+  const chars = glyphs.map((g) => g.char.replace(/[\uE0100-\uE01EF]/g, '')).join('');
+  const mjs = glyphs.map((g) => g.mj).filter(Boolean).join('_');
+  return mjs ? `${chars}_${mjs}` : chars || 'glyphs';
+}
+
+/**
+ * 複数字形を連結した透明 PNG を作成する（横書き・縦書き対応、高解像度対応）
+ * @param {Array<{char: string, mj?: string}>} glyphs
+ * @param {{ size?: number, direction?: 'horizontal'|'vertical', color?: string }} [options]
+ * @returns {Promise<Blob>}
+ */
+export async function renderMultiPng(glyphs, { size = PNG_SIZE, direction = 'horizontal', color = '#000000' } = {}) {
+  if (!glyphs?.length) throw new Error('文字が指定されていません');
+  const font = `${size}px "${WEB_FONT_FAMILY}"`;
+  await Promise.all(glyphs.map((g) => document.fonts.load(font, g.char)));
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = font;
+
+  const metrics = glyphs.map((g) => {
+    const m = ctx.measureText(g.char);
+    const ascent = m.fontBoundingBoxAscent ?? size * 0.88;
+    const descent = m.fontBoundingBoxDescent ?? size * 0.12;
+    return {
+      char: g.char,
+      width: Math.ceil(m.width),
+      ascent,
+      descent,
+    };
+  });
+
+  const maxAscent = Math.max(...metrics.map((m) => m.ascent));
+  const maxDescent = Math.max(...metrics.map((m) => m.descent));
+  const charHeight = Math.ceil(maxAscent + maxDescent);
+
+  if (direction === 'horizontal') {
+    const totalWidth = metrics.reduce((sum, m) => sum + m.width, 0);
+    canvas.width = Math.max(1, totalWidth);
+    canvas.height = Math.max(1, charHeight);
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'alphabetic';
+
+    let x = 0;
+    for (const m of metrics) {
+      ctx.fillText(m.char, x, maxAscent);
+      x += m.width;
+    }
+  } else {
+    // 縦書き: 各文字を 1em の正方形セルに中央揃えで配置
+    const maxWidth = Math.max(...metrics.map((m) => m.width), size);
+    const totalHeight = glyphs.length * size;
+    canvas.width = Math.max(1, maxWidth);
+    canvas.height = Math.max(1, totalHeight);
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'alphabetic';
+
+    let y = 0;
+    for (const m of metrics) {
+      const x = (maxWidth - m.width) / 2;
+      ctx.fillText(m.char, x, y + maxAscent);
+      y += size;
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('PNG を作成できませんでした'))), 'image/png');
+  });
+}
+
+export async function copyMultiPng(glyphs, options) {
+  if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+    throw new Error('このブラウザは画像のコピーに対応していません');
+  }
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': renderMultiPng(glyphs, options) })]);
+}
+
+export async function downloadMultiPng(glyphs, options) {
+  saveBlob(await renderMultiPng(glyphs, options), `${multiFileBase(glyphs)}.png`);
+}
+
+/**
+ * 複数字形を連結した SVG 文字列を作成する
+ * @param {Array<{char: string, mj?: string}>} glyphs
+ * @param {{ direction?: 'horizontal'|'vertical', color?: string }} [options]
+ * @returns {Promise<string>}
+ */
+export async function buildMultiSvg(glyphs, { direction = 'horizontal', color = '#000000' } = {}) {
+  if (!glyphs?.length) throw new Error('文字が指定されていません');
+
+  const items = [];
+  for (const glyph of glyphs) {
+    const cps = [...glyph.char].map((ch) => ch.codePointAt(0));
+    const font = await fontFor(cps[0]);
+    const g = glyphFor(font, cps);
+    if (!g || g.id === 0) throw new Error(`「${glyph.char}」の字形がフォントにありません`);
+    items.push({ glyph, font, g, cps });
+  }
+
+  const em = items[0].font.unitsPerEm; // 通常 2048
+  const paths = [];
+
+  let totalWidth = 0;
+  let totalHeight = 0;
+
+  if (direction === 'horizontal') {
+    let currentX = 0;
+    let maxHeight = 0;
+    for (const item of items) {
+      const width = item.g.advanceWidth;
+      const height = item.font.ascent - item.font.descent;
+      if (height > maxHeight) maxHeight = height;
+      paths.push(`<path transform="translate(${currentX} ${item.font.ascent}) scale(1 -1)" fill="${escapeXml(color)}" d="${item.g.path.toSVG()}"/>`);
+      currentX += width;
+    }
+    totalWidth = currentX;
+    totalHeight = maxHeight || em;
+  } else {
+    // 縦書き
+    let currentY = 0;
+    let maxWidth = 0;
+    for (const item of items) {
+      const width = item.g.advanceWidth;
+      if (width > maxWidth) maxWidth = width;
+      const x = (em - width) / 2;
+      paths.push(`<path transform="translate(${x} ${currentY + item.font.ascent}) scale(1 -1)" fill="${escapeXml(color)}" d="${item.g.path.toSVG()}"/>`);
+      currentY += em;
+    }
+    totalWidth = maxWidth || em;
+    totalHeight = currentY;
+  }
+
+  const title = glyphs.map((g) => g.char).join('');
+  const scale = 256 / em;
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="${totalWidth * scale}" height="${totalHeight * scale}">`,
+    `<title>${escapeXml(title)}</title>`,
+    `<desc>${escapeXml('字形: IPAmj明朝 Ver.006.01（IPAフォントライセンス v1.0）')}</desc>`,
+    ...paths,
+    '</svg>',
+    '',
+  ].join('\n');
+}
+
+export async function downloadMultiSvg(glyphs, options) {
+  const svg = await buildMultiSvg(glyphs, options);
+  saveBlob(new Blob([svg], { type: 'image/svg+xml' }), `${multiFileBase(glyphs)}.svg`);
+}
+
 // ---------------------------------------------------------------------------- 共通
 
 function saveBlob(blob, filename) {

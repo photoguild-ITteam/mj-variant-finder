@@ -2,6 +2,7 @@
 
 import { formatMJ, isFilterActive } from '../db.js';
 import { charPanel } from './char-panel.js';
+import { COMPARE_MAX, openCompareWithGlyphs } from './compare.js';
 import { app } from './context.js';
 import { $, h, loading, queryButton } from './dom.js';
 import { reportError } from './session.js';
@@ -115,10 +116,27 @@ async function renderChars(result) {
     panel.querySelector('.glyph-card.is-focus')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
+  const exportMultiBtn = items.length > 1 && items.length <= COMPARE_MAX ? h('button', {
+    class: 'button button--small button--ghost',
+    type: 'button',
+    title: `「${result.query}」の各文字を比較リストに追加して連結画像を書き出します`,
+    onclick: async () => {
+      const targetGlyphs = [];
+      for (const item of items) {
+        const detail = await app.db.detail(item.key);
+        const target = (item.focus ? detail.glyphs.find((g) => g.ivs === item.focus.ivs) : null) ?? detail.glyphs[0];
+        if (target) targetGlyphs.push(target);
+      }
+      openCompareWithGlyphs(targetGlyphs);
+    },
+  }, '📷 連結書き出し・比較') : null;
+
   const unknown = [...new Set(result.unknown ?? [])];
   show(
     h('div', { class: 'result-header' },
-      h('h2', {}, result.type === 'code' ? `「${result.query}」` : `「${result.query}」の異体字`),
+      h('div', { class: 'result-header__title-row' },
+        h('h2', {}, result.type === 'code' ? `「${result.query}」` : `「${result.query}」の異体字`),
+        exportMultiBtn),
       h('p', {}, items.length > 1 ? `${items.length} 文字。タブで切り替えられます。` : '')),
     unknown.length ? h('div', { class: 'notice notice--spaced' }, `「${unknown.join('')}」は MJ文字情報一覧表に収録されていないため表示していません。`) : null,
     tabs,
