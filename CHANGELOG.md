@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-30
+
 ### 追加
 
 - 複数文字を連結した高解像度 PNG / SVG 書き出し機能: 比較リストまたは複数文字検索から、複数の異体字を横書き・縦書きで連結し、透明PNG（クリップボードコピー・保存、最大2048px解像度）およびSVGアウトラインとして一括書き出し可能に
@@ -95,6 +97,7 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/photoguild-ITteam/mj-variant-finder/releases/tag/v0.1.0
