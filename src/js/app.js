@@ -9,6 +9,7 @@ import { renderQuickAccess, setupFilters } from './ui/filters.js';
 import { setupFontStatus } from './ui/font-status.js';
 import { setupGlyphDiff } from './ui/glyph-diff.js';
 import { setupHandwriting } from './ui/handwriting.js';
+import { addHistory, renderHistoryBar } from './ui/history.js';
 import { setupImageSearch } from './ui/image-search.js';
 import { isFilterable, renderResult } from './ui/results.js';
 import { setupSessionWatch, showSessionExpired } from './ui/session.js';
@@ -54,6 +55,7 @@ async function init() {
     if (isFilterable(app.result)) search(app.query, { fromHash: true });
   });
   renderQuickAccess();
+  renderHistoryBar();
   renderDataMeta();
 
   window.addEventListener('hashchange', () => {
@@ -96,6 +98,7 @@ async function search(query, { fromHash = false } = {}) {
     if (app.query !== query) return;
   }
   app.result = app.db.search(query, app.filters);
+  if (query.trim()) addHistory(query.trim());
   await renderResult(app.result);
 
   // 狭い画面では「よく検索される異体字」が結果を押し下げるので、検索中は畳む（空の検索で開く）
