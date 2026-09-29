@@ -48,8 +48,12 @@ test('呼び名で検索できる（完全一致・前方一致・IVS の字形�
   assert.deepEqual(nishi.targets, [{ query: '897F_E0102', char: '西\u{E0102}', mj: 'MJ024197' }]);
   assert.equal(db.search(nishi.targets[0].query).chars[0].focus.ivs, '897F_E0102');
 
-  // 社内で使っている呼び名
+  // 社内で使っている呼び名・追加した呼び名
   assert.equal(db.search('みずはら').nicknames[0].targets[0].char, '厡');
+  assert.equal(db.search('まゆはま').nicknames[0].targets[0].char, '濵');
+  assert.equal(db.search('まのれい').nicknames[0].targets[0].query, '4EE4_E0102');
+  assert.equal(db.search('てんつきつか').nicknames[0].targets[0].char, '塚');
+  assert.equal(db.search('かぎにし').nicknames[0].targets[0].query, '897F_E0101');
   for (const name of ['いちてんつじ', 'しんにょうつじ']) {
     assert.equal(db.search(name).nicknames[0].targets[0].query, '8FBB_E0102', name);
   }

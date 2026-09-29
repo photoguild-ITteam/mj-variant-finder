@@ -7,6 +7,7 @@ import { badge, h, loading, queryButton } from './dom.js';
 import { copyText, showToast } from './feedback.js';
 import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
 import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.js';
+import { isFavorite, toggleFavorite } from './history.js';
 import { reportError } from './session.js';
 
 /** @param {{key: string, focus?: object | null}} item db.search() の chars の要素 */
@@ -38,6 +39,18 @@ function hero(entry, glyphs) {
     glyphs.slice(0, COMPARE_MAX).forEach((g) => addToCompare(g, { silent: true }));
     showToast('比較リストに追加しました');
   };
+  const favTarget = entry.char;
+  let favActive = isFavorite(favTarget);
+  const favBtn = h('button', {
+    class: `button button--small button--fav${favActive ? ' button--fav-active' : ''}`,
+    type: 'button',
+    onclick: () => {
+      favActive = toggleFavorite(favTarget);
+      favBtn.classList.toggle('button--fav-active', favActive);
+      favBtn.textContent = favActive ? '★ お気に入り中' : '☆ お気に入り';
+      showToast(favActive ? `「${favTarget}」をお気に入りに追加しました` : `「${favTarget}」をお気に入りから解除しました`);
+    },
+  }, favActive ? '★ お気に入り中' : '☆ お気に入り');
 
   return h('div', { class: 'char-hero' },
     h('div', { class: 'char-hero__glyph glyph', 'aria-hidden': 'true' }, entry.char),
@@ -49,7 +62,8 @@ function hero(entry, glyphs) {
       readings.length ? h('p', { class: 'char-hero__readings' }, `読み: ${readings.join('・')}`) : null,
       h('div', { class: 'char-hero__actions' },
         h('button', { class: 'button button--small', type: 'button', onclick: copyAll }, '全バリエーションをコピー'),
-        h('button', { class: 'button button--small', type: 'button', onclick: compareAll }, '比較に追加'))));
+        h('button', { class: 'button button--small', type: 'button', onclick: compareAll }, '比較に追加'),
+        favBtn)));
 }
 
 function glyphSection(glyphs, focus) {

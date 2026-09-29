@@ -647,6 +647,43 @@ if (isLocal) {
   }
 }
 
+// --- 検索履歴・お気に入り（ピン留め）
+{
+  const { page, errors, context } = await newPage();
+  await check('検索履歴とお気に入りの動作（追加・表示・トグル・消去）', async () => {
+    await page.goto(BASE);
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForSelector('#q:not([disabled])');
+
+    assert.ok(await page.locator('#search-history').isHidden());
+
+    await page.fill('#q', '葛飾');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.char-hero__actions');
+
+    await page.waitForSelector('#search-history:not([hidden])');
+    assert.ok(await page.locator('.search-history__row:has-text("最近の検索")').isVisible());
+    assert.ok(await page.locator('.chip-item__btn:has-text("葛飾")').isVisible());
+
+    const favBtn = page.locator('.char-hero__actions .button--fav').first();
+    await favBtn.click();
+    await page.waitForSelector('.button--fav-active');
+
+    assert.ok(await page.locator('.search-history__label--fav').isVisible());
+    await page.screenshot({ path: OUT + '15-history-favorites.png' });
+
+    await page.click('.search-history__clear');
+    assert.ok(await page.locator('.chip-item--fav').isVisible());
+    assert.equal(await page.locator('.search-history__row:has-text("最近の検索")').count(), 0);
+
+    await page.click('.chip-item--fav .chip-item__remove');
+    await page.waitForFunction(() => document.querySelector('#search-history')?.hidden === true);
+  });
+  await check('検索履歴・お気に入りでコンソールエラーなし', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
 // --- 静的ガイドページ（guide.html）
 {
   const { page, errors, context } = await newPage();
