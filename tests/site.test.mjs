@@ -25,3 +25,6 @@ test('ページ同士のリンク先（.html）が存在する', () => {
     }
   }
 });
+
+import './confusables.test.mjs';
+

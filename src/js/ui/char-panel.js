@@ -1,6 +1,7 @@
 // 1文字分のパネル: 概要（読み・画数・部首など）、字形バリエーション、関連する異体字。
 
 import { radicalChar } from '../db.js';
+import { getConfusablesForChar } from '../confusables.js';
 import { app } from './context.js';
 import { COMPARE_MAX, addToCompare } from './compare.js';
 import { badge, h, loading, queryButton } from './dom.js';
@@ -16,7 +17,10 @@ export async function charPanel(item) {
   const entry = db.entry(item.key);
   const [detail, related] = await Promise.all([db.detail(item.key), db.related(item.key)]);
 
-  const sections = [hero(entry, detail.glyphs), glyphSection(detail.glyphs, item.focus)];
+  const confSection = confusablesSection(entry, detail.glyphs);
+  const sections = [hero(entry, detail.glyphs)];
+  if (confSection) sections.push(confSection);
+  sections.push(glyphSection(detail.glyphs, item.focus));
   if (related.primary.length || related.reference.length) sections.push(relatedSection(related));
   return h('article', { class: 'char-panel' }, sections);
 }
@@ -137,3 +141,60 @@ function relatedItem(rel, open) {
   }
   return details;
 }
+
+function confusablesSection(entry, glyphs) {
+  const rels = getConfusablesForChar(entry.char);
+  if (!rels.length) return null;
+
+  const rows = rels.map(({ group, others }) => {
+    const isWarn = group.type === 'confusable';
+    const chips = others.map((other) => {
+      const otherKey = app.db.resolve(other.codePointAt(0));
+      const note = group.notes?.[other];
+      const shortNote = note ? note.replace(/^【[^】]+】/, '').split('。')[0] : '';
+      return queryButton(other, h('span', { class: 'confusable-chip__inner' },
+        h('span', { class: 'glyph confusable-chip__glyph' }, other),
+        otherKey ? h('span', { class: 'confusable-chip__code' }, `U+${otherKey}`) : null,
+        shortNote ? h('span', { class: 'confusable-chip__note' }, shortNote) : null,
+      ), `chip chip--confusable${isWarn ? ' chip--warn' : ''}`);
+    });
+
+    const compareGroup = async () => {
+      const primary = glyphs.find((g) => g.impl === entry.key) ?? glyphs[0];
+      const targetGlyphs = [primary];
+      for (const other of others) {
+        const otherKey = app.db.resolve(other.codePointAt(0));
+        if (otherKey) {
+          try {
+            const detail = await app.db.detail(otherKey);
+            const target = detail?.glyphs?.find((g) => g.impl === otherKey) ?? detail?.glyphs?.[0];
+            if (target) targetGlyphs.push(target);
+          } catch {
+            // エラー時はスキップ
+          }
+        }
+      }
+      targetGlyphs.slice(0, COMPARE_MAX).forEach((g) => addToCompare(g, { silent: true }));
+      showToast(`「${[entry.char, ...others].join('」「')}」を比較リストに追加しました`);
+    };
+
+    const myNote = group.notes?.[entry.char];
+
+    return h('div', { class: `confusables-bar${isWarn ? ' confusables-bar--warn' : ''}` },
+      h('div', { class: 'confusables-bar__header' },
+        badge(isWarn ? '⚠️ 似ている別の字（混同注意）' : '💡 異構字・異体字', isWarn ? 'crimson' : 'gold'),
+        h('span', { class: 'confusables-bar__desc' }, group.desc),
+        h('button', {
+          class: 'button button--small button--ghost confusables-bar__compare-btn',
+          type: 'button',
+          onclick: compareGroup,
+          title: `「${entry.char}」と「${others.join('」「')}」を比較リストに追加して並べます`,
+        }, '➕ 並べて比較')),
+      h('div', { class: 'confusables-bar__body' },
+        h('div', { class: 'confusables-bar__chips' }, chips),
+        myNote ? h('p', { class: 'confusables-bar__mynote' }, `※ この文字（${entry.char}）: ${myNote}`) : null));
+  });
+
+  return h('div', { class: 'confusables-section' }, rows);
+}
+
