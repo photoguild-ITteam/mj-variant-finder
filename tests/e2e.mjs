@@ -760,6 +760,71 @@ if (isLocal) {
   await context.close();
 }
 
+// --- 混同しやすい字・異構字の相互リンクと表記候補サジェスト
+{
+  const { page, errors, context } = await newPage();
+
+  await check('混同しやすい字・異構字の相互リンクと一括比較（島・嶋・嶌）', async () => {
+    await page.goto(BASE + '#q=%E5%B3%B6'); // 島
+    await page.waitForSelector('.confusables-bar');
+
+    // 「島」のパネルに異構字「嶋」「嶌」のリンクがある
+    const barText = await page.textContent('.confusables-bar');
+    assert.match(barText, /異構字・異体字/);
+    assert.match(barText, /嶋/);
+    assert.match(barText, /嶌/);
+    await page.screenshot({ path: OUT + '18-confusables-island.png' });
+
+    // 「➕ 並べて比較」をクリックすると、まとめて比較トレイに入る
+    await page.click('.confusables-bar__compare-btn');
+    await page.waitForSelector('.toast');
+    const toast = await page.textContent('.toast');
+    assert.match(toast, /比較リストに追加/);
+
+    // 比較トレイに島・嶋・嶌が入っている
+    const trayItems = await page.$$eval('#compare-list button.glyph', (els) => els.map((e) => e.textContent.trim()));
+    assert.ok(trayItems.some((t) => t.includes('島')));
+    assert.ok(trayItems.some((t) => t.includes('嶋')));
+
+    // 「嶋」チップをクリックすると「嶋」の検索に遷移
+    await page.click('.confusables-bar button[data-query="嶋"]');
+    await page.waitForSelector('.char-hero__title:has-text("嶋")');
+    assert.equal(await page.inputValue('#q'), '嶋');
+  });
+
+  await check('類似字・誤認頻出字の警告表示と解説（柿と杮）', async () => {
+    await page.goto(BASE + '#q=%E6%9F%BF'); // 柿
+    await page.waitForSelector('.confusables-bar--warn');
+
+    const warnText = await page.textContent('.confusables-bar--warn');
+    assert.match(warnText, /似ている別の字/);
+    assert.match(warnText, /杮/);
+    assert.match(warnText, /こけら落とし/);
+
+    await page.screenshot({ path: OUT + '17-confusables.png' });
+  });
+
+  await check('複数文字検索時の表記候補サジェスト（中島 → 中嶋）', async () => {
+    await page.goto(BASE + '#q=%E4%B8%AD%E5%B3%B6'); // 中島
+    await page.waitForSelector('.variant-suggestions');
+
+    const sugText = await page.textContent('.variant-suggestions');
+    assert.match(sugText, /他の表記候補/);
+    assert.match(sugText, /中嶋/);
+    assert.match(sugText, /中嶌/);
+    await page.screenshot({ path: OUT + '19-confusables-word.png' });
+
+    // 「中嶋」をクリックすると「中嶋」が検索される
+    await page.click('.variant-suggestions button[data-query="中嶋"]');
+    await page.waitForSelector('h2:has-text("中嶋")');
+    assert.equal(await page.inputValue('#q'), '中嶋');
+  });
+
+  await check('混同字・異構字リンクでコンソールエラーなし', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
+
 // --- 静的ガイドページ（guide.html）
 {
   const { page, errors, context } = await newPage();

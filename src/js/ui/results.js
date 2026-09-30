@@ -1,6 +1,7 @@
 // 検索結果の描画。db.search() の結果の type ごとに描き分ける。
 
 import { formatMJ, isFilterActive } from '../db.js';
+import { getWordVariantSuggestions } from '../confusables.js';
 import { charPanel } from './char-panel.js';
 import { COMPARE_MAX, openCompareWithGlyphs } from './compare.js';
 import { app } from './context.js';
@@ -131,13 +132,26 @@ async function renderChars(result) {
     },
   }, '📷 連結書き出し・比較') : null;
 
+  const suggestions = result.type === 'text' ? getWordVariantSuggestions(result.query) : [];
+  const suggestionRow = suggestions.length ? h('div', { class: 'variant-suggestions' },
+    h('span', { class: 'variant-suggestions__label' }, '💡 他の表記候補:'),
+    h('div', { class: 'variant-suggestions__chips' }, suggestions.map((s) => {
+      const isWarn = s.type === 'confusable';
+      return queryButton(s.word, h('span', { class: 'variant-suggestion-chip' },
+        h('span', { class: 'variant-suggestion-chip__word' }, s.word),
+        h('span', { class: 'variant-suggestion-chip__diff' }, `(${s.from}→${s.to})`),
+      ), `chip chip--ghost${isWarn ? ' chip--warn' : ''}`);
+    })),
+  ) : null;
+
   const unknown = [...new Set(result.unknown ?? [])];
   show(
     h('div', { class: 'result-header' },
       h('div', { class: 'result-header__title-row' },
         h('h2', {}, result.type === 'code' ? `「${result.query}」` : `「${result.query}」の異体字`),
         exportMultiBtn),
-      h('p', {}, items.length > 1 ? `${items.length} 文字。タブで切り替えられます。` : '')),
+      h('p', {}, items.length > 1 ? `${items.length} 文字。タブで切り替えられます。` : ''),
+      suggestionRow),
     unknown.length ? h('div', { class: 'notice notice--spaced' }, `「${unknown.join('')}」は MJ文字情報一覧表に収録されていないため表示していません。`) : null,
     tabs,
     panelHost,
