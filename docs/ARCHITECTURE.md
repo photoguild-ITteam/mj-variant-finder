@@ -15,6 +15,7 @@
 | `src/js/theme-init.js` | 描画前に `data-theme` を確定（保存値、無ければ OS 設定）。CSS は `data-theme` だけを見る |
 | `src/js/ui/results.js` | 検索結果の描画（種類ごと: 文字タブ・読み・絞り込み・見つからない） |
 | `src/js/ui/char-panel.js` | 1文字分のパネル（概要・字形バリエーション・関連する異体字） |
+| `src/js/confusables.js` | 混同しやすい字・異構字（島・嶋・嶌、柿・杮など）のグループ定義（85グループ189字）、相互リンク、単語の表記候補サジェスト |
 | `src/js/ui/glyph-card.js` / `glyph-dialog.js` | 字形カードと一覧の道具（絞り込み・違いを色で表示の切り替え）、詳細ダイアログ（コピー形式・画像書き出し・全項目） |
 | `src/js/ui/glyph-diff.js` | 違いを色で表示: 字形と、IVS なしの通常の字形を canvas に描いて画素ごとに比べる（この字形だけ=赤、通常の字形だけ=青、共通=薄く）。設定は localStorage に保存 |
 | `src/js/ui/glyph-info.js` | 表示ラベルとゴシック体の判定。DOM 非依存（`tests/glyph-info.test.mjs`） |
@@ -65,7 +66,11 @@ Python 3.10 以上、標準ライブラリのみ。
 
 `scripts/data/name_presets.json` は、姓・地名の読みから表記を引くための手作業の辞書。MJ の読みは1文字単位なので、「わたなべ → 渡辺・渡邊・渡邉」のような読み検索はこの辞書で補う。
 
-`src/data/nicknames.json` は、字の呼び名（「はしごだか」「たてにし」等）と部首名（約110種）を定義した手作業の辞書。読み検索での解釈や「部首名＋読み」検索で使用され、`tests/nicknames.test.mjs` で検証する。
+`src/data/nicknames.json` は、字の呼び名（「はしごだか」「たてにし」等）と部首名（約135種）を定義した手作業の辞書。読み検索での解釈や「部首名＋読み」検索で使用され、`tests/nicknames.test.mjs` で検証する。
+
+`src/js/confusables.js` は、文字コード（UCS）が分かれている異構字・代表的異体字グループ（島・嶋・嶌、柳・栁、塩・鹽、鉄・鐵など）や、字形が酷似している類似字・誤認頻出字グループ（柿・杮、土・士、日・曰、大・犬・太、奇・㟢など）を定義した辞書（85グループ189字）。相互リンク、見分け方メモの表示、および単語検索時の表記候補サジェスト（中島 → 中嶋、柳田 → 栁田等）で使用され、`tests/confusables.test.mjs` で全文字の実在性と双方向整合性を検証する。
+
+手作業辞書を安全に保守するため、`scripts/add_nickname.mjs`（MJ番号やUnicodeの自動解決、ひらがな・重複バリデーション）と `scripts/add_confusable.mjs`（MJ実在性検証、グループコード自動生成）の2つの支援スクリプトを用意している（`tests/scripts.test.mjs` で検証）。
 
 ### 出力（`src/data/`）
 
