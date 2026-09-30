@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-30
+
 ### データ
 
 - 俗称辞書（`src/data/nicknames.json`）を大幅拡充: ひのかつ・においかつ（葛）、つきぬけつの（角）、1点・2点しんにょう（逢・逗・達・連・道・迫・樋）、示偏の旧字体（社・神・福・祝・祈）、点付き（猪・諸）、まるやなぎ（栁）、じゅうじゅうくわ（桒）、えだじょう（條）、品字様（轟・驫・蟲・品・森・晶・姦・贔・犇・淼・毳）や部首別名（ちから・とり・しか・さら等29件）を追加
@@ -101,7 +103,8 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/photoguild-ITteam/mj-variant-finder/releases/tag/v0.1.0
