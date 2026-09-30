@@ -98,8 +98,25 @@ test('単語の表記候補サジェスト（getWordVariantSuggestions）', () =
   const words2 = yamazaki.map((s) => s.word);
   assert.ok(words2.includes('山﨑'));
   assert.ok(words2.includes('山嵜'));
+  assert.ok(words2.includes('山㟢'));
 
   // 存在しない文字や長すぎるクエリは空配列
   assert.deepEqual(getWordVariantSuggestions(''), []);
   assert.deepEqual(getWordVariantSuggestions('あいうえおかきくけこ'), []);
 });
+
+test('奇と㟢（やまかんむりのさき）の誤認防止リンクと解説', () => {
+  const ki = getConfusablesForChar('奇');
+  const rel = ki.find((r) => r.group.name.includes('奇と㟢'));
+  assert.ok(rel);
+  assert.equal(rel.group.type, 'confusable');
+  assert.ok(rel.others.includes('㟢'));
+  assert.ok(rel.group.notes['奇'].includes('大＋可'));
+  assert.ok(rel.group.notes['㟢'].includes('山冠＋奇'));
+
+  // 㟢（U+37E2）からは「奇」への誤認注意と「さき」グループの両方が引ける
+  const saki = getConfusablesForChar('㟢');
+  assert.ok(saki.some((r) => r.group.name === 'さき' && r.others.includes('崎')));
+  assert.ok(saki.some((r) => r.group.name.includes('奇と㟢') && r.others.includes('奇')));
+});
+

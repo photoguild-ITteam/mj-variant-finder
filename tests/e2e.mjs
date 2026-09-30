@@ -802,6 +802,14 @@ if (isLocal) {
     assert.match(warnText, /こけら落とし/);
 
     await page.screenshot({ path: OUT + '17-confusables.png' });
+
+    // 「奇」を検索すると「㟢（やまかんむりのさき）」の注意喚起が出る
+    await page.goto(BASE + '#q=%E5%A5%87'); // 奇
+    await page.waitForSelector('.confusables-bar--warn');
+    const kiWarn = await page.textContent('.confusables-bar--warn');
+    assert.match(kiWarn, /似ている別の字/);
+    assert.match(kiWarn, /㟢/);
+    assert.match(kiWarn, /やまかんむりのさき/);
   });
 
   await check('複数文字検索時の表記候補サジェスト（中島 → 中嶋）', async () => {

@@ -64,6 +64,8 @@ test('呼び名で検索できる（完全一致・前方一致・IVS の字形�
   assert.equal(db.search('みつくるま').nicknames[0].targets[0].char, '轟');
   assert.equal(db.search('まるやなぎ').nicknames[0].targets[0].query, '6801_E0102');
   assert.equal(db.search('きゅうじのさくら').nicknames[0].targets[0].char, '櫻');
+  assert.equal(db.search('やまかんむりのき').nicknames[0].targets[0].char, '㟢');
+  assert.equal(db.search('やまかんむりのたつさき').nicknames[0].targets[0].char, '嵜');
 
   // 「はしご」は読み（梯）でもあり、呼び名の前方一致も出す
   const ladder = db.search('はしご');
@@ -73,7 +75,8 @@ test('呼び名で検索できる（完全一致・前方一致・IVS の字形�
 
 test('部首名＋の＋読みで検索できる（2つ目の部首でも引ける）', () => {
   const chars = (q) => db.search(q).byRadical?.keys.map((k) => String.fromCodePoint(parseInt(k, 16))) ?? [];
-  assert.ok(['崎', '﨑', '嵜'].every((ch) => chars('やまへんのさき').includes(ch)));
+  assert.ok(['崎', '﨑', '嵜', '㟢'].every((ch) => chars('やまへんのさき').includes(ch)));
+  assert.ok(['崎', '﨑', '嵜', '㟢'].every((ch) => chars('やまかんむりのさき').includes(ch)));
   assert.deepEqual(chars('いしへんのさき').slice(0, 1), ['碕']);
   assert.ok(chars('ぎょうにんべんのとく').includes('德')); // 「にんべん」より長い名前を先に試す
   assert.ok(chars('つのへんのかい').includes('解'));       // 解 の最初の部首は 刀、2つ目が 角
