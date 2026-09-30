@@ -1,6 +1,6 @@
 // 字形・関連字の表示用ラベル。DOM に依存しない（tests/glyph-info.test.mjs でテスト）。
 
-import { hex, parseSequence, vsNumber } from '../db.js';
+import { hex, parseSequence, radicalChar, vsNumber } from '../db.js';
 
 export const RELATION_SHORT = {
   koseki: '戸籍通達',
@@ -83,3 +83,82 @@ export function gothicStatus(glyph, gothicMeta) {
     detail: `文字コード（U+${glyph.impl}）で表せますが、ゴシック体のフォントに字が無いことがあります。${perFont}`,
   };
 }
+
+const DICT_ORDER = ['daikanwa', 'daijigen', 'shinDaijiten', 'daikangorin', 'nihongoKanji'];
+
+/**
+ * 字形詳細ダイアログ用のセクション構造を生成する。
+ * DOM に依存せず、純粋なデータ構造を返す（tests/glyph-info.test.mjs でテスト）。
+ *
+ * @param {object} glyph 字形オブジェクト
+ * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} [gothicMeta]
+ * @returns {Array<{ id: string, title: string, rows: Array<[string, ...any]> }>}
+ */
+export function glyphDetailSections(glyph, gothicMeta = null) {
+  const gothic = gothicStatus(glyph, gothicMeta);
+
+  // 1. 文字符号・規格
+  const codeRows = [
+    ['MJ文字図形名', glyph.mj],
+    ['対応するUCS', glyph.ucs && `U+${glyph.ucs}`],
+    ['実装したUCS', glyph.impl && `U+${glyph.impl}`],
+    ['IVS (Moji_Joho)', ivsListLabel(glyph)],
+    ['SVS', glyph.svs?.replace('_', ' ')],
+    ['対応する互換漢字', glyph.compat && `U+${glyph.compat}`],
+    ['JIS X 0213', glyph.x0213 && `${glyph.x0213}（${glyph.jisLevel ?? ''}${glyph.x0213Class != null ? `・包摂区分 ${glyph.x0213Class}` : ''}）`],
+    ['JIS X 0212', glyph.x0212],
+    ['ゴシック体', gothic && `${gothic.mark} ${gothic.label}。${gothic.detail}`],
+  ];
+
+  // 2. 文字の属性
+  const attrRows = [
+    ['部首・内画数', glyph.radicals?.map(([r, s]) => `${radicalChar(r)}（${r}）+${s ?? '?'}`).join(' / ')],
+    ['総画数', glyph.strokes],
+    ['読み', glyph.readings?.join('・')],
+    ['漢字施策', glyph.policy],
+    ['MJ文字図形バージョン', glyph.version],
+    ['備考', glyph.note],
+  ];
+
+  // 3. 公的典拠・行政コード（出典）
+  const officialRows = [
+    ['戸籍統一文字番号', glyph.koseki],
+    ['住基ネット統一文字コード', glyph.juki],
+    ['登記統一文字番号', glyph.touki],
+    ['入管正字コード', glyph.nyukanSei],
+    ['入管外字コード', glyph.nyukanGai],
+  ];
+
+  // 4. 漢和辞典の典拠（出典）
+  const dictRows = [];
+  if (glyph.dict) {
+    const keys = Object.keys(glyph.dict);
+    keys.sort((a, b) => {
+      const ia = DICT_ORDER.indexOf(a);
+      const ib = DICT_ORDER.indexOf(b);
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    });
+    for (const k of keys) {
+      dictRows.push([DICT_LABELS[k] ?? k, glyph.dict[k]]);
+    }
+  }
+
+  // 5. MJ縮退マップ・公的代替根拠
+  const shrinkRows = [];
+  if (glyph.shrink && Object.keys(glyph.shrink).length > 0) {
+    shrinkRows.push(['MJ縮退マップ', glyph.shrink]);
+  }
+
+  const filterRows = (rows) => rows.filter(([, ...values]) => values.some((v) => v != null && v !== ''));
+
+  const sections = [
+    { id: 'code', title: '文字符号・規格', rows: filterRows(codeRows) },
+    { id: 'attribute', title: '文字の属性', rows: filterRows(attrRows) },
+    { id: 'official', title: '公的典拠・行政コード', rows: filterRows(officialRows) },
+    { id: 'dictionary', title: '漢和辞典の典拠', rows: filterRows(dictRows) },
+    { id: 'shrink', title: 'MJ縮退マップ・公的代替根拠', rows: filterRows(shrinkRows) },
+  ];
+
+  return sections.filter((s) => s.rows.length > 0);
+}
+
