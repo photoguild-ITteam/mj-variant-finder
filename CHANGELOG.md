@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-01
+
 ### 追加
 
 - 辞書データ追加・更新支援スクリプト: 俗称・部首別名を自動判定・重複検査して安全に追記する `scripts/add_nickname.mjs` と、混同しやすい字・異構字グループを検証・追加する `scripts/add_confusable.mjs` を作成
@@ -132,7 +134,9 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.1.0...v0.2.0
