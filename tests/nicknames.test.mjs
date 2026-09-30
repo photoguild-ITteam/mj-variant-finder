@@ -66,6 +66,11 @@ test('呼び名で検索できる（完全一致・前方一致・IVS の字形�
   assert.equal(db.search('きゅうじのさくら').nicknames[0].targets[0].char, '櫻');
   assert.equal(db.search('やまかんむりのき').nicknames[0].targets[0].char, '㟢');
   assert.equal(db.search('やまかんむりのたつさき').nicknames[0].targets[0].char, '嵜');
+  assert.equal(db.search('いってんしんにょうのへん').nicknames[0].targets[0].query, '904D_E0102');
+  assert.equal(db.search('にてんしんにょうのへん').nicknames[0].targets[0].query, '904D_E0103');
+  assert.equal(db.search('みつかね').nicknames[0].targets[0].char, '鑫');
+  assert.equal(db.search('きゅうじのさわ').nicknames[0].targets[0].char, '澤');
+  assert.equal(db.search('きゅうじのてつ').nicknames[0].targets[0].char, '鐵');
 
   // 「はしご」は読み（梯）でもあり、呼び名の前方一致も出す
   const ladder = db.search('はしご');
