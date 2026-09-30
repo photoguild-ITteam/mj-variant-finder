@@ -17,9 +17,9 @@
 - **戸籍・登記・公的文書・名簿の人名表記（渡辺・斎藤・山崎など）を正確に調べたい**  
   「辺・邉・邊」「斉・齊・斎・齋」「崎・﨑・嵜・㟢」などの複雑な異構字・異体字をコード（Unicode・IVS・戸籍統一文字番号・住基コード）とともに一覧表示し、どの字形を使うべきかを確実に特定できます。
 - **漢字の通称や呼び名から直感的に検索したい**  
-  「はしごだか」「たつさき」「つちよし」「ひのかつ」「つきぬけつの」「まゆはま」「やまかんむりのき」などの俗称や、「やまへんのさき」「ちからのこう」といった部首名＋読みから即座にヒットします。
+  「はしごだか」「たつさき」「つちよし」「ひのかつ」「つきぬけつの」「まゆはま」「やまかんむりのき」「きゅうじのさわ」「みつかね」などの俗称や、「やまへんのさき」「さかなへん」「ちからのこう」といった部首名＋読みから即座にヒットします。
 - **形が酷似している漢字を見分けたい・誤字を防ぎたい**  
-  果物の「柿（木＋市 5画）」と「こけら落とし」の「杮（木＋巿 4画縦貫通）」、「奇」と「㟢（やまかんむりのさき）」、「荻」と「萩」など、混同されやすい漢字に注意喚起バナーと見分け方メモを表示します。
+  果物の「柿（木＋市 5画）」と「こけら落とし」の「杮（木＋巿 4画縦貫通）」、「土」と「士（横棒長短）」、「日」と「曰（幅の差）」、「大」と「犬」と「太」、「奇」と「㟢（やまかんむりのさき）」、「荻」と「萩」など、混同されやすい漢字に注意喚起バナーと見分け方メモを表示します。
 
 ---
 
@@ -29,16 +29,16 @@
 
 - **文字・単語検索**: 1文字だけでなく「渡辺」「中島」などの単語を入力すると自動で分解して各文字を展開。
 - **読み検索**: ひらがなでの検索に対応。人名・地名の辞書を内蔵し、「さいとう」から「斉藤・斎藤・齊藤・齋藤」へ誘導。
-- **俗称・呼び名検索**: 「はしごだか」「たつさき」「ひのかつ」「まるやなぎ」などの通称でダイレクトに字形を表示。
-- **部首名＋読み検索**: 「やまへんのさき」「きへんのはし」などで直感的に絞り込み。
+- **俗称・呼び名検索**: 「はしごだか」「たつさき」「ひのかつ」「まるやなぎ」「きゅうじのさわ」「みつかね」「いってんしんにょうのへん」などの通称でダイレクトに字形を表示。
+- **部首名＋読み検索**: 「やまへんのさき」「きへんのはし」「さかなへんのたい」などで直感的に絞り込み。
 - **コード検索**: MJ文字図形名（`MJ026190`）、Unicode（`U+8FBB`）、IVS（`9089_E010F`）、HTML数値文字参照に対応。
 - **手書き・画像認識検索**: キャンバスに描いた手書き文字（KanjiVG 6,702字）や、スクリーンショットの囲み画像から IPAmj明朝 全58,843字形を自動照合。
 
 ### 2. 混同しやすい字・異構字の相互リンク＆「並べて比較」
 
-- 文字コードが異なる代表的異体字グループ（73グループ164字: `島・嶋・嶌`、`柳・栁`、`峰・峯`、`崎・﨑・嵜・㟢・碕`、`浜・濱・濵` など）のリンクバーを配置。
+- 文字コードが異なる代表的異体字グループ（85グループ189字: `島・嶋・嶌`、`柳・栁`、`峰・峯`、`崎・﨑・嵜・㟢・碕`、`浜・濱・濵`、`塩・鹽`、`鉄・鐵` など）のリンクバーを配置。
 - 「➕ 並べて比較」ボタンを押すだけで、グループ内の全文字を一括で比較トレイに投入可能。
-- 類似字・誤認頻出字（柿と杮、奇と㟢、荻と萩、粟と栗、崇と祟など）の警告表示と見分け方メモを掲載。
+- 類似字・誤認頻出字（土と士、天と夭、日と曰、大と犬と太、玉と王、柿と杮、奇と㟢、荻と萩、粟と栗、崇と祟など）の警告表示と見分け方メモを掲載。
 
 ### 3. 単語・苗字の「表記候補サジェスト」
 
@@ -215,7 +215,7 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事
 ### Key Capabilities
 
 - **Multi-modal Search**: Search by character, word, reading (hiragana with Japanese names/places dictionary), glyph nicknames (`はしごだか`, `たつさき`, `ひのかつ`, `まゆはま`), radical + reading (`やまへんのさき`), MJ glyph identifier (`MJ026190`), Unicode (`U+8FBB`), or IVS code (`9089_E010F`). Also supports canvas handwriting recognition and screenshot image matching against all 58,843 IPAmj Mincho glyphs.
-- **Confusable & Variant Cross-links**: Bidirectional links between code-separated variants (`島/嶋/嶌`, `柳/栁`, `崎/﨑/嵜/㟢/碕`) with a "Compare all" one-click button. Warning alerts and stroke distinction notes for confusable pairs (`柿` vs `杮`, `奇` vs `㟢`, `荻` vs `萩`).
+- **Confusable & Variant Cross-links**: Bidirectional links between 85 groups (189 characters) of code-separated variants (`島/嶋/嶌`, `柳/栁`, `崎/﨑/嵜/㟢/碕`, `塩/鹽`, `鉄/鐵`) with a "Compare all" one-click button. Warning alerts and stroke distinction notes for confusable pairs (`土` vs `士`, `日` vs `曰`, `柿` vs `杮`, `奇` vs `㟢`, `荻` vs `萩`).
 - **Word Variant Suggestions**: Auto-suggests existing variant notations for multi-character queries (e.g., searching "中島" suggests "中嶋" and "中嶌").
 - **Export for Design Tools (Canva, Photoshop, etc.)**: Export single or multi-character sequences as transparent PNGs (up to 2048px, clipboard-ready) or SVG vector outlines (horizontal & vertical). Prevents font fallback and glyph corruption in IVS-unsupported applications.
 - **Diff & Comparison**: Visual overlay highlighting fine stroke differences between IVS variants and standard glyphs. Side-by-side and red/blue overlay comparison modes.
