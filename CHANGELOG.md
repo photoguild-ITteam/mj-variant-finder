@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+### 変更
+
+- README.md の SEO・GEO（生成AI・LLM最適化）対応: 検索エンジンや回答エンジン（Perplexity、ChatGPT、Gemini等）が引用・要約しやすいように、利用シーン（Canva・戸籍実務・誤字防止等）、他ツールとの比較表、FAQ、技術仕様表を大幅拡充
+
 ## [0.4.0] - 2026-09-30
 
 ### 追加
