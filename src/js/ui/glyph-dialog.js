@@ -1,15 +1,17 @@
 // 字形の詳細ダイアログ: コピー形式、画像の書き出し、MJ文字情報一覧表・縮退マップの全項目。
 
-import { copyFormats, keyToChar, radicalChar } from '../db.js';
+import { copyFormats, keyToChar } from '../db.js';
 import { app } from './context.js';
 import { $, h } from './dom.js';
 import { toggleCompare } from './compare.js';
 import { exportImage } from './export-actions.js';
 import { copyText } from './feedback.js';
-import { DICT_LABELS, gothicStatus, ivsListLabel } from './glyph-info.js';
+import { glyphDetailSections } from './glyph-info.js';
 
 export function openGlyphDialog(glyph) {
   $('#glyph-dialog-title').textContent = `${glyph.mj} の詳細`;
+  const sections = glyphDetailSections(glyph, app.db.meta.gothic);
+
   $('#glyph-dialog-body').replaceChildren(
     h('div', { class: 'glyph-detail' },
       h('div', { class: 'glyph-detail__top' },
@@ -21,7 +23,8 @@ export function openGlyphDialog(glyph) {
           h('div', { class: 'glyph-detail__actions' },
             h('button', { class: 'button button--small', type: 'button', onclick: () => toggleCompare(glyph) }, '比較に追加/削除')),
           glyph.char ? exportBox(glyph) : null)),
-      h('table', { class: 'info-table' }, h('tbody', {}, infoRows(glyph)))),
+      h('div', { class: 'glyph-detail__sections' },
+        sections.map((sec) => renderSection(sec)))),
   );
   $('#glyph-dialog').showModal();
 }
@@ -54,36 +57,21 @@ function exportBox(glyph) {
       'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'));
 }
 
-function infoRows(g) {
-  const gothic = gothicStatus(g, app.db.meta.gothic);
-  /** @type {[string, ...any][]} 値が空の行は出さない */
-  const rows = [
-    ['MJ文字図形名', g.mj],
-    ['対応するUCS', g.ucs && `U+${g.ucs}`],
-    ['実装したUCS', g.impl && `U+${g.impl}`],
-    ['IVS (Moji_Joho)', ivsListLabel(g)],
-    ['SVS', g.svs?.replace('_', ' ')],
-    ['対応する互換漢字', g.compat && `U+${g.compat}`],
-    ['JIS X 0213', g.x0213 && `${g.x0213}（${g.jisLevel ?? ''}${g.x0213Class != null ? `・包摂区分 ${g.x0213Class}` : ''}）`],
-    ['JIS X 0212', g.x0212],
-    ['ゴシック体', gothic && `${gothic.mark} ${gothic.label}。${gothic.detail}`],
-    ['漢字施策', g.policy],
-    ['戸籍統一文字番号', g.koseki],
-    ['住基ネット統一文字コード', g.juki],
-    ['入管正字コード', g.nyukanSei],
-    ['入管外字コード', g.nyukanGai],
-    ['登記統一文字番号', g.touki],
-    ['部首・内画数', g.radicals?.map(([r, s]) => `${radicalChar(r)}（${r}）+${s ?? '?'}`).join(' / ')],
-    ['総画数', g.strokes],
-    ['読み', g.readings?.join('・')],
-    ['辞書', g.dict && Object.entries(g.dict).map(([k, v]) => `${DICT_LABELS[k] ?? k} ${v}`).join(' / ')],
-    ['MJ文字図形バージョン', g.version],
-    ['備考', g.note],
-    ['MJ縮退マップ', ...shrinkCells(g.shrink)],
-  ];
-  return rows
-    .filter(([, ...values]) => values.some((v) => v != null && v !== ''))
-    .map(([label, ...values]) => h('tr', {}, h('th', { scope: 'row' }, label), h('td', {}, values)));
+function renderSection(sec) {
+  const trs = sec.rows.map(([label, value]) => {
+    if (label === 'MJ縮退マップ') {
+      return h('tr', {},
+        h('th', { scope: 'row' }, label),
+        h('td', {}, shrinkCells(value)));
+    }
+    return h('tr', {},
+      h('th', { scope: 'row' }, label),
+      h('td', {}, value));
+  });
+
+  return h('div', { class: 'glyph-detail__section', id: `glyph-sec-${sec.id}` },
+    h('h3', { class: 'glyph-detail__section-title' }, sec.title),
+    h('table', { class: 'info-table' }, h('tbody', {}, trs)));
 }
 
 function shrinkCells(shrink) {

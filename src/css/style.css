@@ -676,6 +676,20 @@ a.icon-button { color: inherit; }
 .export-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .export-box__note { margin: 8px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 
+.glyph-detail__sections { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+.glyph-detail__section { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.glyph-detail__section-title {
+  margin: 0; padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--text-muted);
+  background: var(--surface-2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.glyph-detail__section-title::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
+}
+.glyph-detail__section .info-table { margin-top: 0; }
+.glyph-detail__section .info-table tr:last-child th,
+.glyph-detail__section .info-table tr:last-child td { border-bottom: none; }
+
 .info-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13.5px; }
 .info-table th, .info-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .info-table th { width: 11em; color: var(--text-muted); font-weight: 500; }
@@ -901,4 +915,6 @@ body:has(dialog[open]) .compare-tray { display: none; }
   .layout { padding-top: 16px; }
   .compare-tray__actions { width: 100%; }
   .compare-tray__actions .button { flex: 1; }
+  .info-table th { width: 9em; padding: 5px 6px; }
+  .info-table td { padding: 5px 6px; }
 }
