@@ -54,7 +54,7 @@ function startWorker() {
     } else if (data.type === 'init-error') {
       if (/\b(401|403)\b/.test(data.message)) showSessionExpired();
       setStatus(`${data.message}。閉じて開き直すと、もう一度読み込みます。`); // 次に開いたとき startWorker() が読み込み直す
-      worker.terminate();
+      worker?.terminate();
       worker = null;
       workerReady = false;
     } else if (data.type === 'result' && data.id === requestId) {
@@ -96,9 +96,12 @@ function showCandidates(chars) {
     return;
   }
   // MJ に無い字（KanjiVG にしかない字）は検索できないので出さない
-  const usable = chars.filter((ch) => app.db.resolve(ch.codePointAt(0)));
-  list.replaceChildren(...usable.map((ch) => {
-    const entry = app.db.entry(app.db.resolve(ch.codePointAt(0)));
+  const usable = chars.flatMap((ch) => {
+    const key = app.db.resolve(ch.codePointAt(0));
+    const entry = key ? app.db.entry(key) : null;
+    return entry ? [{ ch, entry }] : [];
+  });
+  list.replaceChildren(...usable.map(({ ch, entry }) => {
     return h('button', {
       class: 'hw-candidate', type: 'button', dataset: { query: ch },
       title: `${ch} で検索（${entry.glyphCount} 字形）`,

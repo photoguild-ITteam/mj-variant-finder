@@ -904,8 +904,9 @@ const charToGroups = new Map();
 
 for (const group of CONFUSABLE_GROUPS) {
   for (const ch of group.chars) {
-    if (!charToGroups.has(ch)) charToGroups.set(ch, []);
-    charToGroups.get(ch).push(group);
+    const groups = charToGroups.get(ch) ?? [];
+    groups.push(group);
+    charToGroups.set(ch, groups);
   }
 }
 

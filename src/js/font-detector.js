@@ -1,5 +1,7 @@
 // IPAmj明朝の導入状況と、ブラウザで IVS が描き分けられるかを判定する。
 
+import { context2d } from './canvas.js';
+
 export const WEB_FONT_FAMILY = 'MJ Variant Mincho';
 // 最初の画面の字だけを入れた小さなフォント（scripts/build_webfont.py の PRESET_*）。
 // 下の IVS_SAMPLE_A/B も入っているので、判定のために大きなフォントを読まずに済む
@@ -15,7 +17,7 @@ function canvasContext(size) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
-  return canvas.getContext('2d', { willReadFrequently: true });
+  return context2d(canvas, { willReadFrequently: true });
 }
 
 /**
