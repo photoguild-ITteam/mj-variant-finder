@@ -5,7 +5,7 @@ import { getConfusablesForChar } from '../confusables.js';
 import { app } from './context.js';
 import { COMPARE_MAX, addToCompare } from './compare.js';
 import { badge, h, loading, queryButton } from './dom.js';
-import { copyText, showToast } from './feedback.js';
+import { copyText, errorMessage, showToast } from './feedback.js';
 import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
 import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.js';
 import { isFavorite, toggleFavorite } from './history.js';
@@ -132,7 +132,7 @@ function relatedItem(rel, open) {
     } catch (err) {
       loaded = false; // 次に開いたときに再試行する
       reportError(err);
-      content.replaceChildren(h('p', { class: 'muted' }, `読み込めませんでした: ${err.message}`));
+      content.replaceChildren(h('p', { class: 'muted' }, `読み込めませんでした: ${errorMessage(err)}`));
     }
   };
   details.addEventListener('toggle', load);

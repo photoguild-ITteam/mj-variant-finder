@@ -3,6 +3,7 @@
 
 import { app } from './context.js';
 import { $, h, loading } from './dom.js';
+import { errorMessage } from './feedback.js';
 import { WEB_FONT_FAMILY } from '../font-detector.js';
 import { showSessionExpired } from './session.js';
 
@@ -79,8 +80,8 @@ async function loadIndex() {
     if (sourceImage) runMatch();
   } catch (err) {
     console.error(err);
-    if (/\b(401|403)\b/.test(err.message)) showSessionExpired();
-    setStatus(`読み込めませんでした: ${err.message}`);
+    if (/\b(401|403)\b/.test(errorMessage(err))) showSessionExpired();
+    setStatus(`読み込めませんでした: ${errorMessage(err)}`);
   } finally {
     indexLoading = false;
   }
@@ -232,7 +233,7 @@ function runMatch() {
     } catch (err) {
       if (matchToken !== currentToken) return;
       console.error(err);
-      setStatus(`照合できませんでした: ${err.message}`);
+      setStatus(`照合できませんでした: ${errorMessage(err)}`);
     }
   }, MATCH_DELAY_MS);
 }
