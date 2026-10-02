@@ -897,6 +897,7 @@ export const CONFUSABLE_GROUPS = [
 ];
 
 // 高速ルックアップ用のインデックスマップ
+// （scripts/add_confusable.mjs は「];」とこのコメントの並びを、類似字グループを足す位置の目印にしている）
 /** @type {Map<string, ConfusableGroup[]>} */
 const charToGroups = new Map();
 
@@ -906,6 +907,12 @@ for (const group of CONFUSABLE_GROUPS) {
     charToGroups.get(ch).push(group);
   }
 }
+
+/**
+ * 異体字セレクタ（VS1〜16・VS17〜256）か. db.js の isVariationSelector と同じ。
+ * このファイルは scripts/add_confusable.mjs が単独で読み込むので、ほかのモジュールを import しない
+ */
+const isVariationSelector = (cp) => (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
 
 /**
  * ある文字に関連する混同・異構字グループを取得する.
@@ -938,9 +945,11 @@ export function getWordVariantSuggestions(word) {
   for (let i = 0; i < chars.length; i++) {
     const ch = chars[i];
     const rels = getConfusablesForChar(ch);
+    // 後ろの異体字セレクタは元の字の字形を選ぶものなので、別の字に置き換えるときは外す（辺+E010F のような列は無い）
+    const rest = i + 1 < chars.length && isVariationSelector(chars[i + 1].codePointAt(0)) ? i + 2 : i + 1;
     for (const { group, others } of rels) {
       for (const other of others) {
-        const candidate = chars.slice(0, i).join('') + other + chars.slice(i + 1).join('');
+        const candidate = chars.slice(0, i).join('') + other + chars.slice(rest).join('');
         if (!seen.has(candidate)) {
           seen.add(candidate);
           suggestions.push({
