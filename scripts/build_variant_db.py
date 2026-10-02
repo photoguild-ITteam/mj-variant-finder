@@ -721,18 +721,30 @@ def write_outputs(out: Path, shards: dict[str, dict], no_char: list[dict], index
     for old in chars_dir.glob("*.json"):
         old.unlink()
     for name, data in shards.items():
-        write_json(chars_dir / f"{name}.json", data)
-    write_json(chars_dir / "none.json", {"glyphs": [public_glyph(g) for g in no_char]})
-    write_json(out / "search-index.json", index)
+        write_json(chars_dir / f"{name}.json", data, lines=1)                         # 1行 = 1文字
+    write_json(chars_dir / "none.json", {"glyphs": [public_glyph(g) for g in no_char]}, lines=2)  # 1行 = 1字形
+    write_json(out / "search-index.json", index, lines=2)                            # 1行 = chars・readings などの1項目
     write_json(out / "meta.json", meta, pretty=True)
 
 
-def write_json(path: Path, data, pretty: bool = False) -> None:
+def json_lines(data, depth: int) -> str:
+    """depth 段目までの dict・list を1項目1行にし、その中は詰めて書く JSON.
+
+    1行の minified JSON だと、作り直すたびにファイル全体が1行の差分になり、PR で変化を読めない。
+    1項目1行なら、変わった字・読みの行だけが差分になる。改行が増えるだけで、gzip 後の大きさはほぼ変わらない。
+    """
+    if depth > 0 and isinstance(data, dict) and data:
+        return "{\n" + ",\n".join(f"{json.dumps(k, ensure_ascii=False)}:{json_lines(v, depth - 1)}" for k, v in data.items()) + "\n}"
+    if depth > 0 and isinstance(data, list) and data:
+        return "[\n" + ",\n".join(json_lines(v, depth - 1) for v in data) + "\n]"
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+
+
+def write_json(path: Path, data, pretty: bool = False, lines: int = 0) -> None:
+    """pretty: 字下げして書く（meta.json）。lines: json_lines の段数（0 なら1行に詰める）."""
+    text = json.dumps(data, ensure_ascii=False, indent=2) if pretty else json_lines(data, lines)
     with path.open("w", encoding="utf-8", newline="\n") as f:
-        if pretty:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        else:
-            json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+        f.write(text + ("\n" if lines else ""))
 
 
 def gothic_font_arg(value: str) -> tuple[str, str]:
