@@ -252,6 +252,24 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.equal(await page.inputValue('#q'), 'U+8FBB');
   });
 
+  await check('読み込み中に次の検索をしたら、前の検索（UCS の無い MJ 字形）の結果で上書きしない', async () => {
+    // UCS を持たない字形のデータ（chars/none.json）を遅らせ、その間に別の語で検索する
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    await page.route('**/src/data/chars/none.json', async (route) => { await held; await route.continue(); });
+    await page.fill('#q', 'MJ037229');
+    await page.press('#q', 'Enter');
+    await page.waitForTimeout(200);
+    await page.fill('#q', 'U+8FBB');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.char-hero__code:text("U+8FBB")');
+    release();
+    await page.waitForTimeout(500);
+    await page.unroute('**/src/data/chars/none.json');
+    assert.equal(await page.locator('#results :text("UCS 符号位置がありません")').count(), 0);
+    assert.equal(await page.locator('.char-hero__code:text("U+8FBB")').count(), 1);
+  });
+
   await check('手書きで探す（十を書く → 候補 → その字で検索）', async () => {
     await page.click('#handwriting-open');
     await page.waitForSelector('#handwriting-dialog[open]');
