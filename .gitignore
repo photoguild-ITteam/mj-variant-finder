@@ -5,3 +5,8 @@ node_modules/
 tests/screenshots/
 .DS_Store
 Thumbs.db
+
+# AI のコーディングエージェントの個人の設定・作業ファイル（権限の設定などを共有しない）
+# 共有するルールは AGENTS.md・CLAUDE.md に書く（こちらはコミットする）
+.claude/settings.local.json
+.claude/*.lock
