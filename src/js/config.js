@@ -10,5 +10,6 @@
 //     loginLabel: 'ログイン',                       // 同ボタンの表示
 //   }
 export const config = {
+  /** @type {{message?: string, loginUrl?: string, loginLabel?: string} | null} */
   sessionWatch: null,
 };

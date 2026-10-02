@@ -9,13 +9,15 @@ import { $, h } from './dom.js';
 const CHECK_INTERVAL_MS = 60_000;
 const PROBE_URL = new URL('../../data/meta.json', import.meta.url);
 let lastCheck = 0;
+/** @type {HTMLDivElement | null} */
 let banner = null;
 
 export const isSessionWatchEnabled = () => Boolean(config.sessionWatch);
 
 export function setupSessionWatch() {
-  if (!isSessionWatchEnabled()) return;
-  const { message, loginUrl, loginLabel = 'ログイン' } = config.sessionWatch;
+  const watch = config.sessionWatch;
+  if (!watch) return;
+  const { message, loginUrl, loginLabel = 'ログイン' } = watch;
   banner = h('div', { class: 'session-banner', role: 'alert', hidden: true },
     h('div', { class: 'session-banner__inner' },
       h('span', {}, h('strong', {}, message ?? 'ログインが切れました。'),

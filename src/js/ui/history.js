@@ -55,11 +55,17 @@ export function removeFromList(list, query) {
 
 // ---------------------------------------------------------------------------- ストレージ操作
 
-function loadStorage(key) {
+/**
+ * 保存した一覧を読む. 文字列の配列でなければ空として扱う
+ * （壊れた値や、同じ origin の別のページが同じキーに書いた値で、検索や起動を止めないため）。
+ * @returns {string[]}
+ */
+export function loadStorage(key) {
   try {
     if (typeof localStorage === 'undefined') return [];
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data.filter((item) => typeof item === 'string') : [];
   } catch {
     return [];
   }
@@ -74,67 +80,59 @@ function saveStorage(key, data) {
   }
 }
 
+/** @type {string[] | null} 最初に使うときに localStorage から読む */
 let historyCache = null;
+/** @type {string[] | null} */
 let favoritesCache = null;
 
-function ensureCache() {
-  if (historyCache === null) historyCache = loadStorage(STORAGE_KEY_HISTORY);
-  if (favoritesCache === null) favoritesCache = loadStorage(STORAGE_KEY_FAVORITES);
-}
+const historyList = () => (historyCache ??= loadStorage(STORAGE_KEY_HISTORY));
+const favoritesList = () => (favoritesCache ??= loadStorage(STORAGE_KEY_FAVORITES));
 
 export function getHistory() {
-  ensureCache();
-  return [...historyCache];
+  return [...historyList()];
 }
 
 export function getFavorites() {
-  ensureCache();
-  return [...favoritesCache];
+  return [...favoritesList()];
 }
 
 export function isFavorite(query) {
-  ensureCache();
   const q = query?.trim();
-  return Boolean(q && favoritesCache.includes(q));
+  return Boolean(q && favoritesList().includes(q));
 }
 
 export function addHistory(query) {
-  ensureCache();
   const q = query?.trim();
   if (!q) return;
-  historyCache = updateHistoryList(historyCache, q);
+  historyCache = updateHistoryList(historyList(), q);
   saveStorage(STORAGE_KEY_HISTORY, historyCache);
   renderHistoryBar();
 }
 
 export function removeHistoryItem(query) {
-  ensureCache();
-  historyCache = removeFromList(historyCache, query);
+  historyCache = removeFromList(historyList(), query);
   saveStorage(STORAGE_KEY_HISTORY, historyCache);
   renderHistoryBar();
 }
 
 export function clearHistory() {
-  ensureCache();
   historyCache = [];
   saveStorage(STORAGE_KEY_HISTORY, historyCache);
   renderHistoryBar();
 }
 
 export function toggleFavorite(query) {
-  ensureCache();
   const q = query?.trim();
   if (!q) return false;
-  const isNowFav = !favoritesCache.includes(q);
-  favoritesCache = toggleFavoriteInList(favoritesCache, q);
+  const isNowFav = !favoritesList().includes(q);
+  favoritesCache = toggleFavoriteInList(favoritesList(), q);
   saveStorage(STORAGE_KEY_FAVORITES, favoritesCache);
   renderHistoryBar();
   return isNowFav;
 }
 
 export function removeFavoriteItem(query) {
-  ensureCache();
-  favoritesCache = removeFromList(favoritesCache, query);
+  favoritesCache = removeFromList(favoritesList(), query);
   saveStorage(STORAGE_KEY_FAVORITES, favoritesCache);
   renderHistoryBar();
 }
@@ -148,9 +146,10 @@ export function renderHistoryBar() {
   const container = $('#search-history');
   if (!container) return;
 
-  ensureCache();
-  const hasFav = favoritesCache.length > 0;
-  const hasHist = historyCache.length > 0;
+  const favorites = favoritesList();
+  const history = historyList();
+  const hasFav = favorites.length > 0;
+  const hasHist = history.length > 0;
 
   if (!hasFav && !hasHist) {
     container.replaceChildren();
@@ -163,7 +162,7 @@ export function renderHistoryBar() {
 
   // お気に入り行
   if (hasFav) {
-    const favChips = favoritesCache.map((item) =>
+    const favChips = favorites.map((item) =>
       h('span', { class: 'chip-item chip-item--fav' },
         h('button', {
           class: 'chip-item__btn glyph',
@@ -190,7 +189,7 @@ export function renderHistoryBar() {
 
   // 履歴行
   if (hasHist) {
-    const histChips = historyCache.map((item) =>
+    const histChips = history.map((item) =>
       h('span', { class: 'chip-item' },
         h('button', {
           class: 'chip-item__btn',

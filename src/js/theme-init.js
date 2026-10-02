@@ -2,6 +2,7 @@
 // 保存値が無ければ OS の設定を使い、必ず data-theme を付ける（CSS は data-theme だけを見る）。
 // あわせて、app.js（module）が動かない環境での案内も出す（module が読めないと app.js 側では何もできないため）。
 (() => {
+  /** @type {string | null} */
   let theme = null;
   try {
     theme = localStorage.getItem('theme');

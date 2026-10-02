@@ -1,6 +1,7 @@
 // 字形を画像として書き出す: PNG（クリップボード / 保存）と SVG（アウトライン、保存）.
 // Canva・Illustrator などフォントや IVS の扱いが不確かなアプリへ、字形を崩さず持ち込むための機能。
 
+import { context2d } from './canvas.js';
 import { fetchOk } from './db.js';
 import { WEB_FONT_FAMILY } from './font-detector.js';
 
@@ -17,7 +18,7 @@ export async function renderPng(glyph, { size = PNG_SIZE, color = '#000000' } = 
   const font = `${size}px "${WEB_FONT_FAMILY}"`;
   await document.fonts.load(font, glyph.char);
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = context2d(canvas);
   ctx.font = font;
   const m = ctx.measureText(glyph.char);
   const ascent = m.fontBoundingBoxAscent ?? size * 0.88;
@@ -135,7 +136,7 @@ export async function renderMultiPng(glyphs, { size = PNG_SIZE, direction = 'hor
   await Promise.all(glyphs.map((g) => document.fonts.load(font, g.char)));
 
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = context2d(canvas);
   ctx.font = font;
 
   const metrics = glyphs.map((g) => {

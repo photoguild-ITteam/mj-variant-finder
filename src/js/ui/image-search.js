@@ -4,6 +4,7 @@
 import { app } from './context.js';
 import { $, h, loading } from './dom.js';
 import { errorMessage } from './feedback.js';
+import { context2d } from '../canvas.js';
 import { WEB_FONT_FAMILY } from '../font-detector.js';
 import { showSessionExpired } from './session.js';
 
@@ -12,12 +13,17 @@ const INDEX_META = new URL('../../data/image-index.json', import.meta.url);
 const PREVIEW_MAX = 420;
 const MATCH_DELAY_MS = 200;
 
+/** @type {typeof import('../image-search/matcher.js') | null} */
 let matcherModule = null;
+/** @type {typeof import('../image-search/features.js') | null} */
 let featuresModule = null;
+/** @type {ReturnType<typeof import('../image-search/matcher.js').createIndex> | null} */
 let index = null;
 /** @type {HTMLCanvasElement | null} 読み込んだ画像（元の大きさ。照合はここから画素を読む） */
+/** @type {HTMLCanvasElement | null} 読み込んだ画像（元の大きさ） */
 let sourceImage = null;
-let selection = null; // 元画像の座標での切り出し範囲
+/** @type {{x: number, y: number, width: number, height: number} | null} 元画像の座標での切り出し範囲 */
+let selection = null;
 let timer;
 let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
 let indexLoading = false; // 照合データを読み込み中か（二重に読まない）
@@ -129,8 +135,16 @@ async function loadFile(file) {
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
-  canvas.getContext('2d', { willReadFrequently: true }).drawImage(bitmap, 0, 0);
-  bitmap.close();
+  try {
+    context2d(canvas, { willReadFrequently: true }).drawImage(bitmap, 0, 0);
+  } catch (err) {
+    console.error(err);
+    setStatus(`この画像は大きすぎて読み込めませんでした（${bitmap.width}×${bitmap.height}）。縮小するか、文字の周りだけを切り取ってから読み込んでください。`);
+    canvas.width = canvas.height = 0;
+    return;
+  } finally {
+    bitmap.close();
+  }
   if (sourceImage) sourceImage.width = sourceImage.height = 0; // 前の画像のメモリを早めに手放す
   sourceImage = canvas;
   selection = null;
@@ -143,17 +157,20 @@ async function loadFile(file) {
 
 // ---------------------------------------------------------------------------- 範囲の選択
 
-function previewScale() {
-  return Math.min(1, PREVIEW_MAX / Math.max(sourceImage.width, sourceImage.height));
+/** @param {HTMLCanvasElement} image */
+function previewScale(image) {
+  return Math.min(1, PREVIEW_MAX / Math.max(image.width, image.height));
 }
 
 function drawPreview() {
+  const image = sourceImage;
+  if (!image) return;
   const canvas = $('#img-canvas');
-  const scale = previewScale();
-  canvas.width = Math.round(sourceImage.width * scale);
-  canvas.height = Math.round(sourceImage.height * scale);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+  const scale = previewScale(image);
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  const ctx = context2d(canvas);
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
   if (!selection) return;
   // 選んだ範囲の外を暗くする
   ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
@@ -173,10 +190,12 @@ const scaleRect = (rect, scale) => ({
 
 function setupSelection() {
   const canvas = $('#img-canvas');
+  /** @type {number[] | null} ドラッグを始めた位置 */
   let start = null;
-  const at = (e) => {
+  /** @param {PointerEvent} e @param {HTMLCanvasElement} image */
+  const at = (e, image) => {
     const rect = canvas.getBoundingClientRect();
-    const scale = previewScale();
+    const scale = previewScale(image);
     const cssScaleX = rect.width ? canvas.width / rect.width : 1;
     const cssScaleY = rect.height ? canvas.height / rect.height : 1;
     return [
@@ -188,11 +207,11 @@ function setupSelection() {
     if (!sourceImage) return;
     e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
-    start = at(e);
+    start = at(e, sourceImage);
   });
   canvas.addEventListener('pointermove', (e) => {
-    if (!start) return;
-    const [x, y] = at(e);
+    if (!start || !sourceImage) return;
+    const [x, y] = at(e, sourceImage);
     selection = {
       x: Math.max(0, Math.min(start[0], x)),
       y: Math.max(0, Math.min(start[1], y)),
@@ -218,11 +237,12 @@ function runMatch() {
   clearTimeout(timer);
   if (!index || !sourceImage) return;
   timer = setTimeout(async () => {
+    if (!index || !sourceImage || !matcherModule) return; // 待っている間に閉じた・画像を替えた
     matchToken += 1;
     const currentToken = matchToken;
     setStatus('照合中…', true);
     const region = selection ?? { x: 0, y: 0, width: sourceImage.width, height: sourceImage.height };
-    const ctx = sourceImage.getContext('2d', { willReadFrequently: true });
+    const ctx = context2d(sourceImage, { willReadFrequently: true });
     const image = ctx.getImageData(Math.round(region.x), Math.round(region.y),
       Math.max(1, Math.round(region.width)), Math.max(1, Math.round(region.height)));
     try {
@@ -240,12 +260,13 @@ function runMatch() {
 
 /** 候補を実際のフォントで描き直して、入力画像と比べ直すための下請け */
 async function renderGlyph(char) {
+  if (!matcherModule) throw new Error('照合データを読み込んでいません');
   const size = matcherModule.BOX;
   // 並行して実行されるため、呼び出しごとに個別の canvas で描画する
   const canvas = document.createElement('canvas');
   canvas.width = size * 2;
   canvas.height = size * 2;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const ctx = context2d(canvas, { willReadFrequently: true });
   const font = `${size * 1.4}px "${WEB_FONT_FAMILY}", serif`;
   try {
     await document.fonts.load(font, char);

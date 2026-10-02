@@ -8,6 +8,7 @@ import {
   updateHistoryList,
   toggleFavoriteInList,
   removeFromList,
+  loadStorage,
 } from '../src/js/ui/history.js';
 
 test('updateHistoryList: 空文字や空白のみは追加しない', () => {
@@ -62,4 +63,19 @@ test('removeFromList: 個別削除', () => {
   const list = ['A', 'B', 'C'];
   assert.deepEqual(removeFromList(list, 'B'), ['A', 'C']);
   assert.deepEqual(removeFromList(list, 'Z'), ['A', 'B', 'C']);
+});
+
+test('loadStorage: 文字列の配列でなければ空として扱う（壊れた値・別のページが書いた値）', () => {
+  const saved = globalThis.localStorage;
+  const values = { arr: '["渡辺",1,"さいとう"]', obj: '{"theme":"dark"}', broken: '[', str: '"x"' };
+  globalThis.localStorage = /** @type {any} */ ({ getItem: (key) => values[key] ?? null });
+  try {
+    assert.deepEqual(loadStorage('arr'), ['渡辺', 'さいとう']);
+    assert.deepEqual(loadStorage('obj'), []);
+    assert.deepEqual(loadStorage('broken'), []);
+    assert.deepEqual(loadStorage('str'), []);
+    assert.deepEqual(loadStorage('none'), []);
+  } finally {
+    globalThis.localStorage = saved;
+  }
 });

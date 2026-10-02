@@ -354,6 +354,7 @@ export class VariantDB {
   searchCodes(query) {
     const chars = [];
     const selectors = [];
+    /** @type {{key: string, focus: {ivs: string} | null} | null} */
     let last = null;
     for (const m of query.matchAll(CODE_TOKEN)) {
       const cp = m[3] ? Number(m[3]) : parseInt(m[1], 16);

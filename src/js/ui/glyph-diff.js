@@ -2,6 +2,7 @@
 // 異体字セレクタを付けずに表示される通常の字形と重ね、この字形だけにある部分と、
 // 通常の字形だけにある部分に色を付ける。共通の部分は薄く表示する。
 
+import { context2d } from '../canvas.js';
 import { WEB_FONT_FAMILY } from '../font-detector.js';
 
 const STORAGE_KEY = 'glyph-diff';
@@ -15,10 +16,13 @@ const INK_CACHE_MAX = 256;             // 覚えておく字の数（1字 SIZE*S
  * INK_CACHE_MAX を超えたら前（しばらく使っていないもの）から捨てる
  * @type {Map<string, Uint8ClampedArray>}
  */
+/** @type {Map<string, Uint8ClampedArray>} */
 const inkCache = new Map();
 /** @type {CanvasRenderingContext2D | null} ink() で使い回す canvas（描いてすぐ読むので、共有しても混ざらない） */
+/** @type {CanvasRenderingContext2D | null} */
 let inkContext = null;
 /** themeColors() の結果。テーマを切り替えたら捨てる */
+/** @type {{onlyThis: number[], onlyBase: number[], common: number[]} | null} */
 let colorCache = null;
 let enabled = load();
 
@@ -66,7 +70,7 @@ async function drawDiff(face, text) {
   canvas.width = SIZE;
   canvas.height = SIZE;
   canvas.setAttribute('aria-hidden', 'true');
-  const ctx = canvas.getContext('2d');
+  const ctx = context2d(canvas);
   const image = ctx.createImageData(SIZE, SIZE);
   let differ = 0;
   let total = 0;
@@ -115,7 +119,7 @@ function ink(text) {
     const canvas = document.createElement('canvas');
     canvas.width = SIZE;
     canvas.height = SIZE;
-    inkContext = canvas.getContext('2d', { willReadFrequently: true });
+    inkContext = context2d(canvas, { willReadFrequently: true });
     inkContext.textAlign = 'center';
     inkContext.textBaseline = 'middle';
     inkContext.fillStyle = '#000';
@@ -128,7 +132,7 @@ function ink(text) {
   const alpha = new Uint8ClampedArray(SIZE * SIZE);
   for (let i = 0; i < alpha.length; i++) alpha[i] = data[i * 4 + 3];
   inkCache.set(text, alpha);
-  if (inkCache.size > INK_CACHE_MAX) inkCache.delete(inkCache.keys().next().value);
+  if (inkCache.size > INK_CACHE_MAX) inkCache.delete(/** @type {string} */ (inkCache.keys().next().value)); // いちばん古いもの
   return alpha;
 }
 
@@ -136,7 +140,7 @@ function ink(text) {
 function themeColors() {
   if (colorCache) return colorCache;
   const style = getComputedStyle(document.documentElement);
-  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  const ctx = context2d(document.createElement('canvas'), { willReadFrequently: true });
   const rgb = (name) => {
     ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = style.getPropertyValue(name).trim();

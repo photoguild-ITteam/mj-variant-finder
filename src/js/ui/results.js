@@ -196,7 +196,8 @@ async function renderChars(result) {
 function charTabs(items, onSelect) {
   return h('div', { class: 'tabs', role: 'tablist', 'aria-label': '文字' },
     items.map((item, i) => {
-      const entry = app.db.entry(item.key);
+      // item.key は db.search() が索引から返したものなので、必ず見つかる
+      const entry = /** @type {NonNullable<ReturnType<typeof app.db.entry>>} */ (app.db.entry(item.key));
       return h('button', {
         class: 'tab', role: 'tab', type: 'button', id: `tab-${i}`,
         'aria-selected': String(i === 0), 'aria-controls': 'char-panel-host', tabindex: i === 0 ? '0' : '-1',
