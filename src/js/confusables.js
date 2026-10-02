@@ -896,13 +896,8 @@ export const CONFUSABLE_GROUPS = [
   },
 ];
 
-/**
- * 異体字セレクタ（VS1〜16・VS17〜256）か. db.js の isVariationSelector と同じ。
- * このファイルは scripts/add_confusable.mjs が単独で読み込むので、ほかのモジュールを import しない
- */
-const isVariationSelector = (cp) => (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
-
 // 高速ルックアップ用のインデックスマップ
+// （scripts/add_confusable.mjs は「];」とこのコメントの並びを、類似字グループを足す位置の目印にしている）
 /** @type {Map<string, ConfusableGroup[]>} */
 const charToGroups = new Map();
 
@@ -912,6 +907,12 @@ for (const group of CONFUSABLE_GROUPS) {
     charToGroups.get(ch).push(group);
   }
 }
+
+/**
+ * 異体字セレクタ（VS1〜16・VS17〜256）か. db.js の isVariationSelector と同じ。
+ * このファイルは scripts/add_confusable.mjs が単独で読み込むので、ほかのモジュールを import しない
+ */
+const isVariationSelector = (cp) => (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
 
 /**
  * ある文字に関連する混同・異構字グループを取得する.
