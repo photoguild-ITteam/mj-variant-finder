@@ -6,7 +6,7 @@ import { charPanel } from './char-panel.js';
 import { COMPARE_MAX, openCompareWithGlyphs } from './compare.js';
 import { app } from './context.js';
 import { $, h, loading, queryButton, scrollBehavior } from './dom.js';
-import { showToast } from './feedback.js';
+import { errorMessage, showToast } from './feedback.js';
 import { focusedGlyph } from './glyph-info.js';
 import { reportError } from './session.js';
 
@@ -157,7 +157,7 @@ async function renderChars(result) {
       } catch (err) {
         showToast(reportError(err)
           ? 'ログインが切れています。ログインしてから再読み込みしてください'
-          : `字形を読み込めませんでした: ${err.message ?? err}`);
+          : `字形を読み込めませんでした: ${errorMessage(err)}`);
         return;
       }
       if (app.result !== result) return; // 読み込み中に別の検索をした

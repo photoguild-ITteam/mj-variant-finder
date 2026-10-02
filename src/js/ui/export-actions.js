@@ -1,7 +1,7 @@
 // 画像の書き出し（PNG コピー / PNG 保存 / SVG 保存）の操作と結果表示。
 // 書き出し本体（glyph-export.js と fontkit）は初回の操作時にだけ読み込む。
 
-import { glyphMessage, showToast } from './feedback.js';
+import { errorMessage, glyphMessage, showToast } from './feedback.js';
 import { reportError } from './session.js';
 
 const DONE_MESSAGE = {
@@ -24,9 +24,9 @@ export async function exportImage(action, glyph) {
     if (reportError(err)) {
       showToast('ログインが切れています。ログインしてから再読み込みしてください');
     } else if (action === 'copyPng') {
-      showToast(`${err.message ?? '画像をコピーできませんでした'}。詳細画面の「PNGで保存」をお使いください`);
+      showToast(`${errorMessage(err, '画像をコピーできませんでした')}。詳細画面の「PNGで保存」をお使いください`);
     } else {
-      showToast(`保存できませんでした: ${err.message ?? err}`);
+      showToast(`保存できませんでした: ${errorMessage(err)}`);
     }
   }
 }
@@ -43,9 +43,9 @@ export async function exportMultiImage(action, glyphs, options) {
     if (reportError(err)) {
       showToast('ログインが切れています。ログインしてから再読み込みしてください');
     } else if (action === 'copyMultiPng') {
-      showToast(`${err.message ?? '画像をコピーできませんでした'}。「PNGで保存」をお使いください`);
+      showToast(`${errorMessage(err, '画像をコピーできませんでした')}。「PNGで保存」をお使いください`);
     } else {
-      showToast(`保存できませんでした: ${err.message ?? err}`);
+      showToast(`保存できませんでした: ${errorMessage(err)}`);
     }
   }
 }

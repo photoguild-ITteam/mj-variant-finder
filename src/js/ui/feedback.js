@@ -3,6 +3,13 @@
 import { $, h } from './dom.js';
 
 const TOAST_MS = 2200;
+
+/**
+ * 例外の文言. catch で受けた値は Error とは限らない（文字列などが投げられることもある）ので、文字列にして返す.
+ * @param {unknown} err
+ * @param {string} [fallback] Error でないときの文言（既定は String(err)）
+ */
+export const errorMessage = (err, fallback = String(err)) => (err instanceof Error ? err.message : fallback);
 let toastTimer;
 
 /** @param {string | Node} message */
