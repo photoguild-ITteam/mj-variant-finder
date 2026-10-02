@@ -77,7 +77,14 @@ function renderNotFound(result) {
 }
 
 async function renderNoChar(result) {
-  const glyph = await app.db.noCharGlyph(result.mj);
+  let glyph;
+  try {
+    glyph = await app.db.noCharGlyph(result.mj);
+  } catch (err) {
+    if (app.result === result) throw err;
+    return;
+  }
+  if (app.result !== result) return; // 読み込み中に別の検索をした
   show(h('div', { class: 'notice notice--warn' },
     h('strong', {}, `${formatMJ(result.mj)} には UCS 符号位置がありません`),
     h('p', {}, 'MJ文字情報一覧表で重複や図形誤りと判明した字形で、IPAmj明朝には実装されていません。'),
