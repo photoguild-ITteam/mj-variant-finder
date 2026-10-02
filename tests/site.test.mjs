@@ -26,6 +26,3 @@ test('ページ同士のリンク先（.html）が存在する', () => {
   }
 });
 
-import './confusables.test.mjs';
-import './scripts.test.mjs';
-import './glyph-export.test.mjs';
