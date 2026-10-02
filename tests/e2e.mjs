@@ -733,6 +733,20 @@ if (isLocal) {
     await page.waitForFunction(() => !document.querySelector('#compare-dialog')?.open);
   });
 
+  await check('連結書き出し・比較は、検索語の IVS が指す字形を使う（邉 E011F → MJ026193）', async () => {
+    if (await page.locator('#compare-tray:not([hidden])').count() > 0) await page.click('#compare-clear');
+    await page.fill('#q', '渡邉\u{E011F}');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.tab:has-text("邉")');
+    await page.locator('.result-header__title-row button:has-text("連結書き出し")').click();
+    await page.waitForSelector('#compare-dialog[open] .compare-item');
+    const labels = await page.$$eval('#compare-stage .compare-item__label', (els) => els.map((e) => e.textContent));
+    assert.ok(labels.some((l) => l.includes('MJ026193')), `比較に MJ026193 が無い: ${labels.join(' / ')}`);
+    assert.ok(!labels.some((l) => l.includes('MJ026190')), '先頭の字形（MJ026190）が選ばれている');
+    await page.click('#compare-dialog [data-close]');
+    await page.waitForFunction(() => !document.querySelector('#compare-dialog')?.open);
+  });
+
   await check('buildMultiSvg と renderMultiPng の寸法・パス検証', async () => {
     const res = await page.evaluate(async () => {
       const ex = await import('./src/js/glyph-export.js');
