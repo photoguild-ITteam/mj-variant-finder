@@ -1,5 +1,5 @@
 {
-"generatedAt":"2026-10-02T05:55:35+00:00",
+"generatedAt":"2026-10-02T06:25:43+00:00",
 "sources":[
 {"title":"mecab-ipadic 2.7.0-20070801（人名: 姓・名）","license":"ipadic ライセンス（BSD 系）","copyright":"Copyright 2000, 2001, 2002, 2003 Nara Institute of Science and Technology","notice":"licenses/IPADIC-COPYING.txt","page":"https://taku910.github.io/mecab/","sha256":"b62f527d881c504576baed9c6ef6561554658b175ce6ae0096a60307e49e3523"},
 {"title":"郵便番号データ（市区町村・町域）","license":"日本郵便（著作権を主張せず、自由に利用可）","page":"https://www.post.japanpost.jp/zipcode/dl/utf-zip.html","sha256":"7d42728c4c9023e30668b1ef144fd5ffd831a417011c82d3e85ca3c35db43b15"},

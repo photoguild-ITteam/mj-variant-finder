@@ -19,6 +19,7 @@ let sourceImage = null;
 let selection = null; // 元画像の座標での切り出し範囲
 let timer;
 let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
+let loadToken = 0; // 画像の読み込みの番号。後から選んだ画像があれば、前の画像は読み終わっても使わない
 
 export function setupImageSearch() {
   $('#image-open').addEventListener('click', () => openDialog());
@@ -110,11 +111,16 @@ function setupDropZone() {
 
 async function loadFile(file) {
   matchToken += 1;
+  const token = ++loadToken;
   let bitmap;
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    setStatus('この画像は読み込めませんでした。');
+    if (token === loadToken) setStatus('この画像は読み込めませんでした。');
+    return;
+  }
+  if (token !== loadToken) { // 読み込み中に別の画像を選んだ（大きな画像は後の画像より遅れて読み終わる）
+    bitmap.close();
     return;
   }
   // canvas に描いたら bitmap はすぐ閉じる（同じ画像を元の大きさで2つ持たない）

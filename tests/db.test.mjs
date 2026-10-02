@@ -76,6 +76,18 @@ test('コードポイント表記', () => {
   assert.match(vs.reason, /VS17/);
 });
 
+test('全角の英数字で入力したコード（IME の全角モード）', () => {
+  const mj = db.search('ＭＪ０２６１９０');
+  assert.deepEqual(mj.chars, [{ key: '9089', focus: { mj: 'MJ026190' } }]);
+  assert.equal(mj.query, 'ＭＪ０２６１９０'); // 表示は入力のまま
+  assert.equal(db.search('Ｕ＋８ＦＢＢ').chars[0].key, '8FBB');
+  assert.deepEqual(db.search('９０８９＿Ｅ０１０Ｆ').chars[0].focus, { ivs: '9089_E010F' });
+  assert.deepEqual(db.search('Ｕ＋９０８９　Ｕ＋Ｅ０１０Ｆ').chars, [{ key: '9089', focus: { ivs: '9089_E010F' } }]);
+  // 字の検索は変えない（互換漢字や全角記号を別の字に置き換えない）
+  assert.deepEqual(db.search('塚').chars[0].focus, { impl: 'FA10' }); // 互換漢字の 塚
+  assert.equal(db.search('ＡＢ').type, 'notfound');
+});
+
 test('部首・画数フィルター', () => {
   const r = db.search('', { radical: 162, strokesMin: 17, strokesMax: 17, ivsOnly: true });
   assert.equal(r.type, 'filter');

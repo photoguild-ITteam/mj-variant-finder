@@ -16,7 +16,7 @@
 ## 作成方法（第3条1項(1)）
 
 ```sh
-pip install fonttools brotli
+pip install -r scripts/requirements.txt
 python scripts/build_webfont.py --font path/to/ipamjm.ttf
 ```
 
