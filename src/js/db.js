@@ -52,6 +52,9 @@ const MJ_CODE = /^mj\s*0*(\d{1,6})$/i;
 const CODE_TOKEN = /(?:u\+|0x|&#x)?([0-9a-f]{4,6})(?:;)?(?:_([0-9a-f]{4,5}))?|&#(\d{4,7});/gi;
 const CODE_QUERY = /^(?:\s*(?:(?:u\+|0x|&#x)?[0-9a-f]{4,6};?(?:_[0-9a-f]{4,5})?|&#\d{4,7};)[\s,]*)+$/i;
 
+/** 全角の英数字・記号（！〜～）を半角にする。IME の全角モードで入力したコード（ＭＪ０２６１９０・Ｕ＋８ＦＢＢ）用 */
+const toHalfwidth = (s) => s.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+
 export class VariantDB {
   /**
    * @param {object} index search-index.json
@@ -231,7 +234,9 @@ export class VariantDB {
       return { type: 'filter', candidates: this.rank(keys), total: keys.length };
     }
 
-    const mj = query.match(MJ_CODE);
+    // コードとして読むときだけ全角を半角にする（字の検索には使わない）
+    const code = toHalfwidth(query);
+    const mj = code.match(MJ_CODE);
     if (mj) {
       const num = Number(mj[1]);
       const found = this.findMJ(num);
@@ -240,7 +245,7 @@ export class VariantDB {
       return { type: 'code', query, chars: [{ key: found.key, focus: { mj: formatMJ(num) } }] };
     }
 
-    if (CODE_QUERY.test(query)) return this.searchCodes(query);
+    if (CODE_QUERY.test(code)) return { ...this.searchCodes(code), query };
 
     if (KANA_ONLY.test(query)) return this.searchReading(query, filters);
 
