@@ -19,6 +19,7 @@ let sourceImage = null;
 let selection = null; // 元画像の座標での切り出し範囲
 let timer;
 let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
+let indexLoading = false; // 照合データを読み込み中か（二重に読まない）
 let loadToken = 0; // 画像の読み込みの番号。後から選んだ画像があれば、前の画像は読み終わっても使わない
 
 export function setupImageSearch() {
@@ -59,8 +60,8 @@ function openDialog() {
 // ---------------------------------------------------------------------------- 索引の読み込み
 
 async function loadIndex() {
-  if (index || loadIndex.pending) return;
-  loadIndex.pending = true;
+  if (index || indexLoading) return;
+  indexLoading = true;
   setStatus('照合データを読み込んでいます…', true);
   try {
     const [module, featModule, metaRes, binRes] = await Promise.all([
@@ -81,7 +82,7 @@ async function loadIndex() {
     if (/\b(401|403)\b/.test(err.message)) showSessionExpired();
     setStatus(`読み込めませんでした: ${err.message}`);
   } finally {
-    loadIndex.pending = false;
+    indexLoading = false;
   }
 }
 

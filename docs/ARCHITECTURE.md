@@ -32,6 +32,7 @@
 | `src/js/ui/theme.js` / `font-status.js` / `dom.js` / `context.js` | テーマ切り替え / フォント状態表示 / DOM 組み立て / 共有状態 |
 | `src/js/font-detector.js` | 端末の IPAmj明朝の検出と、IVS が描き分けられるかの判定 |
 | `src/js/glyph-export.js` | 字形の画像書き出し（透明PNGのコピー/保存、SVGアウトラインの保存）。Canva などへの貼り付け用 |
+| `jsconfig.json` | `src/js/` の型検査の設定（`npm run test:types`。JSDoc の型を `tsc` で検査するだけで、ビルドはしない）。データの形の型は `db.js` の `@typedef`、同梱の Kanji Canvas の型は `src/vendor/kanji-canvas.bundle.d.ts`（JS 本体の隣に置くと tsc がこちらを読み、同梱ライブラリ自体は検査しない） |
 | `src/vendor/fontkit.js` | SVG 書き出しで woff2 から輪郭を取り出すための fontkit。`npm run build:vendor` で生成し、SVG 保存時にだけ読み込む（[ライセンス](src/vendor/THIRD_PARTY_LICENSES.txt)） |
 | `src/fonts/` | Webフォント「MJ Variant Mincho」（IPAmj明朝の派生フォント。[README](src/fonts/README.md)） |
 

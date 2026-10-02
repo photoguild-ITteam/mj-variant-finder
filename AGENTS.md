@@ -22,7 +22,7 @@ AI のコーディングエージェント（Jules、Antigravity、Claude Code �
 
 ```sh
 npm ci
-npm test                  # Node の単体テスト + Python unittest（生成データの検証）
+npm test                  # 型検査（tsc）+ Node の単体テスト + Python unittest（生成データの検証）
 # 画面・JS を変えたとき（CI と同じ条件）
 npx playwright-core install --with-deps chromium
 npm run serve &           # http://127.0.0.1:8765/
@@ -41,6 +41,7 @@ CONTRIBUTING.md の「開発の手順」に加えて:
 - DOM は `h()`（`src/js/ui/dom.js`）で組み立てる。`innerHTML`・`eval`・inline script・`on*` 属性は使わない。
 - **CSP（`index.html` の `<meta http-equiv="Content-Security-Policy">`）を緩めない。** 緩める必要があると思ったら、変えずに依頼者に相談する。
 - 状態は関数のプロパティ（`fn.cache = ...` など）ではなく、モジュールの変数に置く。
+- `src/js/` は JSDoc で型を書き、`npm run test:types`（`tsc -p jsconfig.json`。`npm test` の最初に実行される）で検査する。データの形（字形・索引など）の型は `src/js/db.js` の `@typedef` にあり、`import('../db.js').Glyph` のように参照する。型が合わないときは、`any` やキャストで黙らせる前に、型の定義かコードのどちらが正しいかを確かめる。
 - `await` の後では、待っている間に状況が変わっていないか（新しい検索・別のタブ・ダイアログを閉じた など）を確かめ、古い結果で画面を上書きしない。
 - `src/js/db.js`・`src/js/image-search/`・`src/js/handwriting/recognizer.js` は DOM に依存させない（Node でテストしている）。
 - 実行時の依存（npm・CDN）を増やさない。開発用の依存（`devDependencies`）を足すときは、PR に理由を書く。

@@ -7,7 +7,7 @@ import { sequenceLabel } from './glyph-info.js';
 
 export const COMPARE_MAX = 8;
 
-/** @type {object[]} 比較中の字形（MJ文字図形名で一意） */
+/** @type {import('../db.js').Glyph[]} 比較中の字形（MJ文字図形名で一意） */
 const glyphs = [];
 
 export const isCompared = (glyph) => glyphs.some((g) => g.mj === glyph.mj);
@@ -88,7 +88,7 @@ function update() {
     },
       glyph.char))));
   // 表示中の字形カードの「比較」ボタンの状態を合わせる
-  for (const card of document.querySelectorAll('.glyph-card')) {
+  for (const card of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.glyph-card'))) {
     const selected = glyphs.some((g) => g.mj === card.dataset.mj);
     card.classList.toggle('is-selected', selected);
     $('.glyph-card__compare', card)?.setAttribute('aria-pressed', String(selected));

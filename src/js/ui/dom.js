@@ -1,11 +1,20 @@
 // DOM を組み立てる小さな道具。文字列の子はテキストノードになる（innerHTML は使わない）。
 
+/**
+ * querySelector の短縮.
+ * 戻り値には型を付けない（id で引く要素がダイアログか入力欄かは、呼ぶ側が index.html の形で知っている）。
+ * @param {string} selector
+ * @param {ParentNode} [root]
+ * @returns {any}
+ */
 export const $ = (selector, root = document) => root.querySelector(selector);
 
 /**
- * @param {string} tag
+ * @template {keyof HTMLElementTagNameMap} K
+ * @param {K} tag
  * @param {Record<string, any>} [attrs] class / dataset / on<event> / その他の属性。null・false は付けない
  * @param {...any} children 配列は平坦化し、null・false は無視する
+ * @returns {HTMLElementTagNameMap[K]}
  */
 export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);

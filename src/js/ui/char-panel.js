@@ -18,6 +18,7 @@ export async function charPanel(item) {
   const [detail, related] = await Promise.all([db.detail(item.key), db.related(item.key)]);
 
   const confSection = confusablesSection(entry, detail.glyphs);
+  /** @type {HTMLElement[]} */
   const sections = [hero(entry, detail.glyphs)];
   if (confSection) sections.push(confSection);
   sections.push(glyphSection(detail.glyphs, item.focus));

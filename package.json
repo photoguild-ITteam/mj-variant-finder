@@ -27,7 +27,8 @@
     "build:data": "python scripts/build_variant_db.py",
     "build:font": "python scripts/build_webfont.py",
     "serve": "node -e \"import('node:child_process').then(({spawnSync}) => { for (const cmd of ['python3', 'python', 'py']) { const c = spawnSync(cmd, ['-c', 'import sys'], { stdio: 'ignore' }); if (!c.error && c.status === 0) { process.exit(spawnSync(cmd, ['-m', 'http.server', '8765', '--bind', '127.0.0.1'], { stdio: 'inherit' }).status ?? 0); } } console.error('Python not found (checked python3, python, py)'); process.exit(1); })\"",
-    "test": "node --test \"tests/*.test.mjs\" && node -e \"import('node:child_process').then(({spawnSync}) => { for (const cmd of ['python3', 'python', 'py']) { const c = spawnSync(cmd, ['-c', 'import sys'], { stdio: 'ignore' }); if (!c.error && c.status === 0) { const res = spawnSync(cmd, ['-m', 'unittest', 'scripts/test_variant_db.py'], { stdio: 'inherit' }); process.exit(res.status ?? 0); } } console.error('Python not found (checked python3, python, py)'); process.exit(1); })\"",
+    "test": "npm run test:types && node --test \"tests/*.test.mjs\" && node -e \"import('node:child_process').then(({spawnSync}) => { for (const cmd of ['python3', 'python', 'py']) { const c = spawnSync(cmd, ['-c', 'import sys'], { stdio: 'ignore' }); if (!c.error && c.status === 0) { const res = spawnSync(cmd, ['-m', 'unittest', 'scripts/test_variant_db.py'], { stdio: 'inherit' }); process.exit(res.status ?? 0); } } console.error('Python not found (checked python3, python, py)'); process.exit(1); })\"",
+    "test:types": "tsc -p jsconfig.json",
     "test:e2e": "node tests/e2e.mjs",
     "build:vendor": "node scripts/vendor/build.mjs",
     "build:handwriting": "node scripts/build_handwriting_db.mjs",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "esbuild": "^0.28.2",
     "fontkit": "^2.0.4",
-    "playwright-core": "^1.63.0"
+    "playwright-core": "^1.63.0",
+    "typescript": "^7.0.2"
   }
 }

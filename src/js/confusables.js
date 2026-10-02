@@ -10,6 +10,7 @@
  * @property {Record<string, string>} [notes] 各文字ごとの見分け方・解説
  */
 
+/** @type {ConfusableGroup[]} */
 export const CONFUSABLE_GROUPS = [
   // ==========================================================================
   // 1. 異構字・代表的な異体字グループ（名字・地名・公的文書で置き換えられる字）
