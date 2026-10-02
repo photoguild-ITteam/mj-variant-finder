@@ -1,9 +1,12 @@
 name: deploy-pages
 
-# main への push で、静的ファイルを GitHub Pages に公開する。
+# main への push で test ワークフロー（test.yml）が通ったら、静的ファイルを GitHub Pages に公開する。
+# テストが落ちた main は公開しない。手動の実行（workflow_dispatch）は、テストを待たずにそのときの main を公開する。
 # 事前に リポジトリの Settings → Pages → Build and deployment で "GitHub Actions" を選んでおく。
 on:
-  push:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -18,12 +21,19 @@ concurrency:
 
 jobs:
   deploy:
+    # pull_request で動いた test は対象にしない（branches は PR の元のブランチ名にも一致するため）
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # テストしたコミットを公開する（workflow_run の既定は main の最新）
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       # 配信に必要なものだけを _site に集める（テスト・ビルド用のスクリプト、元データは含めない）
       - name: 公開するファイルを集める
         run: |
