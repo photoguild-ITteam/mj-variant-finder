@@ -10,7 +10,7 @@ IPAフォントライセンス v1.0 第3条1項に従い:
 出力: src/fonts/mjv-<先頭コードポイント>.woff2, src/fonts/fonts.css
       src/fonts/mjv-preset.woff2 … 最初の画面に出る字だけのフォント（下の PRESET_EXTRA を参照）
 
-依存: pip install fonttools brotli
+依存: pip install -r scripts/requirements.txt（fonttools・brotli）
 使い方: python scripts/build_webfont.py [--font data/raw/ipamjm.ttf] [--out src/fonts] [--jobs 8]
 """
 
@@ -127,6 +127,18 @@ def build_one(args: tuple[str, str, list[int], bool]) -> tuple[str, int]:
     return out_path, os.path.getsize(out_path)
 
 
+def verify_font(path: Path) -> None:
+    """IPAmj明朝 Ver.006.01 か（公式掲載の MD5）. 違う版から作ると字形が変わるので止める."""
+    md5 = hashlib.md5(path.read_bytes()).hexdigest()
+    if md5 != EXPECTED_MD5:
+        sys.exit(
+            f"MD5 不一致 ({path.name}):\n"
+            f"  期待値: {EXPECTED_MD5}（IPAmj明朝 Ver.006.01 の公式掲載値）\n"
+            f"  実際値: {md5}\n"
+            f"新しい版に上げる場合は EXPECTED_MD5 と、版を書いた箇所（FAMILY の説明・fonts.css・image-index.json）を書き換えてください"
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--font", type=Path, default=ROOT / "data" / "raw" / "ipamjm.ttf")
@@ -136,9 +148,7 @@ def main() -> None:
 
     if not args.font.exists():
         sys.exit(f"{args.font} がありません。https://moji.or.jp/mojikiban/font/ から IPAmj明朝 を取得して配置してください。")
-    md5 = hashlib.md5(args.font.read_bytes()).hexdigest()
-    if md5 != EXPECTED_MD5:
-        log(f"warning: MD5 {md5} が IPAmj明朝 Ver.006.01 の公式値と異なります")
+    verify_font(args.font)
 
     font = TTFont(args.font, lazy=True)
     codepoints = [cp for cp in font.getBestCmap() if cp not in VARIATION_SELECTORS]

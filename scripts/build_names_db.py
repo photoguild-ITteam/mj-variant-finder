@@ -4,11 +4,14 @@
   python scripts/build_names_db.py
 
 入力（data/raw/ に置く。どちらも再配布可）:
-  - mecab-ipadic_2.7.0-20070801+main.orig.tar.gz  … 姓・名と読み（ipadic ライセンス）
-      http://deb.debian.org/debian/pool/main/m/mecab-ipadic/
-  - utf_ken_all.zip                                … 市区町村・町域と読み（日本郵便。著作権を主張せず自由に利用可）
+  - mecab-ipadic.tar.gz  … 姓・名と読み（ipadic ライセンス）
+      http://deb.debian.org/debian/pool/main/m/mecab-ipadic/ の mecab-ipadic_2.7.0-20070801+main.orig.tar.gz を
+      この名前で置く
+  - utf_ken_all.zip       … 市区町村・町域と読み（日本郵便。著作権を主張せず自由に利用可）
       https://www.post.japanpost.jp/zipcode/dl/utf-zip.html
       ※ ブラウザからダウンロードすること（curl などは拒否される）
+
+どちらも INPUT_SHA256 で版を固定している（郵便番号データは毎月更新されるので、新しい月のデータに替えたら書き換える）。
 
 出力: src/data/names.json
   surnames / given / places … 実在する表記（辞書に載っているもの）
@@ -38,6 +41,11 @@ POSTAL = ROOT / "data" / "raw" / "utf_ken_all.zip"
 PRESETS = ROOT / "scripts" / "data" / "name_presets.json"
 VARIANT_MAP = ROOT / "scripts" / "data" / "name_variants.json"
 OUT = ROOT / "src" / "data" / "names.json"
+# 入力の版（sha256）。違うファイルから作ると names.json が変わるので止める
+INPUT_SHA256 = {
+    IPADIC: "b62f527d881c504576baed9c6ef6561554658b175ce6ae0096a60307e49e3523",  # 2.7.0-20070801
+    POSTAL: "7d42728c4c9023e30668b1ef144fd5ffd831a417011c82d3e85ca3c35db43b15",  # 2026-09 に取得
+}
 
 KANJI = re.compile(r"^[々一-鿿\U00020000-\U0003ffff]+$")
 MAX_VARIANTS_PER_READING = 10
@@ -146,6 +154,12 @@ def main() -> None:
     for path in (IPADIC, POSTAL):
         if not path.exists():
             sys.exit(f"{path} がありません（このスクリプトの説明を参照）")
+        actual = sha256_of(path)
+        if actual != INPUT_SHA256[path]:
+            sys.exit(
+                f"SHA256 不一致 ({path.name}):\n  期待値: {INPUT_SHA256[path]}\n  実際値: {actual}\n"
+                f"新しい版に替えた場合は INPUT_SHA256 を書き換え、names.json の件数の変化を PR に書いてください"
+            )
 
     mapping = json.loads(VARIANT_MAP.read_text(encoding="utf-8"))["map"]
     available = known_chars()
