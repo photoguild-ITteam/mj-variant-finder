@@ -5,7 +5,7 @@ import { getWordVariantSuggestions } from '../confusables.js';
 import { charPanel } from './char-panel.js';
 import { COMPARE_MAX, openCompareWithGlyphs } from './compare.js';
 import { app } from './context.js';
-import { $, h, loading, queryButton } from './dom.js';
+import { $, h, loading, queryButton, scrollBehavior } from './dom.js';
 import { showToast } from './feedback.js';
 import { focusedGlyph } from './glyph-info.js';
 import { reportError } from './session.js';
@@ -20,18 +20,34 @@ export const isFilterable = (result) => !result || ['empty', 'reading', 'filter'
 
 export async function renderResult(result) {
   try {
-    switch (result.type) {
-      case 'empty': return renderWelcome();
-      case 'text':
-      case 'code': return await renderChars(result);
-      case 'reading': return renderReading(result);
-      case 'filter': return renderFilterList(result);
-      case 'nochar': return await renderNoChar(result);
-      default: return renderNotFound(result);
-    }
+    await renderBody(result);
   } catch (err) {
     renderLoadError(err);
   }
+  if (app.result === result) announce(result);
+}
+
+async function renderBody(result) {
+  switch (result.type) {
+    case 'empty': return renderWelcome();
+    case 'text':
+    case 'code': return await renderChars(result);
+    case 'reading': return renderReading(result);
+    case 'filter': return renderFilterList(result);
+    case 'nochar': return await renderNoChar(result);
+    default: return renderNotFound(result);
+  }
+}
+
+/**
+ * 結果の見出しだけを読み上げる（#search-status は role="status"）.
+ * #results 全体を aria-live にすると、検索のたびに結果の一覧がまるごと読み上げられるため。
+ */
+function announce(result) {
+  const results = $('#results');
+  const heading = results.querySelector('h2')?.textContent.trim();
+  const notice = results.querySelector('.notice strong')?.textContent.trim();
+  $('#search-status').textContent = result.type === 'empty' ? '' : heading ? `${heading}を表示しました` : notice ?? '';
 }
 
 export function renderLoadError(err) {
@@ -97,7 +113,7 @@ async function renderNoChar(result) {
 
 async function renderChars(result) {
   const items = result.chars;
-  const panelHost = h('div', { id: 'char-panel-host' });
+  const panelHost = h('div', { id: 'char-panel-host', role: items.length > 1 ? 'tabpanel' : null });
   const tabs = items.length > 1 ? charTabs(items, (i, focusTab) => selectTab(i, focusTab).catch(renderLoadError)) : null;
 
   let tabToken = 0; // 最後に選んだタブの番号。読み込み中に切り替えたら、前のタブの結果は捨てる
@@ -123,7 +139,7 @@ async function renderChars(result) {
     }
     if (!isCurrent()) return;
     panelHost.replaceChildren(panel);
-    panel.querySelector('.glyph-card.is-focus')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    panel.querySelector('.glyph-card.is-focus')?.scrollIntoView({ block: 'nearest', behavior: scrollBehavior() });
   }
 
   const exportMultiBtn = items.length > 1 && items.length <= COMPARE_MAX ? h('button', {
@@ -186,10 +202,11 @@ function charTabs(items, onSelect) {
         'aria-selected': String(i === 0), 'aria-controls': 'char-panel-host', tabindex: i === 0 ? '0' : '-1',
         onclick: () => onSelect(i, false),
         onkeydown: (e) => {
-          const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-          if (!step) return;
+          // 左右で隣のタブ、Home・End で最初・最後のタブ（WAI-ARIA のタブの操作）
+          const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: items.length - 1 }[e.key];
+          if (next === undefined) return;
           e.preventDefault();
-          onSelect((i + step + items.length) % items.length, true);
+          onSelect((next + items.length) % items.length, true);
         },
       },
       h('span', { class: 'glyph' }, entry.char),

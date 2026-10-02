@@ -82,7 +82,10 @@ function update() {
   requestAnimationFrame(() => document.body.style.setProperty('--tray-space', tray.hidden ? '0px' : `${tray.offsetHeight + 24}px`));
   $('#compare-count').textContent = String(glyphs.length);
   $('#compare-list').replaceChildren(...glyphs.map((glyph) => h('li', {},
-    h('button', { class: 'glyph', type: 'button', title: `${glyph.mj}（クリックで削除）`, onclick: () => toggleCompare(glyph) },
+    h('button', {
+      class: 'glyph', type: 'button', title: `${glyph.mj}（クリックで削除）`, 'aria-label': `${glyph.mj} を比較から外す`,
+      onclick: () => toggleCompare(glyph),
+    },
       glyph.char))));
   // 表示中の字形カードの「比較」ボタンの状態を合わせる
   for (const card of document.querySelectorAll('.glyph-card')) {

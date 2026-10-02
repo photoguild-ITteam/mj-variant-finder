@@ -4,7 +4,7 @@
 import { AuthRequiredError, KANA_ONLY, VariantDB } from './db.js';
 import { setupCompare } from './ui/compare.js';
 import { app } from './ui/context.js';
-import { $, h } from './ui/dom.js';
+import { $, h, scrollBehavior } from './ui/dom.js';
 import { renderQuickAccess, setupFilters } from './ui/filters.js';
 import { setupFontStatus } from './ui/font-status.js';
 import { setupGlyphDiff } from './ui/glyph-diff.js';
@@ -116,7 +116,7 @@ async function search(query, { fromHash = false } = {}) {
   if (!wide.matches) $('#quick-access-box').open = !query;
 
   // 狭い画面では検索パネルの下に結果があるので、操作した後は結果までスクロールする
-  if (!fromHash && !wide.matches) $('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!fromHash && !wide.matches) $('#results').scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
 }
 
 function setupSearchForm() {
