@@ -28,6 +28,7 @@ npm run test:e2e         # ブラウザテスト（別ターミナルで serve �
 ```
 
 - PR を出す前に `npm test` を通してください（CI でも自動実行されます）。
+- Node の単体テストは `tests/` に `*.test.mjs` の名前で置けば、`npm test` で実行されます（Node 22 以上）。
 - 画面の変更は `npm run test:e2e` も通し、スクリーンショットを PR に添えてください。
 - 既存のコードの書き方（コメントの量、命名、DOM は `h()` で組み立てて `innerHTML` を使わない、など）に合わせてください。
 - AI のコーディングエージェント（Jules、Antigravity、Claude Code など）で作業する場合は、[AGENTS.md](AGENTS.md) のルール（ブランチの切り方、PR 前の確認、データを作り直すときの注意など）にも従ってください。
@@ -52,6 +53,9 @@ node scripts/add_nickname.mjs --char 㟢 --names やまかんむりのき,やま
 
 # 混同しやすい字・類似字グループの追加（実在性・相互関係を自動検証）
 node scripts/add_confusable.mjs --type confusable --name "奇と㟢" --chars "奇,㟢" --desc "山冠の有無による誤認"
+
+# 既存のグループに字を足す（同じ --type と --name。既存の字・説明・メモは残る）
+node scripts/add_confusable.mjs --type variant --name "しま" --chars "隝" --notes "隝:阝＋島。"
 ```
 
 追加した後は `npm run build:names` で `src/data/names.json` を作り直し、`npm test` を通してください。

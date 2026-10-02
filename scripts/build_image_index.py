@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """画像から字形を探すための索引を作る（IPAmj明朝の全字形を画像化して特徴を取り出す）.
 
-  pip install freetype-py pillow numpy
+  pip install -r scripts/requirements.txt   # freetype-py・pillow・numpy・fonttools
   python scripts/build_image_index.py          # → src/data/image-index.bin / image-index.json
 
 出力（src/data/image-index.bin）は 1 字形 = RECORD_BYTES の固定長レコードを並べたもの:
@@ -129,6 +129,8 @@ def main() -> None:
     args = parser.parse_args()
     if not args.font.exists():
         sys.exit(f"{args.font} がありません（IPAmj明朝。README の Webフォントの節を参照）")
+    from build_webfont import verify_font
+    verify_font(args.font)  # 索引の "font" に書く版（Ver.006.01）と同じか
 
     try:
         import freetype

@@ -6,6 +6,8 @@ import { charPanel } from './char-panel.js';
 import { COMPARE_MAX, openCompareWithGlyphs } from './compare.js';
 import { app } from './context.js';
 import { $, h, loading, queryButton, scrollBehavior } from './dom.js';
+import { showToast } from './feedback.js';
+import { focusedGlyph } from './glyph-info.js';
 import { reportError } from './session.js';
 
 const PAGE_SIZE = 300;
@@ -93,7 +95,14 @@ function renderNotFound(result) {
 }
 
 async function renderNoChar(result) {
-  const glyph = await app.db.noCharGlyph(result.mj);
+  let glyph;
+  try {
+    glyph = await app.db.noCharGlyph(result.mj);
+  } catch (err) {
+    if (app.result === result) throw err;
+    return;
+  }
+  if (app.result !== result) return; // 読み込み中に別の検索をした
   show(h('div', { class: 'notice notice--warn' },
     h('strong', {}, `${formatMJ(result.mj)} には UCS 符号位置がありません`),
     h('p', {}, 'MJ文字情報一覧表で重複や図形誤りと判明した字形で、IPAmj明朝には実装されていません。'),
@@ -139,11 +148,19 @@ async function renderChars(result) {
     title: `「${result.query}」の各文字を比較リストに追加して連結画像を書き出します`,
     onclick: async () => {
       const targetGlyphs = [];
-      for (const item of items) {
-        const detail = await app.db.detail(item.key);
-        const target = (item.focus ? detail.glyphs.find((g) => g.ivs === item.focus.ivs) : null) ?? detail.glyphs[0];
-        if (target) targetGlyphs.push(target);
+      try {
+        for (const item of items) {
+          const detail = await app.db.detail(item.key);
+          const target = focusedGlyph(detail.glyphs, item.focus);
+          if (target) targetGlyphs.push(target);
+        }
+      } catch (err) {
+        showToast(reportError(err)
+          ? 'ログインが切れています。ログインしてから再読み込みしてください'
+          : `字形を読み込めませんでした: ${err.message ?? err}`);
+        return;
       }
+      if (app.result !== result) return; // 読み込み中に別の検索をした
       openCompareWithGlyphs(targetGlyphs);
     },
   }, '📷 連結書き出し・比較') : null;
