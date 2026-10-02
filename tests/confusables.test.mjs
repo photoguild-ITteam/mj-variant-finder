@@ -105,6 +105,20 @@ test('単語の表記候補サジェスト（getWordVariantSuggestions）', () =
   assert.deepEqual(getWordVariantSuggestions('あいうえおかきくけこ'), []);
 });
 
+test('表記候補: IVS 付きの字を置き換えるときは異体字セレクタを残さない', () => {
+  // 邉 E010F の E010F は 邉 の字形を選ぶもの。辺 E010F・邊 E010F という列は IVD に無い
+  const VS = String.fromCodePoint(0xe010f);
+  const words = getWordVariantSuggestions(`渡邉${VS}`).map((s) => s.word);
+  assert.ok(words.includes('渡辺'), words.join(' / '));
+  assert.ok(words.includes('渡邊'), words.join(' / '));
+  assert.ok(!words.some((w) => w.includes(VS) && !w.startsWith(`渡邉${VS}`)), words.join(' / '));
+  // 置き換えない字の IVS はそのまま残す（渡 は置き換えの対象外なので、邉 E010F を含む候補は出ない）
+  for (const s of getWordVariantSuggestions(`邉${VS}島`)) {
+    if (s.from === '島') assert.ok(s.word.startsWith(`邉${VS}`), s.word);
+    else assert.ok(!s.word.includes(VS), s.word);
+  }
+});
+
 test('奇と㟢（やまかんむりのさき）の誤認防止リンクと解説', () => {
   const ki = getConfusablesForChar('奇');
   const rel = ki.find((r) => r.group.name.includes('奇と㟢'));
