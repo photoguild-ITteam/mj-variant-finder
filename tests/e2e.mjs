@@ -246,6 +246,12 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     await page.waitForSelector('.notice--warn:has-text("VS17")');
   });
 
+  await check('手で書いた URL の #q=U+8FBB（+ を空白にしない）', async () => {
+    await page.goto(BASE + '#q=U+8FBB');
+    await page.waitForSelector('.char-hero__code:text("U+8FBB")');
+    assert.equal(await page.inputValue('#q'), 'U+8FBB');
+  });
+
   await check('手書きで探す（十を書く → 候補 → その字で検索）', async () => {
     await page.click('#handwriting-open');
     await page.waitForSelector('#handwriting-dialog[open]');
