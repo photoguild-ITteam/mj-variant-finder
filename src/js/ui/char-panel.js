@@ -11,10 +11,15 @@ import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.
 import { isFavorite, toggleFavorite } from './history.js';
 import { reportError } from './session.js';
 
-/** @param {{key: string, focus?: object | null}} item db.search() の chars の要素 */
+/** @typedef {import('../db.js').Glyph} Glyph */
+/** @typedef {import('../db.js').Entry} Entry */
+/** @typedef {import('../db.js').RelatedChar} RelatedChar */
+
+/** @param {import('../db.js').SearchItem} item db.search() の chars の要素 */
 export async function charPanel(item) {
   const { db } = app;
-  const entry = db.entry(item.key);
+  // item.key は db.search() が索引から返したものなので、必ず見つかる
+  const entry = /** @type {Entry} */ (db.entry(item.key));
   const [detail, related] = await Promise.all([db.detail(item.key), db.related(item.key)]);
 
   const confSection = confusablesSection(entry, detail.glyphs);
@@ -26,6 +31,7 @@ export async function charPanel(item) {
   return h('article', { class: 'char-panel' }, sections);
 }
 
+/** @param {Entry} entry @param {Glyph[]} glyphs */
 function hero(entry, glyphs) {
   const primary = glyphs.find((g) => g.impl === entry.key) ?? glyphs[0];
   const ivsCount = glyphs.filter((g) => g.ivs).length;
@@ -71,6 +77,7 @@ function hero(entry, glyphs) {
         favBtn)));
 }
 
+/** @param {Glyph[]} glyphs @param {import('../db.js').Focus | null} focus */
 function glyphSection(glyphs, focus) {
   const grid = glyphGrid(glyphs, focus);
   const section = h('section', { class: 'panel-section' },
@@ -84,6 +91,7 @@ function glyphSection(glyphs, focus) {
   return section;
 }
 
+/** @param {{primary: RelatedChar[], reference: RelatedChar[]}} related db.related() の戻り値 */
 function relatedSection({ primary, reference }) {
   // 関連字が多いときは上位だけ開いておく（開くと字形を読み込む）
   const openCount = primary.length <= 3 ? 3 : 2;
@@ -99,6 +107,7 @@ function relatedSection({ primary, reference }) {
       h('div', { class: 'related-list' }, reference.map((r) => relatedItem(r, false)))) : null);
 }
 
+/** @param {RelatedChar} rel */
 function relationBadges(rel) {
   const direction = relationDirection(rel);
   return [
@@ -107,7 +116,11 @@ function relationBadges(rel) {
   ];
 }
 
-/** 開いたときに初めて字形を読み込む関連字の行 */
+/**
+ * 開いたときに初めて字形を読み込む関連字の行.
+ * @param {RelatedChar} rel
+ * @param {boolean} open 最初から開いておくか
+ */
 function relatedItem(rel, open) {
   const content = h('div', { class: 'related__content' });
   const details = h('details', { class: 'related' },
@@ -143,6 +156,7 @@ function relatedItem(rel, open) {
   return details;
 }
 
+/** @param {Entry} entry @param {Glyph[]} glyphs */
 function confusablesSection(entry, glyphs) {
   const rels = getConfusablesForChar(entry.char);
   if (!rels.length) return null;
@@ -150,7 +164,8 @@ function confusablesSection(entry, glyphs) {
   const rows = rels.map(({ group, others }) => {
     const isWarn = group.type === 'confusable';
     const chips = others.map((other) => {
-      const otherKey = app.db.resolve(other.codePointAt(0));
+      // other は1文字の文字列なので codePointAt(0) は必ず数
+      const otherKey = app.db.resolve(/** @type {number} */ (other.codePointAt(0)));
       const note = group.notes?.[other];
       const shortNote = note ? note.replace(/^【[^】]+】/, '').split('。')[0] : '';
       return queryButton(other, h('span', { class: 'confusable-chip__inner' },
@@ -164,7 +179,7 @@ function confusablesSection(entry, glyphs) {
       const primary = glyphs.find((g) => g.impl === entry.key) ?? glyphs[0];
       const targetGlyphs = [primary];
       for (const other of others) {
-        const otherKey = app.db.resolve(other.codePointAt(0));
+        const otherKey = app.db.resolve(/** @type {number} */ (other.codePointAt(0)));
         if (otherKey) {
           try {
             const detail = await app.db.detail(otherKey);

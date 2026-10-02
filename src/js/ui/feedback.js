@@ -10,6 +10,7 @@ const TOAST_MS = 2200;
  * @param {string} [fallback] Error でないときの文言（既定は String(err)）
  */
 export const errorMessage = (err, fallback = String(err)) => (err instanceof Error ? err.message : fallback);
+/** @type {ReturnType<typeof setTimeout> | undefined} */
 let toastTimer;
 
 /** @param {string | Node} message */
@@ -22,14 +23,26 @@ export function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove('is-visible'), TOAST_MS);
 }
 
-/** 字形を含むトースト（例: 「邉 をコピーしました」） */
+/**
+ * 字形を含むトースト（例: 「邉 をコピーしました」）
+ * @param {string} char
+ * @param {string} text
+ */
 export const glyphMessage = (char, text) => h('span', {}, h('span', { class: 'glyph' }, char), text);
 
+/**
+ * @param {string} text
+ * @param {string | Node} message コピーできたときのトースト
+ */
 export async function copyText(text, message) {
   if (await writeClipboard(text)) showToast(message);
   else showToast('コピーできませんでした');
 }
 
+/**
+ * @param {string} text
+ * @returns {Promise<boolean>} コピーできたか
+ */
 async function writeClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);

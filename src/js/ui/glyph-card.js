@@ -9,6 +9,8 @@ import { isDiffEnabled, renderFace, setDiffEnabled } from './glyph-diff.js';
 import { openGlyphDialog } from './glyph-dialog.js';
 import { GOTHIC_VARIANT, gothicStatus, matchesFocus, sequenceLabel } from './glyph-info.js';
 
+/** @typedef {import('../db.js').Glyph} Glyph */
+
 /**
  * @param {import('../db.js').Glyph[]} glyphs
  * @param {{mj?: string, ivs?: string, impl?: string} | null} [focus] 検索語が指した字形（強調表示する）
@@ -17,7 +19,10 @@ export function glyphGrid(glyphs, focus = null) {
   return h('div', { class: 'glyph-grid' }, glyphs.map((g) => glyphCard(g, matchesFocus(g, focus))));
 }
 
-/** 字形の一覧で絞り込める項目（一部の字形だけに当てはまるものを表示する） */
+/**
+ * 字形の一覧で絞り込める項目（一部の字形だけに当てはまるものを表示する）.
+ * @type {{label: string, title: string, test: (g: Glyph) => unknown}[]} test は当てはまれば truthy
+ */
 const GLYPH_FILTERS = [
   { label: '戸籍', title: '戸籍統一文字番号がある', test: (g) => g.koseki },
   { label: '住基', title: '住基ネット統一文字コードがある', test: (g) => g.juki },
@@ -55,7 +60,7 @@ export function glyphTools(glyphs, grid) {
     .filter((f) => f.count > 0 && f.count < glyphs.length)
     .map((f) => h('button', {
       class: 'chip chip--toggle', type: 'button', 'aria-pressed': 'false', title: f.title,
-      onclick: (e) => {
+      onclick: (/** @type {MouseEvent & {currentTarget: HTMLButtonElement}} */ e) => {
         const on = !active.has(f);
         if (on) active.add(f); else active.delete(f);
         e.currentTarget.setAttribute('aria-pressed', String(on));
@@ -89,6 +94,7 @@ export function gothicLegend() {
     badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる');
 }
 
+/** @param {Glyph} g */
 function glyphBadges(g) {
   const gothic = gothicStatus(g, app.db.meta.gothic);
   return [
@@ -103,6 +109,7 @@ function glyphBadges(g) {
   ];
 }
 
+/** @param {Glyph} g */
 function face(g) {
   const button = h('button', {
     class: 'glyph-card__face glyph', type: 'button', 'aria-label': `${g.mj} の詳細`,
@@ -112,6 +119,7 @@ function face(g) {
   return button;
 }
 
+/** @param {Glyph} g @param {boolean} focused 検索語が指した字形か */
 function glyphCard(g, focused) {
   const selected = isCompared(g);
   const classes = ['glyph-card', focused && 'is-focus', selected && 'is-selected'].filter(Boolean).join(' ');

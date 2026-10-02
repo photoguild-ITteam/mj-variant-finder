@@ -13,6 +13,7 @@ const IVS_SAMPLE_A = '邉\u{E010F}';
 const IVS_SAMPLE_B = '邉\u{E0119}';
 const WIDTH_SAMPLE = 'あ永邉𠮷mmmWWiil';
 
+/** @param {number} size */
 function canvasContext(size) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -27,6 +28,7 @@ function canvasContext(size) {
 export function detectLocalFont() {
   const ctx = canvasContext(10);
   const fallbacks = ['monospace', 'serif', 'sans-serif'];
+  /** @param {string} font */
   const measure = (font) => {
     ctx.font = font;
     return ctx.measureText(WIDTH_SAMPLE).width;
@@ -36,6 +38,13 @@ export function detectLocalFont() {
   );
 }
 
+/**
+ * text を描いた画素の指紋（墨の画素の位置のハッシュと数）.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} text
+ * @param {string} family
+ * @param {number} size
+ */
 function renderSignature(ctx, text, family, size) {
   ctx.clearRect(0, 0, size, size);
   ctx.fillStyle = '#000';
@@ -54,7 +63,11 @@ function renderSignature(ctx, text, family, size) {
   return { hash, ink };
 }
 
-/** 指定フォントで IVS の字形が描き分けられるか. */
+/**
+ * 指定フォントで IVS の字形が描き分けられるか.
+ * @param {string} family
+ * @returns {Promise<boolean>}
+ */
 export async function testIvsRendering(family) {
   try {
     await document.fonts.load(`64px "${family}"`, IVS_SAMPLE_A + IVS_SAMPLE_B);

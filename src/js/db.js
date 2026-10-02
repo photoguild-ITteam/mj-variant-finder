@@ -71,6 +71,60 @@
  * @typedef {{strokesMin?: number, strokesMax?: number, radical?: number, ivsOnly?: boolean, policy?: string}} Filters
  */
 
+/**
+ * names.json（人名・地名の読み辞書）. 各辞書は 読み → 表記の一覧.
+ * @typedef {object} Names
+ * @property {string} generatedAt
+ * @property {Record<string, string>[]} sources 出典（title・license・page など）
+ * @property {Record<string, string[]>} surnames 姓
+ * @property {Record<string, string[]>} given 名
+ * @property {Record<string, string[]>} places 地名
+ * @property {Record<string, string[]>} variants 異体字での表記
+ */
+
+/**
+ * nicknames.json（字の呼び名と部首名。手作業）.
+ * @typedef {object} Nicknames
+ * @property {string} about
+ * @property {{names: string[], targets: string[], mj?: string[], note: string}[]} nicknames targets は UCS（IVS 付きは "9089_E010F"）、mj は targets と同じ順の MJ文字図形名
+ * @property {{names: string[], radical: number | number[], example: string}[]} radicals radical は部首番号（複数のこともある）
+ */
+
+/**
+ * 索引の1文字分（VariantDB#entry() の戻り値）.
+ * @typedef {object} Entry
+ * @property {string} key インデックスのキー（"9089"）
+ * @property {string} char
+ * @property {number[]} mjs MJ番号の一覧
+ * @property {number} glyphCount
+ * @property {number} strokes 総画数
+ * @property {number} radical 部首番号（最初のもの）
+ * @property {number} flags FLAG_* の組み合わせ
+ * @property {boolean} jouyou
+ * @property {boolean} jinmei
+ * @property {boolean} hasIVS
+ */
+
+/**
+ * 関連字（VariantDB#related() の primary・reference の要素）.
+ * @typedef {object} RelatedChar
+ * @property {string} key
+ * @property {string} char
+ * @property {string[]} out
+ * @property {string[]} in
+ * @property {string[]} kinds 関係の種別（out と in を合わせ、RELATION_ORDER の順）
+ * @property {Entry | null} entry
+ */
+
+/**
+ * 検索語が指した字形（search() の chars の focus）. どれか1つだけを持つ.
+ * @typedef {{mj?: string, ivs?: string, impl?: string}} Focus
+ */
+
+/** @typedef {{key: string, focus: Focus | null}} SearchItem search() の chars の要素 */
+
+/** @typedef {ReturnType<VariantDB['search']>} SearchResult search() の戻り値（type ごとに項目が違う） */
+
 export const FLAG_JOUYOU = 1;
 export const FLAG_JINMEI = 2;
 export const FLAG_IVS = 4;
@@ -78,33 +132,42 @@ export const FLAG_IVS = 4;
 const PRIMARY_RELATIONS = new Set(['jis', 'kokuji582', 'koseki', 'dict', 'analogy', 'compat', 'ivs']);
 const RELATION_ORDER = ['koseki', 'kokuji582', 'jis', 'compat', 'ivs', 'dict', 'analogy'];
 
+/** @param {number} cp */
 export const isVariationSelector = (cp) =>
   (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
 
-/** 異体字セレクタの番号（U+FE00 = VS1、U+E0100 = VS17）. */
+/** 異体字セレクタの番号（U+FE00 = VS1、U+E0100 = VS17）. @param {number} cp */
 export const vsNumber = (cp) => (cp >= 0xe0100 ? cp - 0xe0100 + 17 : cp - 0xfe00 + 1);
 
+/** @param {number} cp */
 export const hex = (cp) => cp.toString(16).toUpperCase().padStart(4, '0');
 
-/** インデックスのキー（"9089"）→ 文字 */
+/** インデックスのキー（"9089"）→ 文字 @param {string} key */
 export const keyToChar = (key) => String.fromCodePoint(parseInt(key, 16));
 
-/** "9089_E010F" → [0x9089, 0xE010F] */
+/** "9089_E010F" → [0x9089, 0xE010F] @param {string} seq */
 export const parseSequence = (seq) => seq.split('_').map((h) => parseInt(h, 16));
 
+/** @param {string} seq */
 export const sequenceToString = (seq) => String.fromCodePoint(...parseSequence(seq));
 
+/** @param {string} text */
 export const toHiragana = (text) =>
   text.replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
 
-/** 康熙部首番号 → 部首文字（U+2F00 康熙部首ブロック） */
+/** 康熙部首番号 → 部首文字（U+2F00 康熙部首ブロック） @param {number} n */
 export const radicalChar = (n) => (n >= 1 && n <= 214 ? String.fromCodePoint(0x2f00 + n - 1) : '');
 
-/** 字形のコードポイント列（コピーや表記の元になる）. */
+/**
+ * 字形のコードポイント列（コピーや表記の元になる）.
+ * @param {Glyph} glyph
+ * @returns {number[]}
+ */
 export function glyphCodepoints(glyph) {
-  return [...glyph.char].map((ch) => ch.codePointAt(0));
+  return [...glyph.char].map((ch) => /** @type {number} */ (ch.codePointAt(0)));
 }
 
+/** @param {Glyph} glyph */
 export function copyFormats(glyph) {
   const cps = glyphCodepoints(glyph);
   return {
@@ -122,7 +185,7 @@ const MJ_CODE = /^mj\s*0*(\d{1,6})$/i;
 const CODE_TOKEN = /(?:u\+|0x|&#x)?([0-9a-f]{4,6})(?:;)?(?:_([0-9a-f]{4,5}))?|&#(\d{4,7});/gi;
 const CODE_QUERY = /^(?:\s*(?:(?:u\+|0x|&#x)?[0-9a-f]{4,6};?(?:_[0-9a-f]{4,5})?|&#\d{4,7};)[\s,]*)+$/i;
 
-/** 全角の英数字・記号（！〜～）を半角にする。IME の全角モードで入力したコード（ＭＪ０２６１９０・Ｕ＋８ＦＢＢ）用 */
+/** 全角の英数字・記号（！〜～）を半角にする。IME の全角モードで入力したコード（ＭＪ０２６１９０・Ｕ＋８ＦＢＢ）用 @param {string} s */
 const toHalfwidth = (s) => s.replace(/[！-～]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
 
 export class VariantDB {
@@ -137,16 +200,21 @@ export class VariantDB {
     this.meta = meta;
     this.fetchJson = fetchJson;
     this.baseUrl = baseUrl;
+    /** @type {Map<string, Promise<any>>} シャード名 → chars/<name>.json（読み込み中のこともある） */
     this.shards = new Map();
+    /** @type {Map<number, string | null> | null} MJ番号 → インデックスのキー（UCS を持たない字形は null）。findMJ() で作る */
     this._mjToKey = null;
     this._readingKeys = Object.keys(index.readings);
     this._nameKeys = Object.keys(index.names);
-    /** names.json（姓・名・地名・異体字の置き換え）。ensureNames() で読み込む */
+    /** @type {Names | null} names.json（姓・名・地名・異体字の置き換え）。ensureNames() で読み込む */
     this.names = null;
+    /** @type {Promise<Names> | null} */
     this._namesPromise = null;
-    /** nicknames.json（はしごだか などの呼び名と部首名）。ensureNicknames() で読み込む */
+    /** @type {Nicknames | null} nicknames.json（はしごだか などの呼び名と部首名）。ensureNicknames() で読み込む */
     this.nicknames = null;
+    /** @type {Promise<Nicknames> | null} */
     this._nicknamesPromise = null;
+    /** @type {{name: string, radicals: number[]}[]} 部首名 → 部首番号（長い名前から） */
     this._radicalNames = [];
   }
 
@@ -160,7 +228,11 @@ export class VariantDB {
 
   // ------------------------------------------------------------------ 参照
 
-  /** コードポイント → インデックスのキー（互換漢字は対応UCSへ）. 未収録なら null */
+  /**
+   * コードポイント → インデックスのキー（互換漢字は対応UCSへ）. 未収録なら null
+   * @param {number} cp
+   * @returns {string | null}
+   */
   resolve(cp) {
     const key = hex(cp);
     if (this.index.chars[key]) return key;
@@ -168,6 +240,10 @@ export class VariantDB {
     return alias && this.index.chars[alias] ? alias : null;
   }
 
+  /**
+   * @param {string} key
+   * @returns {Entry | null}
+   */
   entry(key) {
     const row = this.index.chars[key];
     if (!row) return null;
@@ -186,6 +262,7 @@ export class VariantDB {
     };
   }
 
+  /** @param {number} num MJ番号 */
   findMJ(num) {
     if (!this._mjToKey) {
       this._mjToKey = new Map();
@@ -197,10 +274,15 @@ export class VariantDB {
     return this._mjToKey.has(num) ? { key: this._mjToKey.get(num) } : null;
   }
 
+  /** @param {string} key */
   shardName(key) {
     return (parseInt(key, 16) >> this.index.shardBits).toString(16).toUpperCase();
   }
 
+  /**
+   * @param {string} name シャード名（"none" は UCS を持たない字形）
+   * @returns {Promise<any>} chars/<name>.json の中身（読み込んだ JSON をそのまま返すので、型は呼び出し側で付ける）
+   */
   async loadShard(name) {
     if (!this.shards.has(name)) {
       const promise = this.fetchJson(new URL(`chars/${name}.json`, this.baseUrl));
@@ -210,21 +292,35 @@ export class VariantDB {
     return this.shards.get(name);
   }
 
-  /** @returns {Promise<CharDetail>} */
+  /**
+   * @param {string} key
+   * @returns {Promise<CharDetail>}
+   */
   async detail(key) {
     const shard = await this.loadShard(this.shardName(key));
     return shard[key];
   }
 
+  /**
+   * @param {number} num MJ番号
+   * @returns {Promise<Omit<Glyph, 'char'> | null>} UCS を持たない字形には、コピー用の文字列（char）が無い
+   */
   async noCharGlyph(num) {
+    /** @type {{glyphs: Omit<Glyph, 'char'>[]}} */
     const data = await this.loadShard('none');
     return data.glyphs.find((g) => g.mj === formatMJ(num)) ?? null;
   }
 
-  /** 関連字を「MJ縮退マップ等に基づく関連」と「Unihan のみ（参考）」に分けて返す. */
+  /**
+   * 関連字を「MJ縮退マップ等に基づく関連」と「Unihan のみ（参考）」に分けて返す.
+   * @param {string} key
+   * @returns {Promise<{primary: RelatedChar[], reference: RelatedChar[]}>}
+   */
   async related(key) {
     const detail = await this.detail(key);
+    /** @type {RelatedChar[]} */
     const primary = [];
+    /** @type {RelatedChar[]} */
     const reference = [];
     for (const rel of detail.related ?? []) {
       const kinds = [...new Set([...rel.out, ...rel.in])];
@@ -239,10 +335,12 @@ export class VariantDB {
       (kinds.some((k) => PRIMARY_RELATIONS.has(k)) ? primary : reference).push(item);
     }
     // 常用・人名用 → BMP（入力しやすい）→ 字形数の多い順 → 関係の種別 → コードポイント
+    /** @param {RelatedChar} r */
     const score = (r) => {
       const flags = r.entry?.flags ?? 0;
       return (flags & (FLAG_JOUYOU | FLAG_JINMEI) ? 0 : 2) + (parseInt(r.key, 16) < 0x10000 ? 0 : 1);
     };
+    /** @param {RelatedChar} a @param {RelatedChar} b */
     const byRank = (a, b) => score(a) - score(b)
       || (b.entry?.glyphCount ?? 0) - (a.entry?.glyphCount ?? 0)
       || relationRank(a.kinds[0]) - relationRank(b.kinds[0])
@@ -253,6 +351,7 @@ export class VariantDB {
   /**
    * 人名・地名の辞書（src/data/names.json、約1.7MB）を読み込む.
    * 読み検索のときだけ必要なので、最初のかな検索で呼ぶ。失敗しても検索自体は続けられる。
+   * @returns {Promise<Names>}
    */
   async ensureNames() {
     this._namesPromise ??= this.fetchJson(new URL('names.json', this.baseUrl))
@@ -263,10 +362,11 @@ export class VariantDB {
 
   /**
    * 字の呼び名と部首名の辞書（src/data/nicknames.json、数KB）を読み込む. 読み検索のときだけ必要.
+   * @returns {Promise<Nicknames>}
    */
   async ensureNicknames() {
     this._nicknamesPromise ??= this.fetchJson(new URL('nicknames.json', this.baseUrl))
-      .then((data) => {
+      .then((/** @type {Nicknames} */ data) => {
         this.nicknames = data;
         // 長い名前から試す（「ぎょうにんべん」を「にんべん」より先に）
         this._radicalNames = data.radicals
@@ -278,11 +378,16 @@ export class VariantDB {
     return this._nicknamesPromise;
   }
 
-  /** 字の部首（一覧表は1字に部首を4つまで持つ。最初のものが chars に、残りが extraRadicals にある） */
+  /**
+   * 字の部首（一覧表は1字に部首を4つまで持つ。最初のものが chars に、残りが extraRadicals にある）
+   * @param {string} key
+   * @returns {number[]}
+   */
   radicalsOf(key) {
     return [this.index.chars[key][2], ...(this.index.extraRadicals?.[key] ?? [])];
   }
 
+  /** @param {string} kind */
   relationLabel(kind) {
     return this.meta.relationTypes[kind] ?? kind;
   }
@@ -322,11 +427,12 @@ export class VariantDB {
     return this.searchText(query);
   }
 
+  /** @param {string} query */
   searchText(query) {
     const chars = [];
     const seen = new Map();
     const unknown = [];
-    const cps = [...query].map((ch) => ch.codePointAt(0));
+    const cps = [...query].map((ch) => /** @type {number} */ (ch.codePointAt(0)));
     for (let i = 0; i < cps.length; i++) {
       const cp = cps[i];
       if (isVariationSelector(cp) || /\s/u.test(String.fromCodePoint(cp))) continue;
@@ -341,6 +447,7 @@ export class VariantDB {
         if (seq && !seen.get(key).focus) seen.get(key).focus = { ivs: seq };
         continue;
       }
+      /** @type {SearchItem} */
       const item = { key, focus: seq ? { ivs: seq } : cp !== parseInt(key, 16) ? { impl: hex(cp) } : null };
       seen.set(key, item);
       chars.push(item);
@@ -351,6 +458,7 @@ export class VariantDB {
     return { type: 'text', query, chars, unknown };
   }
 
+  /** @param {string} query */
   searchCodes(query) {
     const chars = [];
     const selectors = [];
@@ -380,11 +488,16 @@ export class VariantDB {
     return { type: 'code', query, chars };
   }
 
+  /**
+   * @param {string} query
+   * @param {Filters} filters
+   */
   searchReading(query, filters) {
     const reading = toHiragana(query).replace(/ー/g, '');
     const names = this.nameGroups(reading);
 
     const exact = new Set(this.index.readings[reading] ?? []);
+    /** @type {Set<string>} */
     const prefix = new Set();
     if (reading.length >= 1) {
       for (const r of this._readingKeys) {
@@ -393,6 +506,7 @@ export class VariantDB {
         }
       }
     }
+    /** @param {Iterable<string>} keys */
     const filtered = (keys) => [...keys].filter((k) => this.matchesFilter(k, filters));
     const exactKeys = this.rank(filtered(exact));
     const prefixKeys = this.rank(filtered(prefix));
@@ -408,6 +522,7 @@ export class VariantDB {
 
   /**
    * 呼び名（はしごだか など）に一致する字. 完全一致を先に、2文字以上なら前方一致も.
+   * @param {string} reading ひらがな
    * @returns {{name: string, note: string, exact: boolean, targets: {query: string, char: string, mj?: string}[]}[]}
    */
   nicknameMatches(reading) {
@@ -428,6 +543,8 @@ export class VariantDB {
 
   /**
    * 「〇〇へんの〇〇」（部首名＋の＋読み）に一致する字.
+   * @param {string} reading ひらがな
+   * @param {Filters} filters
    * @returns {{radicalName: string, reading: string, keys: string[]} | null}
    */
   radicalReading(reading, filters) {
@@ -443,9 +560,11 @@ export class VariantDB {
 
   /**
    * 読みに一致する人名・地名の表記。names.json があればそれを使い、無ければ手作業のプリセットだけを返す。
+   * @param {string} reading ひらがな
    * @returns {{kind: string, reading: string, words: string[]}[]}
    */
   nameGroups(reading) {
+    /** @type {[string, Record<string, string[]>][]} [種別, 読み → 表記] */
     const sources = this.names
       ? [['姓', this.names.surnames], ['名', this.names.given], ['地名', this.names.places], ['異体字での表記', this.names.variants]]
       : [['姓・地名', this.index.names]];
@@ -474,8 +593,13 @@ export class VariantDB {
     return true;
   }
 
-  /** 常用 → 人名用 → IVSあり → 画数 → コードポイント の順に並べる. */
+  /**
+   * 常用 → 人名用 → IVSあり → 画数 → コードポイント の順に並べる（keys そのものを並べ替える）.
+   * @param {string[]} keys
+   * @returns {string[]}
+   */
   rank(keys) {
+    /** @param {string} k */
     const score = (k) => {
       const [, , , flags] = this.index.chars[k];
       return (flags & FLAG_JOUYOU ? 0 : flags & FLAG_JINMEI ? 1 : 2) * 2 + (flags & FLAG_IVS ? 0 : 1);
@@ -491,8 +615,10 @@ export function isFilterActive(filters = {}) {
   return Boolean(filters.strokesMin || filters.strokesMax || filters.radical || filters.ivsOnly || (filters.policy && filters.policy !== 'all'));
 }
 
+/** @param {number} num MJ番号 */
 export const formatMJ = (num) => `MJ${String(num).padStart(6, '0')}`;
 
+/** @param {string} kind */
 function relationRank(kind) {
   const i = RELATION_ORDER.indexOf(kind);
   return i === -1 ? RELATION_ORDER.length : i;
@@ -500,6 +626,7 @@ function relationRank(kind) {
 
 /** 配信側でログインが必要（401/403）と言われたとき。config.sessionWatch を設定した場合だけ、画面で案内する */
 export class AuthRequiredError extends Error {
+  /** @param {string | URL} url */
   constructor(url) {
     super('ログインの有効期限が切れたか、ログインしていません');
     this.name = 'AuthRequiredError';
@@ -507,6 +634,12 @@ export class AuthRequiredError extends Error {
   }
 }
 
+/**
+ * fetch して、401/403 は AuthRequiredError、それ以外の失敗は Error にする.
+ * @param {string | URL} url
+ * @param {RequestInit} [init]
+ * @returns {Promise<Response>}
+ */
 export async function fetchOk(url, init) {
   const res = await fetch(url, init);
   if (res.status === 401 || res.status === 403) throw new AuthRequiredError(url);
@@ -514,6 +647,10 @@ export async function fetchOk(url, init) {
   return res;
 }
 
+/**
+ * @param {URL} url
+ * @returns {Promise<any>} 読み込んだ JSON（形はファイルごとに違うので、型は受け取る側で付ける）
+ */
 async function defaultFetchJson(url) {
   return (await fetchOk(url)).json();
 }

@@ -18,6 +18,10 @@
 // どちらも「読み込んでいます…」のまま止まるので、ここ（通常のスクリプト）で案内する
 const APP_START_TIMEOUT_MS = 15000;
 
+/**
+ * @param {string} title
+ * @param {string} text
+ */
 function showStartupNotice(title, text) {
   const results = document.getElementById('results');
   if (!results) return;

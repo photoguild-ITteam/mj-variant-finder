@@ -10,17 +10,7 @@
     "noEmit": true,
     "skipLibCheck": true,
 
-    // strict は段階的に有効にする。残り: noImplicitAny。
-    // すべて有効になったら、ここを "strict": true の1行にまとめる。
-    "strict": false,
-    "alwaysStrict": true,
-    "strictBindCallApply": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "strictBuiltinIteratorReturn": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
+    "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },

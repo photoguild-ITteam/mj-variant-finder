@@ -21,7 +21,7 @@ export function setupFilters(onChange) {
     h('option', { value: String(i + 1) }, `${i + 1}  ${radicalChar(i + 1)}`)));
 
   const apply = () => {
-    const num = (el) => (el.value ? Number(el.value) : undefined);
+    const num = (/** @type {HTMLInputElement | HTMLSelectElement} */ el) => (el.value ? Number(el.value) : undefined);
     app.filters = {
       radical: num(fields.radical),
       strokesMin: num(fields.strokesMin),
@@ -33,6 +33,7 @@ export function setupFilters(onChange) {
     onChange();
   };
 
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let timer;
   const applyLater = () => {
     clearTimeout(timer);
@@ -62,7 +63,7 @@ function updateCount() {
 export function renderQuickAccess() {
   $('#quick-access').replaceChildren(...app.db.index.quickAccess.map((ch) => {
     const button = queryButton(ch, ch, 'glyph');
-    button.title = `U+${hex(ch.codePointAt(0))}`;
+    button.title = `U+${hex(/** @type {number} */ (ch.codePointAt(0)))}`;
     return button;
   }));
 }

@@ -2,6 +2,10 @@
 
 import { hex, parseSequence, radicalChar, vsNumber } from '../db.js';
 
+/** @typedef {import('../db.js').Glyph} Glyph */
+/** @typedef {import('../db.js').Focus | null} Focus 検索語が指した字形（db.search() の chars の focus） */
+
+/** @type {Record<string, string>} 関係の種別 → 短い表記 */
 export const RELATION_SHORT = {
   koseki: '戸籍通達',
   kokuji582: '告示582号',
@@ -23,6 +27,7 @@ export const DIRECTION_HELP = {
   相互: '双方向に縮退の関係がある',
 };
 
+/** @type {Record<string, string>} */
 export const DICT_LABELS = {
   daikanwa: '大漢和',
   nihongoKanji: '日本語漢字辞典',
@@ -31,7 +36,10 @@ export const DICT_LABELS = {
   daikangorin: '大漢語林',
 };
 
-/** 関連字の向き（db.related() の要素） */
+/**
+ * 関連字の向き.
+ * @param {{out: string[], in: string[]}} rel db.related() の要素
+ */
 export function relationDirection(rel) {
   if (rel.out.length && rel.in.length) return '相互';
   return rel.out.length ? '縮退先' : '縮退元';
@@ -39,7 +47,8 @@ export function relationDirection(rel) {
 
 /**
  * 検索語が指した字形か（db.search() の chars の focus）.
- * @param {{mj?: string, ivs?: string, impl?: string} | null} focus
+ * @param {Glyph} glyph
+ * @param {Focus} focus
  */
 export function matchesFocus(glyph, focus) {
   if (!focus) return false;
@@ -49,10 +58,17 @@ export function matchesFocus(glyph, focus) {
   return false;
 }
 
-/** 検索語が指した字形。指していなければ（見つからなければ）先頭の字形 */
+/**
+ * 検索語が指した字形。指していなければ（見つからなければ）先頭の字形.
+ * @param {Glyph[]} glyphs
+ * @param {Focus} focus
+ */
 export const focusedGlyph = (glyphs, focus) => glyphs.find((g) => matchesFocus(g, focus)) ?? glyphs[0];
 
-/** カードに出す符号の表記: "9089 E010F（VS32）" / "U+9089" / "UCSなし" */
+/**
+ * カードに出す符号の表記: "9089 E010F（VS32）" / "U+9089" / "UCSなし".
+ * @param {Glyph} glyph
+ */
 export function sequenceLabel(glyph) {
   if (glyph.ivs) {
     const [base, vs] = parseSequence(glyph.ivs[0]);
@@ -61,7 +77,10 @@ export function sequenceLabel(glyph) {
   return glyph.impl ? `U+${glyph.impl}` : 'UCSなし';
 }
 
-/** 詳細画面の IVS 行: "9089 E010F（VS32） / ..." */
+/**
+ * 詳細画面の IVS 行: "9089 E010F（VS32） / ...".
+ * @param {Glyph} glyph
+ */
 export function ivsListLabel(glyph) {
   return glyph.ivs
     ?.map((seq) => `${seq.replace('_', ' ')}（VS${vsNumber(parseSequence(seq)[1])}）${glyph.ivdOnly?.includes(seq) ? ' ※IVD 2026 追加' : ''}`)
@@ -101,6 +120,8 @@ export function gothicStatus(glyph, gothicMeta) {
 
 const DICT_ORDER = ['daikanwa', 'daijigen', 'shinDaijiten', 'daikangorin', 'nihongoKanji'];
 
+/** @typedef {[label: string, value: unknown]} DetailRow 詳細の1行（値が空の行は出さない） */
+
 /**
  * 字形詳細ダイアログ用のセクション構造を生成する。
  * DOM に依存せず、純粋なデータ構造を返す（tests/glyph-info.test.mjs でテスト）。
@@ -113,6 +134,7 @@ export function glyphDetailSections(glyph, gothicMeta = null) {
   const gothic = gothicStatus(glyph, gothicMeta);
 
   // 1. 文字符号・規格
+  /** @type {DetailRow[]} */
   const codeRows = [
     ['MJ文字図形名', glyph.mj],
     ['対応するUCS', glyph.ucs && `U+${glyph.ucs}`],
@@ -126,6 +148,7 @@ export function glyphDetailSections(glyph, gothicMeta = null) {
   ];
 
   // 2. 文字の属性
+  /** @type {DetailRow[]} */
   const attrRows = [
     ['部首・内画数', glyph.radicals?.map(([r, s]) => `${radicalChar(r)}（${r}）+${s ?? '?'}`).join(' / ')],
     ['総画数', glyph.strokes],
@@ -136,6 +159,7 @@ export function glyphDetailSections(glyph, gothicMeta = null) {
   ];
 
   // 3. 公的典拠・行政コード（出典）
+  /** @type {DetailRow[]} */
   const officialRows = [
     ['戸籍統一文字番号', glyph.koseki],
     ['住基ネット統一文字コード', glyph.juki],
@@ -145,6 +169,7 @@ export function glyphDetailSections(glyph, gothicMeta = null) {
   ];
 
   // 4. 漢和辞典の典拠（出典）
+  /** @type {DetailRow[]} */
   const dictRows = [];
   if (glyph.dict) {
     const keys = Object.keys(glyph.dict);
@@ -159,11 +184,13 @@ export function glyphDetailSections(glyph, gothicMeta = null) {
   }
 
   // 5. MJ縮退マップ・公的代替根拠
+  /** @type {DetailRow[]} */
   const shrinkRows = [];
   if (glyph.shrink && Object.keys(glyph.shrink).length > 0) {
     shrinkRows.push(['MJ縮退マップ', glyph.shrink]);
   }
 
+  /** @param {DetailRow[]} rows */
   const filterRows = (rows) => rows.filter(([, ...values]) => values.some((v) => v != null && v !== ''));
 
   const sections = [

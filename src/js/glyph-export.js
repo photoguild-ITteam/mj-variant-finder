@@ -9,11 +9,23 @@ const PNG_SIZE = 1024; // 1em あたりのピクセル数
 const FONT_MAP_URL = new URL('../fonts/fonts-map.json', import.meta.url);
 const FONTKIT_URL = new URL('../vendor/fontkit.js', import.meta.url);
 
+/** @typedef {import('./db.js').Glyph} Glyph */
+/** @typedef {{size?: number, color?: string}} PngOptions */
+/** @typedef {{char: string, mj?: string}} MultiGlyph 連結書き出しの字形（char と mj だけ使う） */
+/** @typedef {{size?: number, direction?: 'horizontal'|'vertical', color?: string}} MultiPngOptions */
+/** @typedef {{direction?: 'horizontal'|'vertical', color?: string}} MultiSvgOptions */
+
+/** @param {Glyph} glyph */
 const fileBase = (glyph) => glyph.mj;
 
 // ---------------------------------------------------------------------------- PNG
 
-/** 字形を 1em 四方の透明 PNG にする（全角の字送り幅 × アセント+ディセント）. */
+/**
+ * 字形を 1em 四方の透明 PNG にする（全角の字送り幅 × アセント+ディセント）.
+ * @param {Glyph} glyph
+ * @param {PngOptions} [options]
+ * @returns {Promise<Blob>}
+ */
 export async function renderPng(glyph, { size = PNG_SIZE, color = '#000000' } = {}) {
   const font = `${size}px "${WEB_FONT_FAMILY}"`;
   await document.fonts.load(font, glyph.char);
@@ -34,6 +46,7 @@ export async function renderPng(glyph, { size = PNG_SIZE, color = '#000000' } = 
   });
 }
 
+/** @param {Glyph} glyph @param {PngOptions} [options] */
 export async function copyPng(glyph, options) {
   if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
     throw new Error('このブラウザは画像のコピーに対応していません');
@@ -42,16 +55,41 @@ export async function copyPng(glyph, options) {
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': renderPng(glyph, options) })]);
 }
 
+/** @param {Glyph} glyph @param {PngOptions} [options] */
 export async function downloadPng(glyph, options) {
   saveBlob(await renderPng(glyph, options), `${fileBase(glyph)}.png`);
 }
 
 // ---------------------------------------------------------------------------- SVG
 
+// fontkit（vendor/fontkit.js）には型が無いので、使うところだけ型を付ける
+/**
+ * @typedef {object} FontkitGlyph
+ * @property {number} id
+ * @property {number} advanceWidth
+ * @property {{toSVG(): string}} path
+ */
+/**
+ * @typedef {object} FontkitFont
+ * @property {number} ascent
+ * @property {number} descent
+ * @property {number} unitsPerEm
+ * @property {(id: number) => FontkitGlyph} getGlyph
+ * @property {(cp: number) => FontkitGlyph | null} glyphForCodePoint
+ * @property {{uvs?: {varSelectors: {toArray(): {varSelector: number, nonDefaultUVS?: {unicodeValue: number, glyphID: number}[]}[]}}}} [_cmapProcessor] fontkit の内部（cmap format 14）
+ */
+
+/** @type {Promise<{create(buf: Uint8Array): FontkitFont}> | undefined} */
 let fontkitPromise;
+/** @type {Promise<[number, number, string][]> | undefined} fonts-map.json（[先頭, 末尾, フォントファイル名] の一覧） */
 let fontMapPromise;
+/** @type {Map<string, Promise<FontkitFont>>} */
 const fontCache = new Map();
 
+/**
+ * @param {number} cp
+ * @returns {Promise<FontkitFont>}
+ */
 async function fontFor(cp) {
   fontMapPromise ??= fetchOk(FONT_MAP_URL).then((r) => r.json());
   fontMapPromise.catch(() => { fontMapPromise = undefined; });
@@ -68,13 +106,16 @@ async function fontFor(cp) {
     promise.catch(() => fontCache.delete(file));
     fontCache.set(file, promise);
   }
-  return fontCache.get(file);
+  return /** @type {Promise<FontkitFont>} */ (fontCache.get(file)); // 直前で set しているので必ずある
 }
 
 /**
  * コードポイント列（基底文字 + 異体字セレクタ）→ グリフ.
  * fontkit 2.0.4 の getVariationSelector は、defaultUVS を持つセレクタで nonDefaultUVS を探さない不具合があるため、
  * cmap format 14 を直接引く。
+ * @param {FontkitFont} font
+ * @param {number[]} cps
+ * @returns {FontkitGlyph | null}
  */
 function glyphFor(font, cps) {
   const [base, vs] = cps;
@@ -87,11 +128,20 @@ function glyphFor(font, cps) {
   return font.glyphForCodePoint(base);
 }
 
-const escapeXml = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
+/** @type {Record<string, string>} */
+const XML_ESCAPES = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' };
+/** @param {unknown} s */
+const escapeXml = (s) => String(s).replace(/[<>&"]/g, (c) => XML_ESCAPES[c]);
 
-/** 字形のアウトラインを SVG 文字列にする（viewBox は字送り幅 × アセント+ディセント、単位はフォント座標）. */
+/**
+ * 字形のアウトラインを SVG 文字列にする（viewBox は字送り幅 × アセント+ディセント、単位はフォント座標）.
+ * @param {Glyph} glyph
+ * @param {{color?: string}} [options]
+ * @returns {Promise<string>}
+ */
 export async function buildSvg(glyph, { color = '#000000' } = {}) {
-  const cps = [...glyph.char].map((ch) => ch.codePointAt(0));
+  // 文字列を1文字ずつに分けたので codePointAt(0) は必ず数
+  const cps = /** @type {number[]} */ ([...glyph.char].map((ch) => ch.codePointAt(0)));
   const font = await fontFor(cps[0]);
   const g = glyphFor(font, cps);
   if (!g || g.id === 0) throw new Error('フォントにこの字形がありません');
@@ -109,6 +159,7 @@ export async function buildSvg(glyph, { color = '#000000' } = {}) {
   ].join('\n');
 }
 
+/** @param {Glyph} glyph @param {{color?: string}} [options] */
 export async function downloadSvg(glyph, options) {
   const svg = await buildSvg(glyph, options);
   saveBlob(new Blob([svg], { type: 'image/svg+xml' }), `${fileBase(glyph)}.svg`);
@@ -116,9 +167,11 @@ export async function downloadSvg(glyph, options) {
 
 // ---------------------------------------------------------------------------- 複数文字の連結書き出し
 
-/** \u9023\u7D50\u66F8\u304D\u51FA\u3057\u306E\u30D5\u30A1\u30A4\u30EB\u540D\uFF08\u4F8B: \u9089\u8FBA_MJ026190_MJ026180\uFF09\u3002\u7570\u4F53\u5B57\u30BB\u30EC\u30AF\u30BF\uFF08VS17\u301CVS256\uFF09\u306F\u5916\u3059 */
+/** 連結書き出しのファイル名（例: 邉辺_MJ026190_MJ026180）。異体字セレクタ（VS17〜VS256）は外す
+ * @param {MultiGlyph[]} glyphs
+ */
 export function multiFileBase(glyphs) {
-  // u \u30D5\u30E9\u30B0\u304C\u7121\u3044\u3068 \u{E0100} \u304C\u66F8\u3051\u305A\u3001[\uE0100-\u2026] \u306F\u300C0\u301C\uE01E\u300D\u306E\u7BC4\u56F2\u306B\u306A\u3063\u3066\u6F22\u5B57\u307E\u3067\u6D88\u3048\u308B
+  // u フラグが無いと \u{E0100} が書けず、[\uE0100-…] は「0〜\uE01E」の範囲になって漢字まで消える
   const chars = glyphs.map((g) => g.char.replace(/[\u{E0100}-\u{E01EF}]/gu, '')).join('');
   const mjs = glyphs.map((g) => g.mj).filter(Boolean).join('_');
   return mjs ? `${chars}_${mjs}` : chars || 'glyphs';
@@ -126,8 +179,8 @@ export function multiFileBase(glyphs) {
 
 /**
  * 複数字形を連結した透明 PNG を作成する（横書き・縦書き対応、高解像度対応）
- * @param {Array<{char: string, mj?: string}>} glyphs
- * @param {{ size?: number, direction?: 'horizontal'|'vertical', color?: string }} [options]
+ * @param {MultiGlyph[]} glyphs
+ * @param {MultiPngOptions} [options]
  * @returns {Promise<Blob>}
  */
 export async function renderMultiPng(glyphs, { size = PNG_SIZE, direction = 'horizontal', color = '#000000' } = {}) {
@@ -191,6 +244,7 @@ export async function renderMultiPng(glyphs, { size = PNG_SIZE, direction = 'hor
   });
 }
 
+/** @param {MultiGlyph[]} glyphs @param {MultiPngOptions} [options] */
 export async function copyMultiPng(glyphs, options) {
   if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
     throw new Error('このブラウザは画像のコピーに対応していません');
@@ -198,14 +252,15 @@ export async function copyMultiPng(glyphs, options) {
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': renderMultiPng(glyphs, options) })]);
 }
 
+/** @param {MultiGlyph[]} glyphs @param {MultiPngOptions} [options] */
 export async function downloadMultiPng(glyphs, options) {
   saveBlob(await renderMultiPng(glyphs, options), `${multiFileBase(glyphs)}.png`);
 }
 
 /**
  * 複数字形を連結した SVG 文字列を作成する
- * @param {Array<{char: string, mj?: string}>} glyphs
- * @param {{ direction?: 'horizontal'|'vertical', color?: string }} [options]
+ * @param {MultiGlyph[]} glyphs
+ * @param {MultiSvgOptions} [options]
  * @returns {Promise<string>}
  */
 export async function buildMultiSvg(glyphs, { direction = 'horizontal', color = '#000000' } = {}) {
@@ -213,7 +268,7 @@ export async function buildMultiSvg(glyphs, { direction = 'horizontal', color = 
 
   const items = [];
   for (const glyph of glyphs) {
-    const cps = [...glyph.char].map((ch) => ch.codePointAt(0));
+    const cps = /** @type {number[]} */ ([...glyph.char].map((ch) => ch.codePointAt(0))); // buildSvg と同じ
     const font = await fontFor(cps[0]);
     const g = glyphFor(font, cps);
     if (!g || g.id === 0) throw new Error(`「${glyph.char}」の字形がフォントにありません`);
@@ -267,6 +322,7 @@ export async function buildMultiSvg(glyphs, { direction = 'horizontal', color = 
   ].join('\n');
 }
 
+/** @param {MultiGlyph[]} glyphs @param {MultiSvgOptions} [options] */
 export async function downloadMultiSvg(glyphs, options) {
   const svg = await buildMultiSvg(glyphs, options);
   saveBlob(new Blob([svg], { type: 'image/svg+xml' }), `${multiFileBase(glyphs)}.svg`);
@@ -274,6 +330,7 @@ export async function downloadMultiSvg(glyphs, options) {
 
 // ---------------------------------------------------------------------------- 共通
 
+/** @param {Blob} blob @param {string} filename */
 function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
