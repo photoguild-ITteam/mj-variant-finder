@@ -1,0 +1,8 @@
+# データ・フォントを作り直すときの Python の依存（版を固定する。いまのデータはこの版で作った）
+#   pip install -r scripts/requirements.txt
+# build_variant_db.py・build_names_db.py は標準ライブラリだけで動く（ゴシック体の判定に fonttools を使う）。
+fonttools==4.65.0     # build_webfont.py（サブセット・WOFF2）、build_variant_db.py（ゴシック体の判定）、build_image_index.py
+brotli==1.2.0         # build_webfont.py（WOFF2 の圧縮）
+freetype-py==2.5.1    # build_image_index.py（字形の描画）
+pillow==12.3.0        # build_image_index.py
+numpy==2.5.1          # build_image_index.py

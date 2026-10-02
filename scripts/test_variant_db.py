@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
@@ -18,8 +19,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import (  # noqa: E402
-    ROOT, SOURCES, build_glyph, jis_level, kata_to_hira, read_ivd, read_strict_xlsx, to_version,
-    verify_sha256
+    GOTHIC_FONTS, ROOT, SOURCES, build_glyph, find_gothic_fonts, gothic_font_arg, jis_level, kata_to_hira, read_ivd,
+    read_strict_xlsx, to_version, verify_sha256
 )
 from build_names_db import make_variants, read_postal  # noqa: E402
 
@@ -85,6 +86,23 @@ class TestUnits(unittest.TestCase):
             self.assertIn("SHA256 不一致", str(cm.exception))
             self.assertIn("docs/ARCHITECTURE.md", str(cm.exception))
 
+    def test_find_gothic_fonts_stops_on_other_version_or_missing(self):
+        # 固定した版と違うフォントでは判定しない（黙って gothic が変わらないように）
+        other = str(ROOT / "src" / "fonts" / "mjv-preset.woff2")
+        with self.assertRaises(SystemExit) as cm:
+            find_gothic_fonts({"noto": other})
+        self.assertIn("判定に使う版と違います", str(cm.exception))
+        # 見つからなければ、判定を省かずに止める
+        with self.assertRaises(SystemExit) as cm:
+            find_gothic_fonts({"noto": str(ROOT / "data" / "raw" / "no-such-font.ttf")})
+        self.assertIn("--no-gothic", str(cm.exception))
+
+    def test_gothic_font_arg(self):
+        self.assertEqual(gothic_font_arg("noto=fonts/a.ttf"), ("noto", "fonts/a.ttf"))
+        for bad in ("noto", "noto=", "other=a.ttf"):
+            with self.assertRaises(argparse.ArgumentTypeError, msg=bad):
+                gothic_font_arg(bad)
+
     def test_to_version(self):
         cases = {
             "1": 1,
@@ -145,6 +163,8 @@ class TestDatabase(unittest.TestCase):
             self.skipTest("ゴシック体のフォントが無い環境でビルドされた")
         counts = gothic["counts"]
         self.assertEqual(sum(counts.values()), load(DATA / "meta.json")["counts"]["mjGlyphs"] - len(index()["noChar"]))
+        # 判定に使ったフォントは GOTHIC_FONTS で固定した版
+        self.assertEqual({f["key"]: f["sha256"] for f in gothic["fonts"]}, {f["key"]: f["sha256"] for f in GOTHIC_FONTS})
         glyphs = {g["mj"]: g for g in detail("邉")["glyphs"]}
         self.assertIn("noto", glyphs["MJ026190"]["gothic"])  # 実装したUCS U+9089 → ゴシック体にある
         self.assertNotIn("gothic", glyphs["MJ026191"])                        # IVS のみ → 判定対象外（×）

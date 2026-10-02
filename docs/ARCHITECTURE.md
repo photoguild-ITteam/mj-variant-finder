@@ -62,7 +62,7 @@ Python 3.10 以上、標準ライブラリのみ。
 | `IVD_Sequences.2026-08-03.txt` | Unicode IVD 2026-08-03 | Unicode License v3 |
 | `Unihan.18.0.0.zip` | Unihan Database 18.0.0（`Unihan_Variants.txt` のみ使用） | Unicode License v3 |
 
-字形カードの「ゴシック○/△/×」は、ビルド時にゴシック体フォントの cmap を読んで判定する（`GOTHIC_FONTS`。SIL Open Font License の Noto Sans JP で ○/△ を判定し、BIZ UDゴシックは参考として表示する（BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。`--gothic-font noto=path/to/font` で場所を指定でき、フォントが見つからなければ判定を省く。フォント自体は配布しない）。Moji_Joho の IVS に対応したゴシック体は無いため、実装したUCS を持たない字形は ×（IVD 上も Moji_Joho と Adobe-Japan1 の共通シーケンスは 0 件）。
+字形カードの「ゴシック○/△/×」は、ビルド時にゴシック体フォントの cmap を読んで判定する（`GOTHIC_FONTS`。SIL Open Font License の Noto Sans JP で ○/△ を判定し、BIZ UDゴシックは参考として表示する（BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。フォント自体は配布しない）。判定はフォントの版で変わるので、使うファイル（いまは Windows 11 に入っている版）を sha256 で固定し、見つからない・版が違うときはビルドを止める。Windows 以外では同じファイルを `data/raw/` に置くか、`--gothic-font noto=path/to/font` で場所を指定する。`--no-gothic` で判定を省けるが、その出力はコミットしない。Moji_Joho の IVS に対応したゴシック体は無いため、実装したUCS を持たない字形は ×（IVD 上も Moji_Joho と Adobe-Japan1 の共通シーケンスは 0 件）。
 
 `scripts/data/name_presets.json` は、姓・地名の読みから表記を引くための手作業の辞書。MJ の読みは1文字単位なので、「わたなべ → 渡辺・渡邊・渡邉」のような読み検索はこの辞書で補う。
 
@@ -97,11 +97,11 @@ Python 3.10 以上、標準ライブラリのみ。
 ## Webフォント
 
 ```sh
-pip install fonttools brotli
+pip install -r scripts/requirements.txt   # Python の依存（版を固定）
 python scripts/build_webfont.py --font path/to/ipamjm.ttf   # 既定は data/raw/ipamjm.ttf
 ```
 
-IPAmj明朝 Ver.006.01（MD5 を検証）を 1024 コードポイント単位で分割し、79 個の WOFF2（合計約 12MB）にする。ブラウザは `unicode-range` で表示に必要なファイルだけを読み込む。
+IPAmj明朝 Ver.006.01（MD5 を検証し、違えば止める）を 1024 コードポイント単位で分割し、79 個の WOFF2（合計約 12MB）にする。ブラウザは `unicode-range` で表示に必要なファイルだけを読み込む。
 
 最初の画面（ロゴ・ようこそ・よく検索される異体字）の字はばらばらのブロックにあり、そのままだと十数ファイル（約3MB）を読む。そこでこれらの字と、IVS 表示の判定（`font-detector.js`）に使う2字形だけを入れた `mjv-preset.woff2`（約7KB、フォント名「MJ Variant Mincho Preset」）を別に作り、最初の画面の字はこのフォントで表示する。判定用の字形もここに入れてあるので、最初の画面では大きなフォントを読まない。入れる字は `search-index.json` の `quickAccess` と `build_webfont.py` の `PRESET_EXTRA`・`PRESET_IVS` で、`tests/fonts.test.mjs` が漏れを検出する（quickAccess を変えたらフォントも作り直す）。検索結果の字形カードは本体のフォントで表示するので、IVS の描き分けには影響しない。IVS の対応表（cmap format 14）を残すため、サブセット時に異体字セレクタも要求に含めている。IPAフォントライセンス v1.0 第3条に従い、改名、ライセンス同梱、オリジナルへの置き換え方法の提示を行っている。
 
@@ -123,12 +123,12 @@ npm run build:names   # data/raw/ の2ファイルから src/data/names.json を
 - 辞書には「髙橋」「山﨑」「𠮷田」のような異体字の表記がほとんど無いため、**よく使われる異体字48組の置き換え表**で補う（生成した表記は「実在の確認はしていません」と明示して表示）
 - 地名は、市区町村（全部）と、置き換え表の字を含む町域のみ。全町域を入れると 3.5MB 増えるうえ、異体字とは関係のない地名が大半のため
 - 「鹿嶋市＝かしまし」のように読みに接尾語が付くので、接尾語を外した読み（かしま）でも引けるようにしている
-- 郵便番号データは**ブラウザでダウンロードする**（curl などは拒否される）。`data/raw/utf_ken_all.zip` に置く（ビルド時に SHA256 が `names.json` の出典情報に記録される）
+- 郵便番号データは**ブラウザでダウンロードする**（curl などは拒否される）。`data/raw/utf_ken_all.zip` に置く（ビルド時に SHA256 が `names.json` の出典情報に記録される）。入力の2ファイルは `build_names_db.py` の `INPUT_SHA256` で版を固定している。郵便番号データは毎月更新されるので、新しい月のデータに替えたら書き換える
 
 ## 画像から探す
 
 ```sh
-pip install freetype-py pillow numpy
+pip install -r scripts/requirements.txt
 npm run build:imageindex    # IPAmj明朝の全字形を画像化 → src/data/image-index.bin
 ```
 
