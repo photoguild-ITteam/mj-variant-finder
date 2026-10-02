@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import (  # noqa: E402
-    ROOT, SOURCES, build_glyph, jis_level, kata_to_hira, read_ivd, read_strict_xlsx, to_version,
+    ROOT, SOURCES, build_glyph, jis_level, json_lines, kata_to_hira, read_ivd, read_strict_xlsx, to_version,
     verify_sha256
 )
 from build_names_db import make_variants, read_postal  # noqa: E402
@@ -84,6 +84,14 @@ class TestUnits(unittest.TestCase):
                 verify_sha256(file_path, "wrong_hash")
             self.assertIn("SHA256 不一致", str(cm.exception))
             self.assertIn("docs/ARCHITECTURE.md", str(cm.exception))
+
+    def test_json_lines(self):
+        data = {"a": {"x": [1, 2], "y": "漢"}, "b": [], "c": {}}
+        self.assertEqual(json_lines(data, 1), '{\n"a":{"x":[1,2],"y":"漢"},\n"b":[],\n"c":{}\n}')
+        self.assertEqual(json_lines(data, 2), '{\n"a":{\n"x":[1,2],\n"y":"漢"\n},\n"b":[],\n"c":{}\n}')
+        self.assertEqual(json_lines([{"k": 1}, 2], 1), '[\n{"k":1},\n2\n]')
+        for depth in range(4):
+            self.assertEqual(json.loads(json_lines(data, depth)), data)
 
     def test_to_version(self):
         cases = {
@@ -182,6 +190,17 @@ class TestDatabase(unittest.TestCase):
             self.assertFalse(seen_mj & set(mjs), key)
             seen_mj.update(mjs)
         self.assertEqual(len(seen_mj) + len(idx["noChar"]), load(DATA / "meta.json")["counts"]["mjGlyphs"])
+
+    def test_files_are_one_entry_per_line(self):
+        # 差分を読めるように、1行 = 1文字（シャード）・1項目（search-index の chars など）・1読み（names）
+        shard = (DATA / "chars" / "8F.json").read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(shard), len(load(DATA / "chars" / "8F.json")) + 2)
+        self.assertTrue(shard[1].startswith('"23C03":{'), shard[1][:40])
+        lines = (DATA / "search-index.json").read_text(encoding="utf-8").splitlines()
+        self.assertIn('"6E21":', "\n".join(line[:7] for line in lines))  # 渡 の行がある
+        self.assertGreater(len(lines), len(index()["chars"]))
+        names = (DATA / "names.json").read_text(encoding="utf-8").splitlines()
+        self.assertGreater(len(names), len(load(DATA / "names.json")["surnames"]))
 
     def test_no_null_version_in_glyphs(self):
         for path in (DATA / "chars").glob("*.json"):

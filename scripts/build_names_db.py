@@ -32,6 +32,8 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from build_variant_db import json_lines
+
 ROOT = Path(__file__).resolve().parent.parent
 IPADIC = ROOT / "data" / "raw" / "mecab-ipadic.tar.gz"
 POSTAL = ROOT / "data" / "raw" / "utf_ken_all.zip"
@@ -188,7 +190,7 @@ def main() -> None:
         "places": {k: sorted(v) for k, v in sorted(places.items())},
         "variants": dict(sorted(variants.items())),
     }
-    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    text = json_lines(data, 2) + "\n"  # 1行 = 1つの読み（差分を読めるように）
     OUT.write_text(text, encoding="utf-8", newline="\n")
     log(f"姓 {len(data['surnames'])} / 名 {len(data['given'])} / 地名 {len(data['places'])} / 置き換え {len(variants)} 読み"
         f" → {OUT} {len(text.encode()) / 1e6:.2f} MB")
