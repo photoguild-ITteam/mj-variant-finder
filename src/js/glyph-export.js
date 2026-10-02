@@ -115,8 +115,10 @@ export async function downloadSvg(glyph, options) {
 
 // ---------------------------------------------------------------------------- 複数文字の連結書き出し
 
-function multiFileBase(glyphs) {
-  const chars = glyphs.map((g) => g.char.replace(/[\uE0100-\uE01EF]/g, '')).join('');
+/** \u9023\u7D50\u66F8\u304D\u51FA\u3057\u306E\u30D5\u30A1\u30A4\u30EB\u540D\uFF08\u4F8B: \u9089\u8FBA_MJ026190_MJ026180\uFF09\u3002\u7570\u4F53\u5B57\u30BB\u30EC\u30AF\u30BF\uFF08VS17\u301CVS256\uFF09\u306F\u5916\u3059 */
+export function multiFileBase(glyphs) {
+  // u \u30D5\u30E9\u30B0\u304C\u7121\u3044\u3068 \u{E0100} \u304C\u66F8\u3051\u305A\u3001[\uE0100-\u2026] \u306F\u300C0\u301C\uE01E\u300D\u306E\u7BC4\u56F2\u306B\u306A\u3063\u3066\u6F22\u5B57\u307E\u3067\u6D88\u3048\u308B
+  const chars = glyphs.map((g) => g.char.replace(/[\u{E0100}-\u{E01EF}]/gu, '')).join('');
   const mjs = glyphs.map((g) => g.mj).filter(Boolean).join('_');
   return mjs ? `${chars}_${mjs}` : chars || 'glyphs';
 }
