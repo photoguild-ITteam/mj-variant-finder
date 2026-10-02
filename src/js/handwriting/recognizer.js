@@ -23,7 +23,7 @@ export function createRecognizer(entries) {
     const inputSignature = signature(input);
     KanjiCanvas.refPatterns = entries
       .filter(([, count]) => count - input.length >= STROKE_MIN_DIFF && count - input.length <= STROKE_MAX_DIFF)
-      .map((entry) => [signatureDistance(inputSignature, entry[3]), entry])
+      .map((entry) => /** @type {const} */ ([signatureDistance(inputSignature, entry[3]), entry]))
       .sort((a, b) => a[0] - b[0])
       .slice(0, POOL_SIZE)
       .map(([, entry]) => entry);

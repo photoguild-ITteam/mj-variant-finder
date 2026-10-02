@@ -1,6 +1,76 @@
 // 異体字データベース: search-index.json の読み込み、検索、詳細シャードの遅延読み込み。
 // DOM に依存しないので Node からもテストできる。
 
+// ---------------------------------------------------------------------------- データの形
+// scripts/build_variant_db.py が作る JSON の型（JSDoc。npm run test:types で検査する）。
+// 項目の意味は docs/ARCHITECTURE.md の「出力」。ほかのモジュールからは import('../db.js').Glyph のように参照する。
+
+/**
+ * 字形（chars/<shard>.json の glyphs の要素）.
+ * @typedef {object} Glyph
+ * @property {string} mj MJ文字図形名（MJ026190）
+ * @property {string} char コピー用の文字列（IVS 付きのことがある）
+ * @property {string} [ucs] 対応UCS（16進。以下のコードも同じ）
+ * @property {string} [impl] 実装したUCS
+ * @property {string} [compat] 互換漢字
+ * @property {string} [svs]
+ * @property {string[]} [ivs] IVS（"9089_E010F" の形）
+ * @property {string[]} [ivdOnly] MJ文字情報一覧表より後に IVD に登録された IVS
+ * @property {string} [x0213]
+ * @property {string} [x0213Class]
+ * @property {string} [x0212]
+ * @property {string} [jisLevel]
+ * @property {string} [koseki] 戸籍統一文字番号
+ * @property {string} [juki] 住基ネット統一文字コード
+ * @property {string} [touki] 登記統一文字番号
+ * @property {string} [nyukanSei] 入管正字コード
+ * @property {string} [nyukanGai] 入管外字コード
+ * @property {number} [strokes] 総画数
+ * @property {[number, number][]} [radicals] [部首番号, 内画数]（最大4つ）
+ * @property {string[]} [readings]
+ * @property {string} [policy] 漢字施策（常用漢字 など）
+ * @property {number} [version] MJ文字図形のバージョン
+ * @property {string} [note]
+ * @property {Record<string, string>} [dict] 漢和辞典の番号（daikanwa など）
+ * @property {string[]} [gothic] 字があるゴシック体のキー（meta.json の gothic.fonts）
+ * @property {Record<string, any>} [shrink] MJ縮退マップ（種別 → 縮退先の一覧、info は参考情報）
+ */
+
+/**
+ * 関連字（chars/<shard>.json の related の要素）. out はこの字から見た縮退先の種別、in は相手から参照されている種別.
+ * @typedef {{ucs: string, out: string[], in: string[]}} Relation
+ */
+
+/** @typedef {{glyphs: Glyph[], related?: Relation[]}} CharDetail chars/<shard>.json の1文字分 */
+
+/**
+ * search-index.json.
+ * @typedef {object} SearchIndex
+ * @property {number} shardBits
+ * @property {Record<string, [number[], number, number, number]>} chars UCS → [MJ番号の一覧, 総画数, 部首番号, flags]
+ * @property {Record<string, string>} aliases 互換漢字 → 対応UCS
+ * @property {number[]} noChar UCS を持たない MJ番号
+ * @property {Record<string, string[]>} readings 読み → UCS の一覧
+ * @property {Record<string, number[]>} [extraRadicals] UCS → 2つ目以降の部首番号
+ * @property {Record<string, string[]>} names 人名・地名プリセット（読み → 表記）
+ * @property {string[]} quickAccess よく検索される異体字
+ */
+
+/**
+ * meta.json（よく使う項目だけ型を付ける）.
+ * @typedef {object} Meta
+ * @property {string} generatedAt
+ * @property {Record<string, {title?: string, url?: string, license?: string}>} sources
+ * @property {Record<string, any>} counts
+ * @property {Record<string, string>} relationTypes
+ * @property {{fonts: {key: string, name: string, ok: boolean}[], counts: Record<string, number>} | null} gothic
+ */
+
+/**
+ * 絞り込みの条件（ui/filters.js が作る）.
+ * @typedef {{strokesMin?: number, strokesMax?: number, radical?: number, ivsOnly?: boolean, policy?: string}} Filters
+ */
+
 export const FLAG_JOUYOU = 1;
 export const FLAG_JINMEI = 2;
 export const FLAG_IVS = 4;
@@ -57,8 +127,8 @@ const toHalfwidth = (s) => s.replace(/[！-～]/g, (c) => String.fromCharCode(c.
 
 export class VariantDB {
   /**
-   * @param {object} index search-index.json
-   * @param {object} meta meta.json
+   * @param {SearchIndex} index search-index.json
+   * @param {Meta} meta meta.json
    * @param {(url: URL) => Promise<any>} fetchJson
    * @param {URL} baseUrl src/data/ の URL
    */
@@ -140,7 +210,7 @@ export class VariantDB {
     return this.shards.get(name);
   }
 
-  /** @returns {Promise<{glyphs: object[], related?: object[]}>} */
+  /** @returns {Promise<CharDetail>} */
   async detail(key) {
     const shard = await this.loadShard(this.shardName(key));
     return shard[key];
@@ -221,7 +291,7 @@ export class VariantDB {
 
   /**
    * @param {string} rawQuery
-   * @param {{strokesMin?: number, strokesMax?: number, radical?: number, ivsOnly?: boolean, policy?: string}} filters
+   * @param {Filters} filters
    */
   search(rawQuery, filters = {}) {
     // NFKC 正規化はしない（互換漢字や IVS が別の文字に置き換わってしまうため）
@@ -390,6 +460,7 @@ export class VariantDB {
     return groups;
   }
 
+  /** @param {string} key @param {Filters} [filters] */
   matchesFilter(key, { strokesMin, strokesMax, radical, ivsOnly, policy } = {}) {
     const [, strokes, , flags] = this.index.chars[key];
     if (strokesMin && strokes < strokesMin) return false;
@@ -414,6 +485,7 @@ export class VariantDB {
   }
 }
 
+/** @param {Filters} [filters] */
 export function isFilterActive(filters = {}) {
   return Boolean(filters.strokesMin || filters.strokesMax || filters.radical || filters.ivsOnly || (filters.policy && filters.policy !== 'all'));
 }

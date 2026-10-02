@@ -10,7 +10,7 @@ import { openGlyphDialog } from './glyph-dialog.js';
 import { GOTHIC_VARIANT, gothicStatus, matchesFocus, sequenceLabel } from './glyph-info.js';
 
 /**
- * @param {object[]} glyphs
+ * @param {import('../db.js').Glyph[]} glyphs
  * @param {{mj?: string, ivs?: string, impl?: string} | null} [focus] 検索語が指した字形（強調表示する）
  */
 export function glyphGrid(glyphs, focus = null) {
@@ -29,7 +29,7 @@ const GLYPH_FILTERS = [
 
 /**
  * 字形の一覧の上に置く道具: 絞り込みと「違いを色で表示」.
- * @param {object[]} glyphs
+ * @param {import('../db.js').Glyph[]} glyphs
  * @param {HTMLElement} grid glyphGrid() の戻り値（カードの並びは glyphs と同じ）
  */
 export function glyphTools(glyphs, grid) {

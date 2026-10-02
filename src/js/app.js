@@ -129,14 +129,14 @@ function setupSearchForm() {
   });
   // data-query を持つ要素（例・候補・関連字・人名など）はすべて検索語へのリンクとして扱う
   document.addEventListener('click', (e) => {
-    const target = e.target.closest('[data-query]');
+    const target = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest('[data-query]'));
     if (!target) return;
     e.preventDefault();
     target.closest('dialog')?.close(); // 使い方などの例から検索したら、ダイアログを閉じて結果を見せる
     navigate(target.dataset.query);
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key !== '/' || e.target.closest('input, textarea, select, dialog')) return;
+    if (e.key !== '/' || /** @type {Element} */ (e.target).closest('input, textarea, select, dialog')) return;
     e.preventDefault();
     input.focus();
     input.select();
@@ -150,7 +150,7 @@ function setupDialogs() {
   $('#license-open').addEventListener('click', () => $('#license-dialog').showModal());
   for (const dialog of document.querySelectorAll('dialog')) {
     dialog.addEventListener('click', (e) => {
-      if (e.target === dialog || e.target.closest('[data-close]')) dialog.close();
+      if (e.target === dialog || /** @type {Element} */ (e.target).closest('[data-close]')) dialog.close();
     });
   }
 }

@@ -74,7 +74,7 @@ export const GOTHIC_VARIANT = { '○': 'ok', '△': 'warn', '×': 'muted' };
  * ゴシック体で使えるか.
  * Moji_Joho の IVS に対応したゴシック体は無いので、実装したUCS を持たない（IVS でしか区別できない）字形は ×。
  * 実装したUCS があり、判定用のゴシック体（ok=true のもの）すべてに字があれば ○、欠けていれば △。
- * @param {object} glyph
+ * @param {import('../db.js').Glyph} glyph
  * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} gothicMeta meta.json の gothic
  * @returns {{mark: '○'|'△'|'×', label: string, detail: string} | null} 判定データが無ければ null
  */
@@ -105,7 +105,7 @@ const DICT_ORDER = ['daikanwa', 'daijigen', 'shinDaijiten', 'daikangorin', 'niho
  * 字形詳細ダイアログ用のセクション構造を生成する。
  * DOM に依存せず、純粋なデータ構造を返す（tests/glyph-info.test.mjs でテスト）。
  *
- * @param {object} glyph 字形オブジェクト
+ * @param {import('../db.js').Glyph} glyph 字形オブジェクト
  * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} [gothicMeta]
  * @returns {Array<{ id: string, title: string, rows: Array<[string, ...any]> }>}
  */

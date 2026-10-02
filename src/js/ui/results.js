@@ -120,11 +120,11 @@ async function renderChars(result) {
 
   async function selectTab(i, focusTab = false) {
     if (tabs) {
-      [...tabs.children].forEach((tab, j) => {
+      [.../** @type {HTMLCollectionOf<HTMLElement>} */ (tabs.children)].forEach((tab, j) => {
         tab.setAttribute('aria-selected', String(i === j));
         tab.tabIndex = i === j ? 0 : -1;
       });
-      if (focusTab) tabs.children[i].focus();
+      if (focusTab) /** @type {HTMLElement} */ (tabs.children[i]).focus();
       panelHost.setAttribute('aria-labelledby', tabs.children[i].id);
     }
     panelHost.replaceChildren(loading());
