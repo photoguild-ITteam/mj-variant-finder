@@ -18,6 +18,7 @@ function savedTheme() {
   }
 }
 
+/** @param {'light' | 'dark'} theme */
 function apply(theme) {
   document.documentElement.dataset.theme = theme;
   $('#theme-toggle').setAttribute('aria-label', theme === 'dark' ? 'ライトモードに切り替え' : 'ダークモードに切り替え');

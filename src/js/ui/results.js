@@ -12,12 +12,29 @@ import { reportError } from './session.js';
 
 const PAGE_SIZE = 300;
 
-/** 結果欄を差し替える。h() と同じく配列は平坦化し、null・false は無視する */
+/** @typedef {import('../db.js').SearchResult} SearchResult */
+/** @typedef {import('../db.js').SearchItem} SearchItem */
+/** @typedef {import('../db.js').Entry} Entry */
+// search() の type は string と推論され、type では絞り込めない。描き分ける関数には、持っている項目で取り出した型を付ける
+/** @typedef {Extract<SearchResult, {chars: unknown[]}> & {unknown?: string[]}} CharsResult 文字・コード検索（unknown は文字検索だけ） */
+/** @typedef {Extract<SearchResult, {reading: string}>} ReadingResult 読み検索 */
+/** @typedef {Extract<SearchResult, {candidates: string[]}>} FilterResult 絞り込みだけ（total と candidates を使う） */
+/** @typedef {Extract<SearchResult, {mj: number}>} NoCharResult UCS を持たない MJ文字図形名 */
+/** @typedef {Extract<SearchResult, {reason: string}>} NotFoundResult */
+
+/**
+ * 結果欄を差し替える。h() と同じく配列は平坦化し、null・false は無視する
+ * @param {...any} nodes h() の子と同じ（要素・文字列・配列・null・false）
+ */
 const show = (...nodes) => $('#results').replaceChildren(...nodes.flat(Infinity).filter((n) => n != null && n !== false));
 
-/** 絞り込み条件を変えたときに描き直すべき結果か（文字・コード検索は絞り込みの影響を受けない） */
+/**
+ * 絞り込み条件を変えたときに描き直すべき結果か（文字・コード検索は絞り込みの影響を受けない）
+ * @param {SearchResult | null} result
+ */
 export const isFilterable = (result) => !result || ['empty', 'reading', 'filter', 'notfound'].includes(result.type);
 
+/** @param {SearchResult} result */
 export async function renderResult(result) {
   try {
     await renderBody(result);
@@ -27,21 +44,24 @@ export async function renderResult(result) {
   if (app.result === result) announce(result);
 }
 
+/** @param {SearchResult} result */
 async function renderBody(result) {
+  // type で絞り込めないので、type ごとの型にして渡す（CharsResult などの説明）
   switch (result.type) {
     case 'empty': return renderWelcome();
     case 'text':
-    case 'code': return await renderChars(result);
-    case 'reading': return renderReading(result);
-    case 'filter': return renderFilterList(result);
-    case 'nochar': return await renderNoChar(result);
-    default: return renderNotFound(result);
+    case 'code': return await renderChars(/** @type {CharsResult} */ (result));
+    case 'reading': return renderReading(/** @type {ReadingResult} */ (result));
+    case 'filter': return renderFilterList(/** @type {FilterResult} */ (result));
+    case 'nochar': return await renderNoChar(/** @type {NoCharResult} */ (result));
+    default: return renderNotFound(/** @type {NotFoundResult} */ (result));
   }
 }
 
 /**
  * 結果の見出しだけを読み上げる（#search-status は role="status"）.
  * #results 全体を aria-live にすると、検索のたびに結果の一覧がまるごと読み上げられるため。
+ * @param {SearchResult} result
  */
 function announce(result) {
   const results = $('#results');
@@ -50,6 +70,7 @@ function announce(result) {
   $('#search-status').textContent = result.type === 'empty' ? '' : heading ? `${heading}を表示しました` : notice ?? '';
 }
 
+/** @param {any} err catch で受けた値（Error とは限らない。message があればそれを出す） */
 export function renderLoadError(err) {
   const expired = reportError(err);
   show(h('div', { class: 'notice notice--error' },
@@ -61,6 +82,7 @@ export function renderLoadError(err) {
 
 function renderWelcome() {
   const { counts } = app.db.meta;
+  /** @param {string} query */
   const example = (query) => queryButton(query, query, 'chip chip--ghost');
   show(h('div', { class: 'empty-state' },
     h('div', { class: 'empty-state__glyph glyph', 'aria-hidden': 'true' }, '邊'),
@@ -75,9 +97,12 @@ function renderWelcome() {
       h('li', {}, '部首・画数: 左の「絞り込み」だけでも一覧できます'))));
 }
 
+/** @param {NotFoundResult} result */
 function renderNotFound(result) {
+  /** @param {string} query */
   const example = (query) => queryButton(query, query, 'chip chip--ghost');
   // 次にできることを示す（手書き・画像のボタンは検索欄の下にあるものを押す）
+  /** @param {string} id ボタンのセレクタ @param {string} label */
   const openTool = (id, label) => h('button', { class: 'button button--small', type: 'button', onclick: () => $(id).click() }, label);
   show(h('div', { class: 'notice notice--warn' },
     h('strong', {}, '見つかりませんでした'),
@@ -94,6 +119,7 @@ function renderNotFound(result) {
       h('li', {}, 'MJ文字図形名・コードポイント: ', example('MJ026190'), ' ', example('U+8FBB')))));
 }
 
+/** @param {NoCharResult} result */
 async function renderNoChar(result) {
   let glyph;
   try {
@@ -111,6 +137,7 @@ async function renderNoChar(result) {
 
 // ---------------------------------------------------------------------------- 文字・コード検索
 
+/** @param {CharsResult} result */
 async function renderChars(result) {
   const items = result.chars;
   const panelHost = h('div', { id: 'char-panel-host', role: items.length > 1 ? 'tabpanel' : null });
@@ -118,6 +145,7 @@ async function renderChars(result) {
 
   let tabToken = 0; // 最後に選んだタブの番号。読み込み中に切り替えたら、前のタブの結果は捨てる
 
+  /** @param {number} i @param {boolean} [focusTab] */
   async function selectTab(i, focusTab = false) {
     if (tabs) {
       [.../** @type {HTMLCollectionOf<HTMLElement>} */ (tabs.children)].forEach((tab, j) => {
@@ -192,7 +220,11 @@ async function renderChars(result) {
   await selectTab(0);
 }
 
-/** 矢印キーでも移動できるタブ（WAI-ARIA tabs） */
+/**
+ * 矢印キーでも移動できるタブ（WAI-ARIA tabs）
+ * @param {SearchItem[]} items
+ * @param {(i: number, focusTab: boolean) => void} onSelect
+ */
 function charTabs(items, onSelect) {
   return h('div', { class: 'tabs', role: 'tablist', 'aria-label': '文字' },
     items.map((item, i) => {
@@ -202,9 +234,9 @@ function charTabs(items, onSelect) {
         class: 'tab', role: 'tab', type: 'button', id: `tab-${i}`,
         'aria-selected': String(i === 0), 'aria-controls': 'char-panel-host', tabindex: i === 0 ? '0' : '-1',
         onclick: () => onSelect(i, false),
-        onkeydown: (e) => {
+        onkeydown: (/** @type {KeyboardEvent} */ e) => {
           // 左右で隣のタブ、Home・End で最初・最後のタブ（WAI-ARIA のタブの操作）
-          const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: items.length - 1 }[e.key];
+          const next = /** @type {Record<string, number | undefined>} */ ({ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: items.length - 1 })[e.key];
           if (next === undefined) return;
           e.preventDefault();
           onSelect((next + items.length) % items.length, true);
@@ -217,6 +249,7 @@ function charTabs(items, onSelect) {
 
 // ---------------------------------------------------------------------------- 読み・絞り込み
 
+/** @param {ReadingResult} result */
 function renderReading(result) {
   const { nicknames = [], byRadical = null } = result;
   show(
@@ -238,7 +271,10 @@ function renderReading(result) {
   );
 }
 
-/** 呼び名（はしごだか など）に一致する字。IVS 付きの字形を指すものは、その字形を開く */
+/**
+ * 呼び名（はしごだか など）に一致する字。IVS 付きの字形を指すものは、その字形を開く
+ * @param {ReadingResult['nicknames']} nicknames
+ */
 function nicknameSection(nicknames) {
   return [
     h('h3', { class: 'section-label' }, '呼び名'),
@@ -251,12 +287,16 @@ function nicknameSection(nicknames) {
   ];
 }
 
-/** 人名・地名の候補を種別（姓・名・地名・異体字での表記）ごとにまとめる */
+/**
+ * 人名・地名の候補を種別（姓・名・地名・異体字での表記）ごとにまとめる
+ * @param {ReadingResult['names']} names
+ */
 function nameSections(names) {
+  /** @type {Map<string, ReadingResult['names']>} 種別 → 読みごとの表記 */
   const byKind = new Map();
   for (const group of names) {
     if (!byKind.has(group.kind)) byKind.set(group.kind, []);
-    byKind.get(group.kind).push(group);
+    byKind.get(group.kind)?.push(group); // 直前で set しているので必ずある
   }
   return [...byKind].map(([kind, groups]) => [
     h('h3', { class: 'section-label' }, kind === '異体字での表記'
@@ -267,6 +307,7 @@ function nameSections(names) {
   ]);
 }
 
+/** @param {FilterResult} result */
 function renderFilterList(result) {
   show(
     h('div', { class: 'result-header' },
@@ -290,7 +331,8 @@ function candidateGrid(keys, exactCount = keys.length) {
     const end = Math.min(shown + PAGE_SIZE, keys.length);
     for (let i = shown; i < end; i++) {
       if (i === exactCount && exactCount > 0) grid.append(h('p', { class: 'candidate-divider' }, '前方一致'));
-      grid.append(candidate(app.db.entry(keys[i])));
+      // keys は db.search() が索引から返したものなので、必ず見つかる
+      grid.append(candidate(/** @type {Entry} */ (app.db.entry(keys[i]))));
     }
     shown = end;
     more.hidden = shown >= keys.length;
@@ -301,6 +343,7 @@ function candidateGrid(keys, exactCount = keys.length) {
   return h('div', {}, grid, more);
 }
 
+/** @param {Entry} entry */
 function candidate(entry) {
   const policy = entry.jouyou ? ' / 常用' : entry.jinmei ? ' / 人名用' : '';
   return h('button', { class: 'candidate', type: 'button', dataset: { query: entry.char }, title: `U+${entry.key} / ${entry.strokes}画${policy}` },

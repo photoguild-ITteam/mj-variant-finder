@@ -3,6 +3,8 @@
 import { detectFontStatus, WEB_FONT_FAMILY } from '../font-detector.js';
 import { $, h } from './dom.js';
 
+/** @typedef {Awaited<ReturnType<typeof detectFontStatus>>} FontStatus */
+
 const STATUS_LABEL = {
   local: '端末のIPAmj明朝',
   webfont: 'Webフォントで表示中',
@@ -19,6 +21,7 @@ export function setupFontStatus() {
   });
 }
 
+/** @returns {Promise<FontStatus>} */
 async function detect() {
   try {
     return await detectFontStatus();
@@ -28,8 +31,9 @@ async function detect() {
   }
 }
 
+/** @param {FontStatus} status */
 function checkRows({ local, webFontIvs }) {
-  const mark = (ok) => h('span', { class: ok ? 'ok' : 'ng' }, ok ? '✓' : '✕');
+  const mark = (/** @type {boolean} */ ok) => h('span', { class: ok ? 'ok' : 'ng' }, ok ? '✓' : '✕');
   return [
     h('div', { class: 'font-check__row' }, mark(local), `端末の IPAmj明朝: ${local ? '検出しました' : '検出されませんでした'}`),
     h('div', { class: 'font-check__row' }, mark(webFontIvs), `このブラウザでの IVS 表示（${WEB_FONT_FAMILY}）: ${webFontIvs ? '正常' : '字形を描き分けられません'}`),

@@ -22,7 +22,11 @@ export function normalizeImage(image) {
   return fitToBox(ink, image.width, bounds);
 }
 
-/** 背景（周囲の明るさの中央値）との差を墨の濃さにする */
+/**
+ * 背景（周囲の明るさの中央値）との差を墨の濃さにする
+ * @param {{data: Uint8ClampedArray, width: number, height: number}} image RGBA
+ * @returns {Float32Array} 画素ごとの墨の濃さ（0-255）
+ */
 function toInk(image) {
   const { data, width, height } = image;
   const gray = new Float32Array(width * height);
@@ -48,6 +52,13 @@ function toInk(image) {
   return ink;
 }
 
+/**
+ * 墨のある範囲. 墨が無ければ null
+ * @param {Float32Array} ink
+ * @param {number} width
+ * @param {number} height
+ * @returns {InkBounds | null}
+ */
 function inkBounds(ink, width, height) {
   let minX = width, minY = height, maxX = -1, maxY = -1;
   for (let y = 0; y < height; y++) {
@@ -63,7 +74,15 @@ function inkBounds(ink, width, height) {
   return maxX < 0 ? null : { minX, minY, maxX, maxY };
 }
 
-/** 切り出した範囲を BOX×BOX の中央へ（面積平均で縮小するので、細い線も残る） */
+/** @typedef {{minX: number, minY: number, maxX: number, maxY: number}} InkBounds 墨のある範囲（両端を含む） */
+
+/**
+ * 切り出した範囲を BOX×BOX の中央へ（面積平均で縮小するので、細い線も残る）
+ * @param {Float32Array} ink
+ * @param {number} width
+ * @param {InkBounds} bounds
+ * @returns {Float32Array}
+ */
 function fitToBox(ink, width, { minX, minY, maxX, maxY }) {
   const cropWidth = maxX - minX + 1;
   const cropHeight = maxY - minY + 1;
@@ -94,7 +113,13 @@ function fitToBox(ink, width, { minX, minY, maxX, maxY }) {
   return out;
 }
 
-/** 箱ぼかし（線が細い字形でも、半マスのずれで別物にならないようにする） */
+/**
+ * 箱ぼかし（線が細い字形でも、半マスのずれで別物にならないようにする）
+ * @param {Float32Array} norm BOX*BOX
+ * @param {number} [radius]
+ * @param {number} [passes]
+ * @returns {Float32Array}
+ */
 export function blur(norm, radius = BLUR_RADIUS, passes = BLUR_PASSES) {
   const width = radius * 2 + 1;
   let src = norm;
@@ -126,7 +151,12 @@ export function blur(norm, radius = BLUR_RADIUS, passes = BLUR_PASSES) {
   return src;
 }
 
-/** BOX×BOX → size×size の平均 */
+/**
+ * BOX×BOX → size×size の平均
+ * @param {Float32Array} norm
+ * @param {number} size
+ * @returns {Float32Array}
+ */
 export function mesh(norm, size) {
   const step = BOX / size;
   const out = new Float32Array(size * size);
@@ -140,7 +170,11 @@ export function mesh(norm, size) {
   return out;
 }
 
-/** 段1 の特徴（長さ 1 にそろえた 8x8 濃淡） */
+/**
+ * 段1 の特徴（長さ 1 にそろえた 8x8 濃淡）
+ * @param {Float32Array} norm normalizeImage() の戻り値
+ * @returns {Float32Array}
+ */
 export function grayFeature(norm) {
   const cells = mesh(blur(norm), GRAY_MESH);
   let sum = 0;
@@ -150,7 +184,11 @@ export function grayFeature(norm) {
   return cells;
 }
 
-/** 段2 の特徴（16x16 白黒。1 ビット 1 マス、上位ビットから） */
+/**
+ * 段2 の特徴（16x16 白黒。1 ビット 1 マス、上位ビットから）
+ * @param {Float32Array} norm normalizeImage() の戻り値
+ * @returns {Uint8Array}
+ */
 export function binaryFeature(norm) {
   const cells = mesh(blur(norm), BIN_MESH);
   const bytes = new Uint8Array(cells.length / 8);

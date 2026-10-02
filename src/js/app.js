@@ -85,7 +85,10 @@ function queryFromHash() {
 /** navigate() で URL を変えた直後か（戻る/進む・リンクから開いた場合と区別する） */
 let navigating = false;
 
-/** 検索語を URL に反映する（hashchange で search が走る）。同じ語なら描き直すだけ */
+/**
+ * 検索語を URL に反映する（hashchange で search が走る）。同じ語なら描き直すだけ
+ * @param {string} rawQuery
+ */
 function navigate(rawQuery) {
   const query = rawQuery.trim();
   const hash = query ? `#q=${encodeURIComponent(query)}` : '';
@@ -97,6 +100,10 @@ function navigate(rawQuery) {
   }
 }
 
+/**
+ * @param {string} query
+ * @param {{fromHash?: boolean}} [options] fromHash: URL から開いた（結果までスクロールしない）
+ */
 async function search(query, { fromHash = false } = {}) {
   const input = $('#q');
   if (input.value !== query) input.value = query;
@@ -123,7 +130,7 @@ function setupSearchForm() {
   const input = $('#q');
   input.disabled = false;
   $('#search-form button[type="submit"]').disabled = false;
-  $('#search-form').addEventListener('submit', (e) => {
+  $('#search-form').addEventListener('submit', (/** @type {SubmitEvent} */ e) => {
     e.preventDefault();
     navigate(input.value);
   });
@@ -133,7 +140,7 @@ function setupSearchForm() {
     if (!target) return;
     e.preventDefault();
     target.closest('dialog')?.close(); // 使い方などの例から検索したら、ダイアログを閉じて結果を見せる
-    navigate(target.dataset.query);
+    navigate(/** @type {string} */ (target.dataset.query)); // [data-query] で選んだので必ずある
   });
   document.addEventListener('keydown', (e) => {
     if (e.key !== '/' || /** @type {Element} */ (e.target).closest('input, textarea, select, dialog')) return;

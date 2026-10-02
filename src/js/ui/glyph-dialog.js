@@ -8,6 +8,13 @@ import { exportImage } from './export-actions.js';
 import { copyText } from './feedback.js';
 import { glyphDetailSections } from './glyph-info.js';
 
+/** @typedef {import('../db.js').Glyph} Glyph */
+/**
+ * MJ縮退マップの縮退先（Glyph の shrink の、info 以外の種別の要素。scripts/build_variant_db.py の build_shrink）.
+ * @typedef {{ucs: string, x0213?: string, table?: string, rank?: string, kind?: string, hops?: number, remark?: string}} ShrinkItem
+ */
+
+/** @param {Glyph} glyph */
 export function openGlyphDialog(glyph) {
   $('#glyph-dialog-title').textContent = `${glyph.mj} の詳細`;
   const sections = glyphDetailSections(glyph, app.db.meta.gothic);
@@ -29,8 +36,10 @@ export function openGlyphDialog(glyph) {
   $('#glyph-dialog').showModal();
 }
 
+/** @param {Glyph} glyph */
 function copyRows(glyph) {
   const f = copyFormats(glyph);
+  /** @param {string} label @param {string} value @param {string} [valueClass] */
   const row = (label, value, valueClass = '') => h('div', { class: 'copy-row' },
     h('span', { class: 'copy-row__label' }, label),
     h('span', { class: `copy-row__value ${valueClass}` }, value),
@@ -43,7 +52,9 @@ function copyRows(glyph) {
     row('JS/CSS', f.js));
 }
 
+/** @param {Glyph} glyph */
 function exportBox(glyph) {
+  /** @param {string} label @param {'copyPng'|'downloadPng'|'downloadSvg'} action @param {boolean} [primary] */
   const button = (label, action, primary = false) => h('button', {
     class: `button button--small${primary ? ' button--primary' : ''}`, type: 'button', onclick: () => exportImage(action, glyph),
   }, label);
@@ -57,6 +68,7 @@ function exportBox(glyph) {
       'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'));
 }
 
+/** @param {ReturnType<typeof glyphDetailSections>[number]} sec */
 function renderSection(sec) {
   const trs = sec.rows.map(([label, value]) => {
     if (label === 'MJ縮退マップ') {
@@ -74,11 +86,12 @@ function renderSection(sec) {
     h('table', { class: 'info-table' }, h('tbody', {}, trs)));
 }
 
+/** @param {Glyph['shrink']} shrink */
 function shrinkCells(shrink) {
   if (!shrink) return [];
   const items = Object.entries(shrink)
     .filter(([kind]) => kind !== 'info')
-    .flatMap(([kind, list]) => list.map((s) => {
+    .flatMap(([kind, list]) => /** @type {ShrinkItem[]} */ (list).map((s) => {
       const ch = keyToChar(s.ucs);
       const notes = [s.kind, s.table && `別表第四 表${s.table} ${s.rank}`, s.hops != null && `${s.hops}ホップ`, s.remark].filter(Boolean);
       return h('li', {},

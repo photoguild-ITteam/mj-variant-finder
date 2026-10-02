@@ -10,11 +10,22 @@ const PATTERNS_URL = new URL('../../data/handwriting-patterns.json', import.meta
 const RECOGNIZE_DELAY_MS = 350;
 const LINE_WIDTH = 6;
 
+/** @typedef {[number, number]} Point 枠の中の座標（CSS 画素） */
+/**
+ * ワーカーから届くメッセージ（handwriting/worker.js が送る）
+ * @typedef {{type: 'ready', count: number}
+ *   | {type: 'init-error', message: string}
+ *   | {type: 'result', id: number, candidates: string[]}
+ *   | {type: 'error', id: number, message: string}} WorkerMessage
+ */
+
 /** @type {Worker | null} */
 let worker = null;
 let workerReady = false;
 let requestId = 0;
+/** @type {Point[][]} 書いた筆画（点列）の一覧 */
 let strokes = [];
+/** @type {ReturnType<typeof setTimeout> | undefined} */
 let timer;
 
 export function setupHandwriting() {
@@ -46,7 +57,7 @@ function startWorker() {
   workerReady = false;
   setStatus('認識データを読み込んでいます…', true);
   worker = new Worker(WORKER_URL, { type: 'module' });
-  worker.addEventListener('message', ({ data }) => {
+  worker.addEventListener('message', (/** @type {MessageEvent<WorkerMessage>} */ { data }) => {
     if (data.type === 'ready') {
       workerReady = true;
       setStatus(`枠の中に、なるべく大きく1文字書いてください。（${data.count.toLocaleString()} 字から探します）`);
@@ -87,6 +98,7 @@ function recognizeSoon() {
   }, RECOGNIZE_DELAY_MS);
 }
 
+/** @param {string[]} chars 似ている順の候補 */
 function showCandidates(chars) {
   const list = $('#hw-candidates');
   if (!chars.length) {
@@ -97,7 +109,7 @@ function showCandidates(chars) {
   }
   // MJ に無い字（KanjiVG にしかない字）は検索できないので出さない
   const usable = chars.flatMap((ch) => {
-    const key = app.db.resolve(ch.codePointAt(0));
+    const key = app.db.resolve(/** @type {number} */ (ch.codePointAt(0)));
     const entry = key ? app.db.entry(key) : null;
     return entry ? [{ ch, entry }] : [];
   });
@@ -113,6 +125,10 @@ function showCandidates(chars) {
     : '候補が MJ文字情報一覧表にありませんでした。');
 }
 
+/**
+ * @param {string} text
+ * @param {boolean} [busy] 読み込み中の印を付ける
+ */
 function setStatus(text, busy = false) {
   $('#hw-status').replaceChildren(busy ? loading(text) : text);
 }
@@ -138,20 +154,23 @@ function resizeCanvas() {
 function setupDrawing() {
   const canvas = $('#hw-canvas');
   let drawing = false;
+  /** @param {PointerEvent} e @returns {Point} */
   const point = (e) => {
     const rect = canvas.getBoundingClientRect();
     return [e.clientX - rect.left, e.clientY - rect.top];
   };
-  canvas.addEventListener('pointerdown', (e) => {
+  canvas.addEventListener('pointerdown', (/** @type {PointerEvent} */ e) => {
     e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
     drawing = true;
     strokes.push([point(e)]);
     redraw();
   });
-  canvas.addEventListener('pointermove', (e) => {
+  canvas.addEventListener('pointermove', (/** @type {PointerEvent} */ e) => {
     if (!drawing) return;
-    strokes.at(-1).push(point(e));
+    const stroke = strokes.at(-1);
+    if (!stroke) return; // 書いている途中に「消去」を押した
+    stroke.push(point(e));
     redraw();
   });
   const finish = () => {

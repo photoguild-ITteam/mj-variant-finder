@@ -16,13 +16,10 @@ const INK_CACHE_MAX = 256;             // 覚えておく字の数（1字 SIZE*S
  * INK_CACHE_MAX を超えたら前（しばらく使っていないもの）から捨てる
  * @type {Map<string, Uint8ClampedArray>}
  */
-/** @type {Map<string, Uint8ClampedArray>} */
 const inkCache = new Map();
 /** @type {CanvasRenderingContext2D | null} ink() で使い回す canvas（描いてすぐ読むので、共有しても混ざらない） */
-/** @type {CanvasRenderingContext2D | null} */
 let inkContext = null;
-/** themeColors() の結果。テーマを切り替えたら捨てる */
-/** @type {{onlyThis: number[], onlyBase: number[], common: number[]} | null} */
+/** @type {{onlyThis: number[], onlyBase: number[], common: number[]} | null} themeColors() の結果。テーマを切り替えたら捨てる */
 let colorCache = null;
 let enabled = load();
 
@@ -36,7 +33,10 @@ function load() {
 
 export const isDiffEnabled = () => enabled;
 
-/** 表示中のすべての字形カードに反映する（切り替えボタンから呼ぶ） */
+/**
+ * 表示中のすべての字形カードに反映する（切り替えボタンから呼ぶ）
+ * @param {boolean} value
+ */
 export function setDiffEnabled(value) {
   enabled = value;
   try { localStorage.setItem(STORAGE_KEY, value ? 'on' : 'off'); } catch {}
@@ -45,7 +45,10 @@ export function setDiffEnabled(value) {
   refreshAll();
 }
 
-/** 字形カードの表面（.glyph-card__face）を、今の設定に合わせて描く */
+/**
+ * 字形カードの表面（.glyph-card__face）を、今の設定に合わせて描く
+ * @param {HTMLElement} face
+ */
 export function renderFace(face) {
   const text = face.dataset.char;
   if (!text) return;
@@ -58,11 +61,15 @@ export function renderFace(face) {
 }
 
 function refreshAll() {
-  for (const face of document.querySelectorAll('.glyph-card__face[data-char]')) renderFace(face);
+  for (const face of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.glyph-card__face[data-char]'))) renderFace(face);
 }
 
+/**
+ * @param {HTMLElement} face
+ * @param {string} text 空でない（renderFace が確かめる）
+ */
 async function drawDiff(face, text) {
-  const base = String.fromCodePoint(text.codePointAt(0)); // 異体字セレクタなし
+  const base = String.fromCodePoint(/** @type {number} */ (text.codePointAt(0))); // 異体字セレクタなし
   await document.fonts.load(FONT, text + base);
   const [a, b] = [ink(text), ink(base)];
   const { onlyThis, onlyBase, common: commonColor } = themeColors();
@@ -107,7 +114,11 @@ async function drawDiff(face, text) {
   if (canvas.parentNode !== face) face.append(canvas);
 }
 
-/** 字を描いて、画素ごとの濃さ（0〜255）を返す */
+/**
+ * 字を描いて、画素ごとの濃さ（0〜255）を返す
+ * @param {string} text
+ * @returns {Uint8ClampedArray}
+ */
 function ink(text) {
   const cached = inkCache.get(text);
   if (cached) {
@@ -141,6 +152,7 @@ function themeColors() {
   if (colorCache) return colorCache;
   const style = getComputedStyle(document.documentElement);
   const ctx = context2d(document.createElement('canvas'), { willReadFrequently: true });
+  /** @param {string} name CSS 変数の名前 */
   const rgb = (name) => {
     ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = style.getPropertyValue(name).trim();

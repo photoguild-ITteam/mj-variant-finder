@@ -51,6 +51,7 @@ export function showSessionExpired() {
 
 /**
  * 読み込み失敗を記録し、ログイン切れならバナーを出す.
+ * @param {unknown} err catch で受けた値
  * @returns {boolean} ログイン切れとして扱ったか（sessionWatch が無効なら常に false）
  */
 export function reportError(err) {

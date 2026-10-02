@@ -20,10 +20,10 @@ let featuresModule = null;
 /** @type {ReturnType<typeof import('../image-search/matcher.js').createIndex> | null} */
 let index = null;
 /** @type {HTMLCanvasElement | null} 読み込んだ画像（元の大きさ。照合はここから画素を読む） */
-/** @type {HTMLCanvasElement | null} 読み込んだ画像（元の大きさ） */
 let sourceImage = null;
 /** @type {{x: number, y: number, width: number, height: number} | null} 元画像の座標での切り出し範囲 */
 let selection = null;
+/** @type {ReturnType<typeof setTimeout> | undefined} */
 let timer;
 let matchToken = 0; // 照合の番号。新しい照合を始めた・画像を替えた・閉じたら、前の照合の結果は捨てる
 let indexLoading = false; // 照合データを読み込み中か（二重に読まない）
@@ -35,8 +35,8 @@ export function setupImageSearch() {
     matchToken += 1;
   });
   for (const id of ['#img-file', '#img-file2']) {
-    $(id).addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
+    $(id).addEventListener('change', (/** @type {Event} */ e) => {
+      const file = /** @type {HTMLInputElement} */ (e.target).files?.[0];
       if (file) loadFile(file);
     });
   }
@@ -100,13 +100,13 @@ const readyMessage = () => `画像を貼り付け（Ctrl+V）、ドラッグ、�
 function setupDropZone() {
   const zone = $('#img-drop');
   for (const type of ['dragenter', 'dragover']) {
-    zone.addEventListener(type, (e) => {
+    zone.addEventListener(type, (/** @type {DragEvent} */ e) => {
       e.preventDefault();
       zone.classList.add('is-over');
     });
   }
   for (const type of ['dragleave', 'drop']) {
-    zone.addEventListener(type, (e) => {
+    zone.addEventListener(type, (/** @type {DragEvent} */ e) => {
       e.preventDefault();
       zone.classList.remove('is-over');
       if (type === 'drop') {
@@ -117,6 +117,7 @@ function setupDropZone() {
   }
 }
 
+/** @param {File} file */
 async function loadFile(file) {
   matchToken += 1;
   const token = ++loadToken;
@@ -184,6 +185,10 @@ function drawPreview() {
   ctx.strokeRect(x, y, width, height);
 }
 
+/**
+ * @param {{x: number, y: number, width: number, height: number}} rect
+ * @param {number} scale
+ */
 const scaleRect = (rect, scale) => ({
   x: rect.x * scale, y: rect.y * scale, width: rect.width * scale, height: rect.height * scale,
 });
@@ -203,13 +208,13 @@ function setupSelection() {
       (e.clientY - rect.top) * cssScaleY / scale,
     ];
   };
-  canvas.addEventListener('pointerdown', (e) => {
+  canvas.addEventListener('pointerdown', (/** @type {PointerEvent} */ e) => {
     if (!sourceImage) return;
     e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
     start = at(e, sourceImage);
   });
-  canvas.addEventListener('pointermove', (e) => {
+  canvas.addEventListener('pointermove', (/** @type {PointerEvent} */ e) => {
     if (!start || !sourceImage) return;
     const [x, y] = at(e, sourceImage);
     selection = {
@@ -258,7 +263,10 @@ function runMatch() {
   }, MATCH_DELAY_MS);
 }
 
-/** 候補を実際のフォントで描き直して、入力画像と比べ直すための下請け */
+/**
+ * 候補を実際のフォントで描き直して、入力画像と比べ直すための下請け
+ * @param {string} char
+ */
 async function renderGlyph(char) {
   if (!matcherModule) throw new Error('照合データを読み込んでいません');
   const size = matcherModule.BOX;
@@ -283,8 +291,12 @@ async function renderGlyph(char) {
   return normalizeImage(imageData);
 }
 
+/**
+ * @param {{char: string, mj: string, score: number}[]} candidates 似ている順
+ * @param {number} ms 照合にかかった時間
+ */
 function showCandidates(candidates, ms) {
-  const usable = candidates.filter((c) => app.db.resolve(c.char.codePointAt(0)));
+  const usable = candidates.filter((c) => app.db.resolve(/** @type {number} */ (c.char.codePointAt(0))));
   $('#img-candidates').replaceChildren(...usable.map((c) => h('button', {
     class: 'hw-candidate', type: 'button', dataset: { query: c.char },
     title: `${c.mj}（似ている度 ${(c.score * 100).toFixed(0)}%）`,
@@ -295,6 +307,10 @@ function showCandidates(candidates, ms) {
     : '候補が見つかりませんでした。1文字だけを囲んでみてください。');
 }
 
+/**
+ * @param {string} text
+ * @param {boolean} [busy] 読み込み中の印を付ける
+ */
 function setStatus(text, busy = false) {
   $('#img-status').replaceChildren(busy ? loading(text) : text);
 }

@@ -58,6 +58,7 @@ export function removeFromList(list, query) {
 /**
  * 保存した一覧を読む. 文字列の配列でなければ空として扱う
  * （壊れた値や、同じ origin の別のページが同じキーに書いた値で、検索や起動を止めないため）。
+ * @param {string} key
  * @returns {string[]}
  */
 export function loadStorage(key) {
@@ -71,6 +72,10 @@ export function loadStorage(key) {
   }
 }
 
+/**
+ * @param {string} key
+ * @param {string[]} data
+ */
 function saveStorage(key, data) {
   try {
     if (typeof localStorage === 'undefined') return;
@@ -96,11 +101,13 @@ export function getFavorites() {
   return [...favoritesList()];
 }
 
+/** @param {string} query */
 export function isFavorite(query) {
   const q = query?.trim();
   return Boolean(q && favoritesList().includes(q));
 }
 
+/** @param {string} query */
 export function addHistory(query) {
   const q = query?.trim();
   if (!q) return;
@@ -109,6 +116,7 @@ export function addHistory(query) {
   renderHistoryBar();
 }
 
+/** @param {string} query */
 export function removeHistoryItem(query) {
   historyCache = removeFromList(historyList(), query);
   saveStorage(STORAGE_KEY_HISTORY, historyCache);
@@ -121,6 +129,10 @@ export function clearHistory() {
   renderHistoryBar();
 }
 
+/**
+ * @param {string} query
+ * @returns {boolean} お気に入りになったか
+ */
 export function toggleFavorite(query) {
   const q = query?.trim();
   if (!q) return false;
@@ -131,6 +143,7 @@ export function toggleFavorite(query) {
   return isNowFav;
 }
 
+/** @param {string} query */
 export function removeFavoriteItem(query) {
   favoritesCache = removeFromList(favoritesList(), query);
   saveStorage(STORAGE_KEY_FAVORITES, favoritesCache);
@@ -175,7 +188,7 @@ export function renderHistoryBar() {
           type: 'button',
           'aria-label': `「${item}」をお気に入りから解除`,
           title: 'お気に入りから解除',
-          onclick: (e) => {
+          onclick: (/** @type {MouseEvent} */ e) => {
             e.stopPropagation();
             removeFavoriteItem(item);
           },
@@ -202,7 +215,7 @@ export function renderHistoryBar() {
           type: 'button',
           'aria-label': `「${item}」を履歴から削除`,
           title: '削除',
-          onclick: (e) => {
+          onclick: (/** @type {MouseEvent} */ e) => {
             e.stopPropagation();
             removeHistoryItem(item);
           },

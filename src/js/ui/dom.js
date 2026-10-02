@@ -35,13 +35,23 @@ export function h(tag, attrs = {}, ...children) {
 /** JS で動かすスクロールの behavior. 「視差効果を減らす」の設定では動きを付けない */
 export const scrollBehavior = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
-/** バッジ. variant は gold / navy / crimson / ok / warn / muted */
+/**
+ * バッジ. variant は gold / navy / crimson / ok / warn / muted
+ * @param {string} text
+ * @param {string | null} [variant]
+ * @param {string} [title]
+ */
 export const badge = (text, variant, title) =>
   h('span', { class: variant ? `badge badge--${variant}` : 'badge', title }, text);
 
 export const loading = (text = '読み込み中…') =>
   h('div', { class: 'loading' }, h('span', { class: 'loading__spinner', 'aria-hidden': 'true' }), text);
 
-/** 検索語として扱うボタン（クリックは app.js がまとめて拾って検索する） */
+/**
+ * 検索語として扱うボタン（クリックは app.js がまとめて拾って検索する）
+ * @param {string} query
+ * @param {string | Node} [label]
+ * @param {string} [className]
+ */
 export const queryButton = (query, label = query, className = 'chip') =>
   h('button', { class: className, type: 'button', dataset: { query } }, label);

@@ -913,6 +913,7 @@ for (const group of CONFUSABLE_GROUPS) {
 /**
  * 異体字セレクタ（VS1〜16・VS17〜256）か. db.js の isVariationSelector と同じ。
  * このファイルは scripts/add_confusable.mjs が単独で読み込むので、ほかのモジュールを import しない
+ * @param {number} cp
  */
 const isVariationSelector = (cp) => (cp >= 0xfe00 && cp <= 0xfe0f) || (cp >= 0xe0100 && cp <= 0xe01ef);
 
@@ -948,7 +949,7 @@ export function getWordVariantSuggestions(word) {
     const ch = chars[i];
     const rels = getConfusablesForChar(ch);
     // 後ろの異体字セレクタは元の字の字形を選ぶものなので、別の字に置き換えるときは外す（辺+E010F のような列は無い）
-    const rest = i + 1 < chars.length && isVariationSelector(chars[i + 1].codePointAt(0)) ? i + 2 : i + 1;
+    const rest = i + 1 < chars.length && isVariationSelector(/** @type {number} */ (chars[i + 1].codePointAt(0))) ? i + 2 : i + 1;
     for (const { group, others } of rels) {
       for (const other of others) {
         const candidate = chars.slice(0, i).join('') + other + chars.slice(rest).join('');

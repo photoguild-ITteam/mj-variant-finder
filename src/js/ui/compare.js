@@ -10,6 +10,7 @@ export const COMPARE_MAX = 8;
 /** @type {import('../db.js').Glyph[]} 比較中の字形（MJ文字図形名で一意） */
 const glyphs = [];
 
+/** @param {import('../db.js').Glyph} glyph */
 export const isCompared = (glyph) => glyphs.some((g) => g.mj === glyph.mj);
 
 function clearAll() {
@@ -53,7 +54,11 @@ export function setupCompare() {
   });
 }
 
-/** @returns {boolean} 追加したか */
+/**
+ * @param {import('../db.js').Glyph} glyph
+ * @param {{silent?: boolean}} [options] silent: 上限を超えてもトーストを出さない
+ * @returns {boolean} 追加したか
+ */
 export function addToCompare(glyph, { silent = false } = {}) {
   if (!glyph.char || isCompared(glyph)) return false;
   if (glyphs.length >= COMPARE_MAX) {
@@ -65,6 +70,7 @@ export function addToCompare(glyph, { silent = false } = {}) {
   return true;
 }
 
+/** @param {import('../db.js').Glyph} glyph */
 export function toggleCompare(glyph) {
   const i = glyphs.findIndex((g) => g.mj === glyph.mj);
   if (i === -1) {
@@ -119,7 +125,10 @@ function renderStage() {
   if (exportBox) exportBox.hidden = glyphs.length < 2;
 }
 
-/** 指定した字形リストを比較リストにセットして比較ダイアログを開く */
+/**
+ * 指定した字形リストを比較リストにセットして比較ダイアログを開く
+ * @param {import('../db.js').Glyph[]} newGlyphs
+ */
 export function openCompareWithGlyphs(newGlyphs) {
   for (const g of newGlyphs) {
     addToCompare(g, { silent: true });
@@ -128,6 +137,10 @@ export function openCompareWithGlyphs(newGlyphs) {
   $('#compare-dialog').showModal();
 }
 
+/**
+ * @param {import('../db.js').Glyph} a
+ * @param {import('../db.js').Glyph} b
+ */
 function overlayItem(a, b) {
   return h('div', { class: 'compare-item compare-overlay' },
     h('div', { class: 'compare-item__glyph glyph' },

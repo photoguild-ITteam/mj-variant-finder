@@ -36,6 +36,7 @@ export function createIndex(buffer, meta) {
     for (let k = 0; k < GRAY_BYTES; k++) gray[i * GRAY_BYTES + k] /= length;
   }
 
+  /** @param {number} i レコード番号 */
   const entry = (i) => {
     const at = i * recordBytes;
     const mj = view.getUint32(at, true);
@@ -47,6 +48,7 @@ export function createIndex(buffer, meta) {
     };
   };
 
+  /** @param {number} i レコード番号 */
   const binaryAt = (i) => bytes.subarray(i * recordBytes + HEADER_BYTES + GRAY_BYTES, (i + 1) * recordBytes);
 
   return { records, recordBytes, gray, entry, binaryAt, binBytes };
@@ -97,8 +99,14 @@ export async function matchImage(index, image, { limit = 12, renderGlyph } = {})
   return candidates.slice(0, limit);
 }
 
+/**
+ * @param {Float32Array} scores
+ * @param {number} count
+ * @returns {number[]} 点数の高い順の添字
+ */
 function topIndices(scores, count) {
   // 上位 count 件（部分選択。全体を並べ替えるより速い）
+  /** @type {number[]} */
   const best = [];
   let worst = -Infinity;
   for (let i = 0; i < scores.length; i++) {
@@ -121,6 +129,10 @@ function topIndices(scores, count) {
   return best;
 }
 
+/**
+ * @param {Uint8Array} a
+ * @param {Uint8Array} b
+ */
 function hamming(a, b) {
   let total = 0;
   for (let i = 0; i < a.length; i++) total += POPCOUNT[a[i] ^ b[i]];
@@ -130,12 +142,19 @@ function hamming(a, b) {
 /**
  * 段3 の似ている度（-1〜1）。段1・段2 と同じくぼかしてから比べる。
  * ぼかさないと、同じ字形でも描いたときの1画素のずれ（環境ごとのアンチエイリアスの違いなど）で大きく下がる
+ * @param {Float32Array} a BOX*BOX の墨の濃さ
+ * @param {Float32Array} b
+ * @returns {number}
  */
 export function similarity(a, b) {
   return correlation(blur(a), blur(b));
 }
 
-/** 平均を引いた相関（-1〜1） */
+/**
+ * 平均を引いた相関（-1〜1）
+ * @param {Float32Array} a
+ * @param {Float32Array} b
+ */
 function correlation(a, b) {
   let meanA = 0;
   let meanB = 0;

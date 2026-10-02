@@ -27,7 +27,12 @@ export function signature(pattern) {
   return Array.from(cells, (v) => Math.round((v / max) * 15).toString(16)).join('');
 }
 
-/** 指紋どうしの距離（小さいほど似ている） */
+/**
+ * 指紋どうしの距離（小さいほど似ている）
+ * @param {string} a signature() の戻り値
+ * @param {string} b
+ * @returns {number}
+ */
 export function signatureDistance(a, b) {
   let distance = 0;
   for (let i = 0; i < a.length; i++) distance += Math.abs(parseInt(a[i], 16) - parseInt(b[i], 16));

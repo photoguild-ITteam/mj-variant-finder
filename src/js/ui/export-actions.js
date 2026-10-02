@@ -13,7 +13,10 @@ const DONE_MESSAGE = {
   downloadMultiSvg: '連結 SVG を保存しました',
 };
 
-/** @param {'copyPng'|'downloadPng'|'downloadSvg'} action */
+/**
+ * @param {'copyPng'|'downloadPng'|'downloadSvg'} action
+ * @param {import('../db.js').Glyph} glyph
+ */
 export async function exportImage(action, glyph) {
   try {
     const exporter = await import('../glyph-export.js');
@@ -31,7 +34,11 @@ export async function exportImage(action, glyph) {
   }
 }
 
-/** @param {'copyMultiPng'|'downloadMultiPng'|'downloadMultiSvg'} action */
+/**
+ * @param {'copyMultiPng'|'downloadMultiPng'|'downloadMultiSvg'} action
+ * @param {import('../db.js').Glyph[]} glyphs
+ * @param {{size?: number, direction?: 'horizontal'|'vertical'}} [options]
+ */
 export async function exportMultiImage(action, glyphs, options) {
   try {
     const exporter = await import('../glyph-export.js');
