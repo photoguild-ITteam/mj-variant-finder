@@ -141,14 +141,18 @@ PRESETS_PATH = ROOT / "scripts" / "data" / "name_presets.json"
 # 「ゴシック体で使えるか」の判定に使うフォント（文字の収録状況＝cmap だけを読む。フォント自体は配布しない）.
 # Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体で出せるのは「実装したUCS」を持つ字形だけ。
 #   ok=True のフォントすべてに字があれば ○、欠けていれば △、実装したUCS が無い（IVS でしか区別できない）字形は ×
-# 判定に使うのは、誰でも入手・再配布できる SIL Open Font License のフォントだけにする。
-# ok=True のフォントすべてに字があれば ○（BIZ UDゴシックの字は Noto Sans JP にすべて含まれるので参考表示）
+# ○ の判定には Noto Sans JP（SIL Open Font License）を使い、BIZ UDゴシックは参考として表示する
+# （BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。
+# 判定はフォントの版で変わるので、使うファイルを sha256 で固定する。いま固定しているのは Windows 11 に入っている版
+# （C:\Windows\Fonts の NotoSansJP-VF.ttf・BIZ-UDGothicR.ttc）。Windows 以外では、同じファイルを data/raw/ に置く。
+# 別の版で判定し直すときは sha256 を書き換え、変わった字形の件数を PR に書く（AGENTS.md「生成物とデータ」）。
 GOTHIC_FONTS = [
     {"key": "noto", "name": "Noto Sans JP", "ok": True,
-     "paths": ["data/raw/NotoSansJP-VF.ttf", r"C:\Windows\Fonts\NotoSansJP-VF.ttf",
-               "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"]},
+     "paths": ["data/raw/NotoSansJP-VF.ttf", r"C:\Windows\Fonts\NotoSansJP-VF.ttf"],
+     "sha256": "5113756f8a3b5d01b2211025e267c50121e3b36f465b7bbaf3cdaf4c3430bfd0"},  # Version 2.04;241114210129
     {"key": "biz", "name": "BIZ UDゴシック", "ok": False,
-     "paths": ["data/raw/BIZUDGothic-Regular.ttf", r"C:\Windows\Fonts\BIZ-UDGothicR.ttc"]},
+     "paths": ["data/raw/BIZ-UDGothicR.ttc", r"C:\Windows\Fonts\BIZ-UDGothicR.ttc"],
+     "sha256": "11cf9a40c90bf67fe9de86c9d852c7a8986dcf87fb16d86b510abf118df41673"},  # Version 2.02
 ]
 
 
@@ -303,27 +307,47 @@ def resolve_path(value: str) -> Path:
     return path if path.is_absolute() else ROOT / path
 
 
-def read_gothic_fonts(overrides: dict[str, str]) -> list[dict]:
-    """GOTHIC_FONTS のうち見つかったフォントの cmap を読む. fontTools が無ければ判定を省く."""
-    try:
-        from fontTools.ttLib import TTCollection, TTFont
-    except ImportError:
-        log("warning: fontTools が無いため、ゴシック体の収録判定を省きます（pip install fonttools）")
-        return []
-    loaded = []
+def find_gothic_fonts(overrides: dict[str, str]) -> list[tuple[dict, Path]]:
+    """GOTHIC_FONTS のフォントを探し、sha256 が固定した版と一致するかを確かめる.
+
+    見つからない・版が違うときは止める（黙って判定が変わったり、省かれたりしないように）。
+    """
+    found = []
     for spec in GOTHIC_FONTS:
         candidates = [overrides[spec["key"]]] if spec["key"] in overrides else spec["paths"]
         path = next((p for p in map(resolve_path, candidates) if p.exists()), None)
         if path is None:
-            log(f"warning: {spec['name']} が見つからないため、ゴシック体の判定から外します（--gothic-font {spec['key']}=パス で指定可）")
-            continue
+            sys.exit(
+                f"{spec['name']} が見つかりません（探した場所: {', '.join(candidates)}）。\n"
+                f"ゴシック体の判定に使うフォントを data/raw/ に置くか、--gothic-font {spec['key']}=パス で指定してください。\n"
+                f"判定を省いて作り直す場合は --no-gothic（字形の gothic が無くなるので、そのデータはコミットしない）"
+            )
+        actual = sha256_of(path)
+        if actual != spec["sha256"]:
+            sys.exit(
+                f"{spec['name']} の版が、判定に使う版と違います ({path}):\n"
+                f"  期待値: {spec['sha256']}\n"
+                f"  実際値: {actual}\n"
+                f"別の版で判定すると、字形のゴシック体の判定（gothic）が変わります。\n"
+                f"新しい版に上げる場合は GOTHIC_FONTS の sha256 を書き換えてください（AGENTS.md「生成物とデータ」）"
+            )
+        found.append((spec, path))
+    return found
+
+
+def read_gothic_fonts(overrides: dict[str, str]) -> list[dict]:
+    """GOTHIC_FONTS のフォントの cmap を読む."""
+    found = find_gothic_fonts(overrides)
+    try:
+        from fontTools.ttLib import TTCollection, TTFont
+    except ImportError:
+        sys.exit("ゴシック体の判定には fontTools が必要です（pip install -r scripts/requirements.txt）。判定を省く場合は --no-gothic")
+    loaded = []
+    for spec, path in found:
         font = TTCollection(str(path), lazy=True).fonts[0] if path.suffix.lower() == ".ttc" else TTFont(str(path), lazy=True)
         version = font["name"].getDebugName(5) or ""
         loaded.append({**spec, "file": path.name, "version": version, "cmap": set(font.getBestCmap())})
         log(f"  {spec['name']}: {path.name} {version} ({len(loaded[-1]['cmap'])} codepoints)")
-    if not any(f["ok"] for f in loaded):
-        log("warning: ○ の判定に使うゴシック体が1つも無いため、ゴシック体の収録判定を省きます")
-        return []
     return loaded
 
 
@@ -639,7 +663,7 @@ def build_meta(src: Sources, grouped: Grouped, gothic_fonts: list[dict], gothic_
         "relationTypes": RELATION_TYPES,
         "gothic": {
             "note": "Moji_Joho の IVS に対応したゴシック体は無い。ゴシック体で出せるのは実装したUCSを持つ字形だけで、IVS でしか区別できない字形は通常の字形になる。",
-            "fonts": [{k: f[k] for k in ("key", "name", "ok", "file", "version")} for f in gothic_fonts],
+            "fonts": [{k: f[k] for k in ("key", "name", "ok", "file", "version", "sha256")} for f in gothic_fonts],
             "counts": gothic_counts,
         } if gothic_fonts else None,
         "counts": {
@@ -659,13 +683,18 @@ def build_meta(src: Sources, grouped: Grouped, gothic_fonts: list[dict], gothic_
     }
 
 
-def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] | None = None) -> dict:
+def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] | None = None,
+          gothic: bool = True) -> dict:
     src = load_sources(raw, offline)
     grouped = group_glyphs(src)
     link_relations(grouped.chars, src.unihan)
 
     log("read gothic fonts ...")
-    gothic_fonts = read_gothic_fonts(gothic_overrides or {})
+    if gothic:
+        gothic_fonts = read_gothic_fonts(gothic_overrides or {})
+    else:
+        log("warning: --no-gothic のため、ゴシック体の判定を省きます（このデータはコミットしない）")
+        gothic_fonts = []
     gothic_counts = annotate_gothic(grouped.chars, gothic_fonts)
 
     shards, index_chars, readings, extra_radicals = build_shards_and_index(grouped.chars)
@@ -706,17 +735,27 @@ def write_json(path: Path, data, pretty: bool = False) -> None:
             json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
 
 
+def gothic_font_arg(value: str) -> tuple[str, str]:
+    """--gothic-font の KEY=PATH."""
+    key, sep, path = value.partition("=")
+    keys = [f["key"] for f in GOTHIC_FONTS]
+    if not sep or not path or key not in keys:
+        raise argparse.ArgumentTypeError(f"KEY=PATH の形で指定してください（KEY: {', '.join(keys)}）: {value}")
+    return key, path
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--raw", type=Path, default=ROOT / "data" / "raw", help="元データの置き場所")
     parser.add_argument("--out", type=Path, default=ROOT / "src" / "data", help="出力先")
     parser.add_argument("--offline", action="store_true", help="元データが無くてもダウンロードしない")
-    parser.add_argument("--gothic-font", action="append", default=[], metavar="KEY=PATH",
+    parser.add_argument("--gothic-font", action="append", default=[], type=gothic_font_arg, metavar="KEY=PATH",
                         help=f"ゴシック体の判定に使うフォントの場所（KEY: {', '.join(f['key'] for f in GOTHIC_FONTS)}）")
+    parser.add_argument("--no-gothic", action="store_true",
+                        help="ゴシック体の判定を省く（フォントが無い環境での確認用。出力はコミットしない）")
     args = parser.parse_args()
 
-    overrides = dict(item.split("=", 1) for item in args.gothic_font)
-    meta = build(args.raw, args.out, args.offline, overrides)
+    meta = build(args.raw, args.out, args.offline, dict(args.gothic_font), gothic=not args.no_gothic)
     log(json.dumps(meta["counts"], ensure_ascii=False, indent=2))
     checks = meta["checks"]
     log(f"IVD にあって一覧表に無い Moji_Joho IVS: {len(checks['ivdMojiJohoMissingInMJ'])}")

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T18:14:42+00:00",
+  "generatedAt": "2026-10-02T05:44:45+00:00",
   "sources": {
     "mji": {
       "url": "https://moji.or.jp/wp-content/uploads/2024/01/mji.00602.xlsx",
@@ -62,14 +62,16 @@
         "name": "Noto Sans JP",
         "ok": true,
         "file": "NotoSansJP-VF.ttf",
-        "version": "Version 2.04;241114210129;non-release"
+        "version": "Version 2.04;241114210129;non-release",
+        "sha256": "5113756f8a3b5d01b2211025e267c50121e3b36f465b7bbaf3cdaf4c3430bfd0"
       },
       {
         "key": "biz",
         "name": "BIZ UDゴシック",
         "ok": false,
         "file": "BIZ-UDGothicR.ttc",
-        "version": "Version 2.02"
+        "version": "Version 2.02",
+        "sha256": "11cf9a40c90bf67fe9de86c9d852c7a8986dcf87fb16d86b510abf118df41673"
       }
     ],
     "counts": {
