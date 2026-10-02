@@ -92,6 +92,23 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   });
   await page.screenshot({ path: OUT + '02-watanabe.png', fullPage: true });
 
+  await check('読み上げは見出しだけ・タブの Home/End・タブパネル', async () => {
+    // 結果の一覧を丸ごと読み上げないよう、#results は aria-live にしない
+    assert.equal(await page.getAttribute('#results', 'aria-live'), null);
+    assert.equal(await page.textContent('#search-status'), '「渡辺」の異体字を表示しました');
+    assert.equal(await page.getAttribute('#char-panel-host', 'role'), 'tabpanel');
+    await page.focus('.tab:nth-child(2)');
+    await page.keyboard.press('Home');
+    await page.waitForSelector('.tab:nth-child(1)[aria-selected="true"]');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'tab-0');
+    await page.keyboard.press('End');
+    await page.waitForSelector('.tab:nth-child(2)[aria-selected="true"]');
+    await page.waitForSelector('.char-hero__code:text("U+8FBA")');
+    // フォーカス枠の色は背景に対して 3:1 以上（ライトテーマ）
+    const focus = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--focus').trim());
+    if (await page.getAttribute('html', 'data-theme') === 'light') assert.equal(focus, '#b45309');
+  });
+
   await check('2. さいとう → 斉藤・斎藤・齊藤・齋藤', async () => {
     await page.fill('#q', 'さいとう');
     await page.press('#q', 'Enter');

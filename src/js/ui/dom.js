@@ -23,6 +23,9 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+/** JS で動かすスクロールの behavior. 「視差効果を減らす」の設定では動きを付けない */
+export const scrollBehavior = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
 /** バッジ. variant は gold / navy / crimson / ok / warn / muted */
 export const badge = (text, variant, title) =>
   h('span', { class: variant ? `badge badge--${variant}` : 'badge', title }, text);

@@ -20,7 +20,7 @@
   --crimson: #b91c1c;
   --crimson-bright: #dc2626;
   --crimson-tint: #fdecec;
-  --focus: #d97706;
+  --focus: #b45309; /* 背景（--bg・--surface など）に対して 4:1 以上（WCAG 1.4.11 は 3:1） */
   --glyph-bg: #fffefb;
   --guide: rgba(185, 28, 28, 0.22);
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
