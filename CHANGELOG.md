@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-02
+
 ### 修正
 
 - 手書きで探すで、書いている途中に「消去」を押すと、その後の筆の動きでエラーが出ていた
@@ -162,7 +164,8 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.0...v0.4.1
