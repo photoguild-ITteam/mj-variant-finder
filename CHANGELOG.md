@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-02
+
 ### 変更
 
 - アクセシビリティ: 検索のたびに結果の一覧がまるごと読み上げられていたのを、見出し（「『渡辺』の異体字を表示しました」など）だけにした。フォーカス枠の色を背景との差が十分な色に変えた。文字のタブで Home・End が使えるようにした。「視差効果を減らす」設定では、スクロールに動きを付けない
@@ -154,7 +156,8 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.3.1...v0.4.0
