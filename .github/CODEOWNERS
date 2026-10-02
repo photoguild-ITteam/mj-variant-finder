@@ -1,0 +1,29 @@
+# 変更すると、下のアカウントにレビューが自動で依頼される（GitHub の CODEOWNERS）。
+# 対象は AGENTS.md の「人に確認してから行うこと」にそろえている。AGENTS.md を変えたら、ここも見直す。
+# 後に書いた行が優先される。
+
+# AI のコーディングエージェント向けの指示（公開リポジトリなので、外部の PR で書き換えられないよう必ずレビューする）
+/AGENTS.md    @photoguild @jassdack
+/CLAUDE.md    @photoguild @jassdack
+
+# ワークフロー・テンプレート・この CODEOWNERS
+/.github/     @photoguild @jassdack
+
+# CSP（index.html の meta）と、npm の scripts・依存
+/index.html        @photoguild @jassdack
+/package.json      @photoguild @jassdack
+/package-lock.json @photoguild @jassdack
+
+# ライセンス
+/LICENSE                             @photoguild @jassdack
+/LICENSES.md                         @photoguild @jassdack
+/licenses/                           @photoguild @jassdack
+/README.md                           @photoguild @jassdack
+/src/fonts/LICENSE_IPA_Font_v1.0.txt @photoguild @jassdack
+/src/vendor/                         @photoguild @jassdack
+
+# 元データの出典・版（URL・SOURCES・ハッシュ）
+/scripts/build_variant_db.py      @photoguild @jassdack
+/scripts/build_names_db.py        @photoguild @jassdack
+/scripts/build_webfont.py         @photoguild @jassdack
+/scripts/build_handwriting_db.mjs @photoguild @jassdack
