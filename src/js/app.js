@@ -69,7 +69,18 @@ async function init() {
 
 // ---------------------------------------------------------------------------- 検索と URL
 
-const queryFromHash = () => new URLSearchParams(location.hash.slice(1)).get('q') ?? '';
+/**
+ * URL の #q= の検索語. URLSearchParams は + を空白として読み、手で書いた #q=U+8FBB が「U 8FBB」になるので使わない
+ * （このアプリが作る URL は encodeURIComponent で + を %2B にしている）
+ */
+function queryFromHash() {
+  const value = location.hash.match(/^#(?:.*&)?q=([^&]*)/)?.[1] ?? '';
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value; // 壊れた % を含む URL
+  }
+}
 
 /** navigate() で URL を変えた直後か（戻る/進む・リンクから開いた場合と区別する） */
 let navigating = false;

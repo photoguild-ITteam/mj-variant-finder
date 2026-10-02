@@ -7,7 +7,7 @@ import { exportImage } from './export-actions.js';
 import { copyText, glyphMessage } from './feedback.js';
 import { isDiffEnabled, renderFace, setDiffEnabled } from './glyph-diff.js';
 import { openGlyphDialog } from './glyph-dialog.js';
-import { GOTHIC_VARIANT, gothicStatus, sequenceLabel } from './glyph-info.js';
+import { GOTHIC_VARIANT, gothicStatus, matchesFocus, sequenceLabel } from './glyph-info.js';
 
 /**
  * @param {object[]} glyphs
@@ -15,14 +15,6 @@ import { GOTHIC_VARIANT, gothicStatus, sequenceLabel } from './glyph-info.js';
  */
 export function glyphGrid(glyphs, focus = null) {
   return h('div', { class: 'glyph-grid' }, glyphs.map((g) => glyphCard(g, matchesFocus(g, focus))));
-}
-
-function matchesFocus(glyph, focus) {
-  if (!focus) return false;
-  if (focus.mj) return glyph.mj === focus.mj;
-  if (focus.ivs) return Boolean(glyph.ivs?.includes(focus.ivs));
-  if (focus.impl) return glyph.impl === focus.impl;
-  return false;
 }
 
 /** 字形の一覧で絞り込める項目（一部の字形だけに当てはまるものを表示する） */
