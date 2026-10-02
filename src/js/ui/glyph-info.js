@@ -37,6 +37,21 @@ export function relationDirection(rel) {
   return rel.out.length ? '縮退先' : '縮退元';
 }
 
+/**
+ * 検索語が指した字形か（db.search() の chars の focus）.
+ * @param {{mj?: string, ivs?: string, impl?: string} | null} focus
+ */
+export function matchesFocus(glyph, focus) {
+  if (!focus) return false;
+  if (focus.mj) return glyph.mj === focus.mj;
+  if (focus.ivs) return Boolean(glyph.ivs?.includes(focus.ivs));
+  if (focus.impl) return glyph.impl === focus.impl;
+  return false;
+}
+
+/** 検索語が指した字形。指していなければ（見つからなければ）先頭の字形 */
+export const focusedGlyph = (glyphs, focus) => glyphs.find((g) => matchesFocus(g, focus)) ?? glyphs[0];
+
 /** カードに出す符号の表記: "9089 E010F（VS32）" / "U+9089" / "UCSなし" */
 export function sequenceLabel(glyph) {
   if (glyph.ivs) {

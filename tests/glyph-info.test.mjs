@@ -1,6 +1,31 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { glyphDetailSections, gothicStatus, ivsListLabel, relationDirection, sequenceLabel } from '../src/js/ui/glyph-info.js';
+import {
+  focusedGlyph, glyphDetailSections, gothicStatus, ivsListLabel, matchesFocus, relationDirection, sequenceLabel,
+} from '../src/js/ui/glyph-info.js';
+
+// 邉 の字形（一部）。シャードの ivs は配列
+const HEN = [
+  { mj: 'MJ026190', ivs: ['9089_E010F'] },
+  { mj: 'MJ026193', ivs: ['9089_E011F'] },
+  { mj: 'MJ000000', impl: 'FA10' },
+];
+
+test('matchesFocus: MJ番号 / IVS（配列に含まれるか）/ 実装したUCS', () => {
+  assert.equal(matchesFocus(HEN[1], { ivs: '9089_E011F' }), true);
+  assert.equal(matchesFocus(HEN[0], { ivs: '9089_E011F' }), false);
+  assert.equal(matchesFocus(HEN[1], { mj: 'MJ026193' }), true);
+  assert.equal(matchesFocus(HEN[2], { impl: 'FA10' }), true);
+  assert.equal(matchesFocus(HEN[0], null), false);
+});
+
+test('focusedGlyph: 検索語が指した字形。無ければ先頭', () => {
+  assert.equal(focusedGlyph(HEN, { ivs: '9089_E011F' }).mj, 'MJ026193');
+  assert.equal(focusedGlyph(HEN, { mj: 'MJ026193' }).mj, 'MJ026193');
+  assert.equal(focusedGlyph(HEN, null).mj, 'MJ026190');
+  assert.equal(focusedGlyph(HEN, { ivs: '9089_E0100' }).mj, 'MJ026190');
+  assert.equal(focusedGlyph([], null), undefined);
+});
 
 const GOTHIC_META = {
   fonts: [

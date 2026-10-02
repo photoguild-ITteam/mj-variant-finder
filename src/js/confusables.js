@@ -561,8 +561,7 @@ export const CONFUSABLE_GROUPS = [
     },
   },
 
-  // ==========================================================================
-    {
+  {
     type: 'variant',
     name: 'しお',
     chars: ['塩', '鹽'],
@@ -573,7 +572,7 @@ export const CONFUSABLE_GROUPS = [
     },
   },
 
-    {
+  {
     type: 'variant',
     name: 'てつ',
     chars: ['鉄', '鐵'],
@@ -584,7 +583,7 @@ export const CONFUSABLE_GROUPS = [
     },
   },
 
-    {
+  {
     type: 'variant',
     name: 'たい',
     chars: ['対', '對'],
@@ -595,7 +594,7 @@ export const CONFUSABLE_GROUPS = [
     },
   },
 
-    {
+  {
     type: 'variant',
     name: 'はし',
     chars: ['橋', '槗'],
@@ -606,6 +605,7 @@ export const CONFUSABLE_GROUPS = [
     },
   },
 
+  // ==========================================================================
   // 2. 類似字・誤認頻出字グループ（形が酷似している別文字・誤字防止）
   // ==========================================================================
   {
