@@ -52,6 +52,9 @@ node scripts/add_nickname.mjs --char 㟢 --names やまかんむりのき,やま
 
 # 混同しやすい字・類似字グループの追加（実在性・相互関係を自動検証）
 node scripts/add_confusable.mjs --type confusable --name "奇と㟢" --chars "奇,㟢" --desc "山冠の有無による誤認"
+
+# 既存のグループに字を足す（同じ --type と --name。既存の字・説明・メモは残る）
+node scripts/add_confusable.mjs --type variant --name "しま" --chars "隝" --notes "隝:阝＋島。"
 ```
 
 追加した後は `npm run build:names` で `src/data/names.json` を作り直し、`npm test` を通してください。
