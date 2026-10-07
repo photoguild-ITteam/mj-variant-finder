@@ -175,6 +175,9 @@ async function search(page, query) {
     await page.goto(BASE + '#q=%E6%B8%A1%E8%BE%BA');
     await page.waitForSelector('.tab');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+    // 字のデータ・フォントを読み込んでいる途中でページを移ると、WebKit は打ち切った読み込みをコンソールの
+    // エラーとして出すことがある（CI でときどき起きた）。読み込みが落ち着いてから移る
+    await page.waitForLoadState('networkidle');
     await page.goto(BASE + 'guide.html');
     await page.waitForSelector('.guide-section');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
