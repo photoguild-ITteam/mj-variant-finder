@@ -5,7 +5,14 @@
   /** @type {string | null} */
   let theme = null;
   try {
-    theme = localStorage.getItem('theme');
+    // キーは mjv_theme（src/js/storage.js）。0.6 までの theme から1回だけ写す（古いキーは消さない）。
+    // このファイルは通常のスクリプトで storage.js を import できないので、同じ処理をここに書いている
+    theme = localStorage.getItem('mjv_theme');
+    const legacy = localStorage.getItem('theme');
+    if (theme === null && (legacy === 'dark' || legacy === 'light')) {
+      theme = legacy;
+      localStorage.setItem('mjv_theme', legacy);
+    }
   } catch {}
   if (theme !== 'dark' && theme !== 'light') {
     theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

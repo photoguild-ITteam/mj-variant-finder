@@ -1,10 +1,11 @@
 // 検索履歴（最近見た文字）とお気に入り（ピン留め）の管理・描画。
 // localStorage に保存し、ブラウザ内だけで完結する（外部通信なし）。
 
+import { STORAGE_KEYS } from '../storage.js';
 import { $, h } from './dom.js';
 
-export const STORAGE_KEY_HISTORY = 'mjv_history';
-export const STORAGE_KEY_FAVORITES = 'mjv_favorites';
+export const STORAGE_KEY_HISTORY = STORAGE_KEYS.history;
+export const STORAGE_KEY_FAVORITES = STORAGE_KEYS.favorites;
 export const HISTORY_MAX = 10;
 export const FAVORITES_MAX = 20;
 
