@@ -1,6 +1,6 @@
 # 変更履歴
 
-このプロジェクトの主な変更を記録します。形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、版の付け方は [セマンティック バージョニング](https://semver.org/lang/ja/) に従います。
+このプロジェクトの主な変更を記録します。形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、版の付け方は [セマンティック バージョニング](https://semver.org/lang/ja/) に従います（互換を守る範囲と、どの変更でどの版を上げるかは [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)）。
 元データの版を更新したときは「データ」に書きます。
 
 ## [Unreleased]
