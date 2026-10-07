@@ -25,6 +25,7 @@ npm install
 npm run serve            # http://127.0.0.1:8765/
 npm test                 # 型検査 + 単体テスト + データ検証
 npm run test:e2e         # ブラウザテスト（別ターミナルで serve しておく。要 Chrome）
+BROWSER=webkit npm run test:e2e:smoke   # WebKit で主な機能を確認（先に npx playwright-core install webkit）
 ```
 
 - PR を出す前に `npm test` を通してください（CI でも自動実行されます）。

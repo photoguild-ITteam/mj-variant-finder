@@ -30,6 +30,7 @@
     "test": "npm run test:types && node --test \"tests/*.test.mjs\" && node -e \"import('node:child_process').then(({spawnSync}) => { for (const cmd of ['python3', 'python', 'py']) { const c = spawnSync(cmd, ['-c', 'import sys'], { stdio: 'ignore' }); if (!c.error && c.status === 0) { const res = spawnSync(cmd, ['-m', 'unittest', 'scripts/test_variant_db.py'], { stdio: 'inherit' }); process.exit(res.status ?? 0); } } console.error('Python not found (checked python3, python, py)'); process.exit(1); })\"",
     "test:types": "tsc -p jsconfig.json",
     "test:e2e": "node tests/e2e.mjs",
+    "test:e2e:smoke": "node tests/e2e-smoke.mjs",
     "build:vendor": "node scripts/vendor/build.mjs",
     "build:handwriting": "node scripts/build_handwriting_db.mjs",
     "build:imageindex": "python scripts/build_image_index.py",

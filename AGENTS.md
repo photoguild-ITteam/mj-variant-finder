@@ -27,6 +27,9 @@ npm test                  # 型検査（tsc）+ Node の単体テスト + Python
 npx playwright-core install --with-deps chromium
 npm run serve &           # http://127.0.0.1:8765/
 BROWSER_CHANNEL=chromium npm run test:e2e
+# WebKit での主な機能の確認（CI でも動く。クリップボードは対象外）
+npx playwright-core install --with-deps webkit
+BROWSER=webkit npm run test:e2e:smoke
 ```
 
 - e2e はコンソールエラーと CSP 違反も検査する。**失敗したまま PR を出さない。** 原因が自分の変更でないと判断したときは、その根拠を PR に書く。
@@ -75,4 +78,4 @@ CONTRIBUTING.md の「開発の手順」に加えて:
 
 - **Jules など、クラウドの VM で動くエージェント**: `data/raw/` と手元のゴシック体フォントが無いので、**データ・フォントを作り直す作業はしない**（頼まれたら、スクリプトの修正とテストまでにし、作り直しは手元で行うよう PR に書く）。
 - **Antigravity など、手元の PC で動くエージェント**: `data/raw/` とフォントがあるので、データの作り直しができる。画面を変えたときは、ブラウザで操作した結果（スクリーンショット）を PR に添える。スマホ幅（例: 390px）とダークモードも確かめる。
-- どちらも、Safari・iPhone での動作は確かめられない。関係する変更（クリップボード、タッチ操作など）では、そのことを PR に書く。
+- どちらも、Safari・iPhone での動作は確かめられない（CI の WebKit は Linux 版で、文字の描画が Safari と違うので、代わりにならない）。関係する変更（クリップボード、タッチ操作など）では、そのことを PR に書く。
