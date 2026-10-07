@@ -24,7 +24,8 @@ const check = async (name, fn) => {
     await fn();
     results.push(['PASS', name]);
   } catch (e) {
-    results.push(['FAIL', name, e.message.split('\n')[0]]);
+    // 理由は1行に詰めて全部出す（コンソールのエラーなど、2行目以降に中身があるため）
+    results.push(['FAIL', name, e.message.replace(/\s*\n\s*/g, ' ⏎ ').slice(0, 800)]);
   }
 };
 
