@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-08
+
+### 追加
+
+- 1.0 以降に互換を守る範囲（共有した URL、保存した履歴・設定、書き出すファイル名、自分のサイトに置くための条件）と、版の付け方を [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) に書いた
+
 ### 変更
 
 - ブラウザに保存する設定のキーを `mjv_` 付きにそろえた（`theme` → `mjv_theme`、`glyph-diff` → `mjv_glyph_diff`）。github.io で同じ保存場所を使う別のページとぶつからないようにするため。今の設定は自動で引き継ぐ
@@ -170,7 +176,8 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.4.1...v0.5.0
