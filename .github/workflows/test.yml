@@ -58,3 +58,32 @@ jobs:
           name: e2e-screenshots
           path: tests/screenshots/
           if-no-files-found: ignore
+
+  e2e-webkit:
+    name: ブラウザテスト（WebKit・主な機能）
+    # Chromium 以外で、ブラウザの違いが出やすい機能を確かめる（tests/e2e-smoke.mjs）。
+    # Linux の WebKit は文字の描画が Safari（CoreText）と違うので、Safari・iPhone の実機確認の代わりにはならない
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright-core install --with-deps webkit
+      - name: 静的サーバーを起動
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 &
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8765/ >/dev/null; then
+              exit 0
+            fi
+            sleep 0.5
+          done
+          echo "静的サーバーの起動に失敗しました" >&2
+          exit 1
+      - name: E2E（WebKit）
+        run: npm run test:e2e:smoke
+        env:
+          BROWSER: webkit
