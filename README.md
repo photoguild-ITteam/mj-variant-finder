@@ -154,6 +154,10 @@ ES Modules と fetch を使用するため、`file://` ではなくローカルH
 
 リポジトリ直下の HTML（`index.html`・`guide.html`）と `src/` ディレクトリを、任意の静的ホスティング（GitHub Pages、Netlify、AWS S3、Apache、Nginx 等）に配置するだけです。**`LICENSE`・`LICENSES.md`・`licenses/` も一緒に配置してください**（画面からリンクしており、データのライセンス条件でもあります）。各 HTML の `og:url`・`og:image` や `guide.html` の `canonical` は、設置先の URL に合わせて書き換えてください。
 
+### 互換性と版
+
+1.0.0 以降は、共有した URL（`#q=`）、ブラウザに保存した履歴・お気に入り・設定、書き出すファイルの名前と既定の形、自分のサイトに置くための条件を、互換を保って変えます。崩すときはメジャー版を上げます。何を守り、何を守らないか（`src/data/` の JSON の形などは内部の仕組み）と版の付け方は、[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) にあります。
+
 ---
 
 ## 開発
@@ -164,7 +168,7 @@ npm test                 # 単体テスト（Node）+ データ検証（Python u
 npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事前に npm run serve を起動）
 ```
 
-- データやフォントの生成手順、各機能の設計思想は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) をご覧ください。
+- データやフォントの生成手順、各機能の設計思想は [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) をご覧ください。互換を守る範囲と版の付け方は [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) にあります。
 - 俗称辞書（`src/data/nicknames.json`）や類似字辞書（`src/js/confusables.js`）へのデータ追加には、専用の支援スクリプト（`scripts/add_nickname.mjs`, `scripts/add_confusable.mjs`）を利用できます（詳細は [CONTRIBUTING.md](CONTRIBUTING.md)）。
 - コントリビューションを歓迎します。セキュリティに関するご報告は [SECURITY.md](SECURITY.md) をご覧ください。
 

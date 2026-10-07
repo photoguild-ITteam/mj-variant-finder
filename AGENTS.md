@@ -72,6 +72,7 @@ CONTRIBUTING.md の「開発の手順」に加えて:
 - ライセンスに関わるもの: `LICENSE`、`LICENSES.md`、`licenses/`、`src/fonts/LICENSE_IPA_Font_v1.0.txt`、README のライセンス節、画面の「データ出典・ライセンス」。ほかのプロジェクトのコード・データの持ち込み（CC BY-SA 2.1 JP と 3.0 は混ぜられない）。
 - 元データの出典・版の変更（`scripts/` の URL、`SOURCES`）。
 - `.github/`（ワークフロー・テンプレート）、CSP、`package.json` の scripts。
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) の「互換を守るもの」（`#q=` の形、保存のキーと値の形、書き出すファイル名と既定の形、置くための条件）を変えること。保存の形を変えるときは、`src/js/storage.js` で古い形から読み移す。
 - ファイルの削除・名前の変更、大きな設計の変更（データの形を変える、ファイルを分ける など）。
 
 ## 環境ごとの注意

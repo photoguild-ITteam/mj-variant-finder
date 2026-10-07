@@ -4,8 +4,9 @@
 
 import { context2d } from '../canvas.js';
 import { WEB_FONT_FAMILY } from '../font-detector.js';
+import { STORAGE_KEYS, readSetting } from '../storage.js';
 
-const STORAGE_KEY = 'glyph-diff';
+const STORAGE_KEY = STORAGE_KEYS.glyphDiff;
 const SIZE = 192;                      // 描画に使う canvas の画素数（表示は CSS で 1em 四方に縮める）
 const FONT = `${SIZE}px "${WEB_FONT_FAMILY}", "IPAmjMincho", "IPAmj明朝", serif`;
 const SAME_THRESHOLD = 0.002;          // 違う画素がこの割合未満なら「通常の字形と同じ」とみなす
@@ -25,7 +26,7 @@ let enabled = load();
 
 function load() {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'on';
+    return readSetting(localStorage, STORAGE_KEY, (v) => v === 'on' || v === 'off') === 'on';
   } catch {
     return false;
   }
