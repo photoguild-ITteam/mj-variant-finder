@@ -2,9 +2,10 @@
 // 初期値は theme-init.js が描画前に <html data-theme> へ入れる（保存値、無ければ OS の設定）。
 // CSS は data-theme だけを見る。
 
+import { STORAGE_KEYS } from '../storage.js';
 import { $ } from './dom.js';
 
-const STORAGE_KEY = 'theme';
+const STORAGE_KEY = STORAGE_KEYS.theme; // 古いキーからの読み移しは theme-init.js が済ませている
 const THEME_COLOR = { light: '#f6f3ec', dark: '#0a0f1c' };
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 

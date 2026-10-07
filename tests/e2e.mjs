@@ -419,6 +419,7 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   await check('6. ダークモード切り替え', async () => {
     await page.click('#theme-toggle');
     assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    assert.equal(await page.evaluate(() => localStorage.getItem('mjv_theme')), 'dark'); // 保存のキーは mjv_ 付き
     const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     assert.equal(bg, 'rgb(10, 15, 28)');
     await page.fill('#q', '辺');
@@ -428,6 +429,30 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
   await page.screenshot({ path: OUT + '07-dark.png' });
 
   await check('コンソールエラーなし', async () => assert.deepEqual(errors, []));
+  await context.close();
+}
+
+// --- 0.6 までの保存のキー（theme・glyph-diff）を、mjv_ 付きのキーへ読み移す
+{
+  const { page, errors, context } = await newPage();
+  await check('古い保存のキー（theme・glyph-diff）を mjv_ 付きのキーへ読み移す', async () => {
+    await page.goto(BASE);
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem('theme', 'dark');
+      localStorage.setItem('glyph-diff', 'on');
+    });
+    await page.reload();
+    await page.waitForSelector('#q:not([disabled])');
+    assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'dark');
+    const stored = await page.evaluate(() => ({
+      theme: localStorage.getItem('mjv_theme'),
+      diff: localStorage.getItem('mjv_glyph_diff'),
+      legacyTheme: localStorage.getItem('theme'), // 同じ origin の別のページが使っているかもしれないので消さない
+    }));
+    assert.deepEqual(stored, { theme: 'dark', diff: 'on', legacyTheme: 'dark' });
+  });
+  await check('保存のキーの読み移しでコンソールエラーなし', async () => assert.deepEqual(errors, []));
   await context.close();
 }
 
