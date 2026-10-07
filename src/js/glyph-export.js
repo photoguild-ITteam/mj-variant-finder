@@ -167,7 +167,7 @@ export async function downloadSvg(glyph, options) {
 
 // ---------------------------------------------------------------------------- 複数文字の連結書き出し
 
-/** 連結書き出しのファイル名（例: 邉辺_MJ026190_MJ026180）。異体字セレクタ（VS17〜VS256）は外す
+/** 連結書き出しのファイル名（例: 邉辺_MJ026190_MJ025758）。異体字セレクタ（VS17〜VS256）は外す
  * @param {MultiGlyph[]} glyphs
  */
 export function multiFileBase(glyphs) {

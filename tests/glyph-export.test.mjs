@@ -5,9 +5,9 @@ import { multiFileBase } from '../src/js/glyph-export.js';
 test('multiFileBase: 異体字セレクタだけを外し、漢字は残す', () => {
   const glyphs = [
     { char: '邉\u{E010F}', mj: 'MJ026190' },
-    { char: '辺', mj: 'MJ026180' },
+    { char: '辺\u{E0101}', mj: 'MJ025758' },
   ];
-  assert.equal(multiFileBase(glyphs), '邉辺_MJ026190_MJ026180');
+  assert.equal(multiFileBase(glyphs), '邉辺_MJ026190_MJ025758');
 });
 
 test('multiFileBase: サロゲートペアの字（𠮷）も残す', () => {
