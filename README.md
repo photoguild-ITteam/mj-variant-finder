@@ -3,8 +3,8 @@
 **IPAmj明朝の約5.9万字形（うち IVS で区別される異体字は約1.1万字形）を、フォントをインストールしなくてもブラウザだけで検索・比較・ワンクリックコピー・高解像度PNG/SVG書き出しができるオープンソースの静的Webツールです。**  
 サーバー処理も外部APIも一切不要で、静的ファイルを配置するだけで完全に動作します。
 
-> 🌐 **オンラインデモ**: [https://photoguild-itteam.github.io/mj-variant-finder/](https://photoguild-itteam.github.io/mj-variant-finder/)  
-> 📖 **徹底解説**: [異体字・IVS 完全活用ガイド（guide.html）](https://photoguild-itteam.github.io/mj-variant-finder/guide.html) ・ [English summary](#english-summary)
+> 🌐 **オンラインデモ**: [https://tools.photoguild.jp/](https://tools.photoguild.jp/)  
+> 📖 **徹底解説**: [異体字・IVS 完全活用ガイド（guide.html）](https://tools.photoguild.jp/guide.html) ・ [English summary](#english-summary)
 
 ![異体字の一覧](docs/images/01-variants.png)
 
@@ -89,7 +89,7 @@
 
 ### Q2. Canva や Illustrator、Photoshop で正しく文字を使うにはどうすればいいですか？
 
-**A.** デザインツールが IVS（異体字セレクタ）に対応していない場合、テキスト貼り付けではなく、本ツールの「PNG保存（またはコピー）」や「SVG保存」をご利用ください。画像・ベクターとして配置すれば、貼り付け先のフォントに関係なく、同じ字形で表示されます。詳しくは [異体字・IVS 完全活用ガイド（guide.html）](https://photoguild-itteam.github.io/mj-variant-finder/guide.html#how-to-use-in-canva) をご覧ください。
+**A.** デザインツールが IVS（異体字セレクタ）に対応していない場合、テキスト貼り付けではなく、本ツールの「PNG保存（またはコピー）」や「SVG保存」をご利用ください。画像・ベクターとして配置すれば、貼り付け先のフォントに関係なく、同じ字形で表示されます。詳しくは [異体字・IVS 完全活用ガイド（guide.html）](https://tools.photoguild.jp/guide.html#how-to-use-in-canva) をご覧ください。
 
 ### Q3. コピーした文字がメモ帳やメールで「・」や「?」に化けるのはなぜですか？
 
@@ -138,7 +138,7 @@
 
 ### オンラインで使う
 
-デモサイト（[https://photoguild-itteam.github.io/mj-variant-finder/](https://photoguild-itteam.github.io/mj-variant-finder/)）を開くだけです。検索クエリは URL の `#q=` に格納されるため、ブックマークやリンクによる共有が可能です。
+デモサイト（[https://tools.photoguild.jp/](https://tools.photoguild.jp/)）を開くだけです。検索クエリは URL の `#q=` に格納されるため、ブックマークやリンクによる共有が可能です。
 
 ### ローカル環境で動かす
 
@@ -243,8 +243,8 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事
 - **Gothic Font Availability**: Instant indicator (○/△/×) of whether a variant glyph is available in standard Japanese Gothic fonts (Noto Sans JP / BIZ UD Gothic).
 - **Privacy & Security**: Pure client-side execution; all searches, handwriting inputs, screenshots, and search histories stay inside the browser (`localStorage`). Zero telemetry, zero external network traffic.
 
-Online Demo: [https://photoguild-itteam.github.io/mj-variant-finder/](https://photoguild-itteam.github.io/mj-variant-finder/)  
-Usage Guide: [guide.html](https://photoguild-itteam.github.io/mj-variant-finder/guide.html)
+Online Demo: [https://tools.photoguild.jp/](https://tools.photoguild.jp/)  
+Usage Guide: [guide.html](https://tools.photoguild.jp/guide.html)
 
 ---
 
