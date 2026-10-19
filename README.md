@@ -189,6 +189,7 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事
 | 手書き認識データ | `src/data/handwriting-patterns.json` | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | Ulrich Apel（[KanjiVG](https://kanjivg.tagaini.net/)） |
 | 人名・地名辞書 | `src/data/names.json` | [ipadic ライセンス](licenses/IPADIC-COPYING.txt) | 奈良先端科学技術大学院大学（mecab-ipadic）、日本郵便（郵便番号データ） |
 | 俗称・呼び名辞書 | `src/data/nicknames.json` | [MIT](LICENSE) | 株式会社フォトギルド |
+| Adobe-Japan1 IVS の対応表 | `scripts/data/aj1_matches.json` | [MIT](LICENSE) | 株式会社フォトギルド（字形を見比べた手作業の対応。IVS は Unicode IVD の Adobe-Japan1 コレクション） |
 | Webフォント | `src/fonts/` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | 情報処理推進機構（IPAmj明朝）。派生フォント「MJ Variant Mincho」 |
 | ゴシック体の見本用Webフォント | `src/fonts/gothic/` | [SIL Open Font License 1.1](src/fonts/gothic/README.md) | Adobe（Noto Sans CJK JP）、Fitzgerald P. Köeingsegg（遍黒体）。派生フォント「MJ Variant Gothic N / P」 |
 | 画像検索データ | `src/data/image-index.*` | IPAフォントライセンス v1.0 | IPAmj明朝から算出した字形特徴量データ |
