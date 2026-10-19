@@ -19,10 +19,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import (  # noqa: E402
-    GOTHIC_FONTS, ROOT, SOURCES, build_glyph, find_gothic_fonts, gothic_font_arg, jis_level, json_lines, kata_to_hira,
-    read_ivd, read_strict_xlsx, to_version, verify_sha256
+    AJ1_MATCHES_PATH, GOTHIC_FONTS, ROOT, SOURCES, annotate_aj1, build_glyph, find_gothic_fonts, gothic_font_arg, jis_level,
+    json_lines, kata_to_hira, read_ivd, read_strict_xlsx, to_version, verify_sha256
 )
 from build_names_db import make_variants, read_postal  # noqa: E402
+from import_aj1_review import merge as merge_aj1_review, parse_sequence  # noqa: E402
 
 DATA = ROOT / "src" / "data"
 RAW = ROOT / "data" / "raw"
@@ -104,6 +105,47 @@ class TestUnits(unittest.TestCase):
             find_gothic_fonts({"noto": str(ROOT / "data" / "raw" / "no-such-font.ttf")})
         self.assertIn("--no-gothic", str(cm.exception))
 
+    def test_annotate_aj1(self):
+        # ゴシック× の字形に、確かめた Adobe-Japan1 IVS を付ける。その IVS を持つゴシック体だけを挙げる
+        def chars():
+            return {0x4E0E: {"glyphs": [{"mj": "MJ006310", "impl": "4E0E"},
+                                        {"mj": "MJ006311", "ivs": ["4E0E_E0103"]},
+                                        {"mj": "MJ006312", "ivs": ["4E0E_E0104"]}]}}
+        fonts = [{"key": "noto", "cmap": {0x4E0E}, "uvs": {"4E0E_E0101"}}, {"key": "biz", "cmap": {0x4E0E}, "uvs": set()}]
+        review = {"matches": {"MJ006311": "4E0E_E0101"}, "noMatch": ["MJ006312"]}
+        c = chars()
+        self.assertEqual(annotate_aj1(c, fonts, {"4E0E_E0101"}, review), {"matches": 1, "noMatch": 1})
+        glyphs = c[0x4E0E]["glyphs"]
+        self.assertEqual(glyphs[1]["aj1"], {"seq": "4E0E_E0101", "gothic": ["noto"]})
+        self.assertIsNone(glyphs[2]["aj1"])
+        self.assertNotIn("aj1", glyphs[0])
+        # 手作業の誤りは止める: IVD に無い IVS、○ の字形、別の字の IVS、一覧に無い MJ番号、両方に書いた MJ番号
+        bad = [
+            ({"matches": {"MJ006311": "4E0E_E0101"}, "noMatch": []}, set(), "Adobe-Japan1 に登録されていません"),
+            ({"matches": {"MJ006310": "4E0E_E0101"}, "noMatch": []}, {"4E0E_E0101"}, "ゴシック×"),
+            ({"matches": {"MJ006311": "4E19_E0101"}, "noMatch": []}, {"4E19_E0101"}, "別の字の IVS"),
+            ({"matches": {}, "noMatch": ["MJ999999"]}, set(), "字形の一覧に無い"),
+            ({"matches": {"MJ006311": "4E0E_E0101"}, "noMatch": ["MJ006311"]}, {"4E0E_E0101"}, "両方"),
+        ]
+        for review, seqs, message in bad:
+            with self.assertRaises(SystemExit, msg=message) as cm:
+                annotate_aj1(chars(), fonts, seqs, review)
+            self.assertIn(message, str(cm.exception))
+
+    def test_import_aj1_review(self):
+        self.assertEqual(parse_sequence("4E0E E0101"), "4E0E_E0101")
+        self.assertEqual(parse_sequence("4E0E（IVS なし）"), "4E0E")
+        with self.assertRaises(ValueError):
+            parse_sequence("")
+        data = {"matches": {"MJ006312": "4E0E_E0101"}, "noMatch": ["MJ006311"]}
+        rows = [
+            {"MJ番号": "MJ006311", "判定": "同じ形あり", "Adobe-Japan1 IVS": "4E0E E0101"},
+            {"MJ番号": "MJ006312", "判定": "同じ形は無い", "Adobe-Japan1 IVS": ""},
+            {"MJ番号": "MJ006313", "判定": "保留", "Adobe-Japan1 IVS": ""},
+        ]
+        self.assertEqual(merge_aj1_review(data, rows), {"matches": 1, "noMatch": 1, "skipped": 1})
+        self.assertEqual(data, {"matches": {"MJ006311": "4E0E_E0101"}, "noMatch": ["MJ006312"]})
+
     def test_gothic_font_arg(self):
         self.assertEqual(gothic_font_arg("noto=fonts/a.ttf"), ("noto", "fonts/a.ttf"))
         for bad in ("noto", "noto=", "other=a.ttf"):
@@ -182,6 +224,19 @@ class TestDatabase(unittest.TestCase):
         for ch in "髙𠮷﨑":                                                     # 人名でよく使う字は ○
             g = next(x for x in detail(ch)["glyphs"] if x.get("impl") == f"{ord(ch):04X}")
             self.assertIn("noto", g["gothic"], ch)
+
+    def test_aj1_matches(self):
+        # 目で確かめた対応（scripts/data/aj1_matches.json）が、字形の aj1 に入っている
+        meta = load(DATA / "meta.json")["gothic"]
+        if meta is None:
+            self.skipTest("ゴシック体のフォントが無い環境でビルドされた")
+        review = load(AJ1_MATCHES_PATH)
+        self.assertEqual(meta["aj1"], {"matches": len(review["matches"]), "noMatch": len(review["noMatch"])})
+        glyphs = {g["mj"]: g for g in detail("与")["glyphs"]}
+        self.assertEqual(glyphs["MJ006311"]["aj1"]["seq"], "4E0E_E0101")       # 与 E0103 → Adobe-Japan1 の 与 E0101
+        self.assertIn("noto", glyphs["MJ006311"]["aj1"]["gothic"])              # Windows の Noto Sans JP で出せる
+        self.assertIsNone(glyphs["MJ006312"]["aj1"])                            # 見比べて、同じ形は無かった
+        self.assertNotIn("aj1", glyphs["MJ006310"])                             # ○ の字形には付けない
 
     def test_gothic_print_fonts_cover_partial(self):
         # △ の字形は、印刷に使うフォント（Noto Sans CJK JP・遍黒体）のどちらかにすべてある（字形の詳細で案内する）

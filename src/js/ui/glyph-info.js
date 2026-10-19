@@ -87,23 +87,39 @@ export function ivsListLabel(glyph) {
     .join(' / ');
 }
 
-export const GOTHIC_VARIANT = { '○': 'ok', '△': 'warn', '×': 'muted' };
+export const GOTHIC_VARIANT = { '○': 'ok', '△': 'warn', 'IVS': 'ok', '×': 'muted' };
+
+/**
+ * Adobe-Japan1 の IVS の表記: "4E0E_E0101" → "4E0E E0101"、既定の形（"4E0E"）→ "4E0E（IVS なし）"
+ * @param {string} seq glyph.aj1.seq
+ */
+export const aj1Label = (seq) => (seq.includes('_') ? seq.replace('_', ' ') : `${seq}（IVS なし）`);
 
 /**
  * ゴシック体で使えるか.
- * Moji_Joho の IVS に対応したゴシック体は無いので、実装したUCS を持たない（IVS でしか区別できない）字形は ×。
  * 実装したUCS があり、判定用のゴシック体（ok=true のもの）すべてに字があれば ○、欠けていれば △。
+ * Moji_Joho の IVS に対応したゴシック体は無いので、実装したUCS を持たない（IVS でしか区別できない）字形は ×。
+ * ただし、同じ形を Adobe-Japan1 の IVS で出せると確かめた字形（glyph.aj1）は IVS。
  * @param {import('../db.js').Glyph} glyph
  * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} gothicMeta meta.json の gothic
- * @returns {{mark: '○'|'△'|'×', label: string, detail: string} | null} 判定データが無ければ null
+ * @returns {{mark: '○'|'△'|'IVS'|'×', label: string, detail: string} | null} 判定データが無ければ null
  */
 export function gothicStatus(glyph, gothicMeta) {
   if (!gothicMeta || !glyph.char) return null;
   if (!glyph.impl) {
+    if (glyph.aj1) {
+      const fonts = gothicMeta.fonts.filter((f) => glyph.aj1?.gothic.includes(f.key)).map((f) => f.name).join('・');
+      return {
+        mark: 'IVS',
+        label: '別の IVS（Adobe-Japan1）でゴシック体でも使える',
+        detail: `Moji_Joho の IVS に対応したゴシック体はありませんが、同じ形を Adobe-Japan1 の IVS（${aj1Label(glyph.aj1.seq)}）で出せます。${fonts}`,
+      };
+    }
     return {
       mark: '×',
       label: 'IVSでのみ区別できる字形',
-      detail: 'Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体では通常の字形で表示されます。この字形は明朝体（IPAmj明朝）でのみ使えます。',
+      detail: 'Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体では通常の字形で表示されます。'
+        + (glyph.aj1 === null ? 'Adobe-Japan1 の IVS で出せる形とも見比べましたが、同じ形はありませんでした。' : ''),
     };
   }
   const has = new Set(glyph.gothic ?? []);
@@ -145,25 +161,45 @@ const KUSA_RADICAL = 140; // 艸部
 
 /**
  * 字形をゴシック体で使うための案内（字形の詳細の「ゴシック体で使う」）.
- * - usable: false … IVS でしか区別できない（×）。ゴシック体では base（IVS を除いた字）の通常の字形になる
- * - usable: true … 文字コード ucs の字 char（IVS なし）を fonts のゴシック体で使える。preview は見本に使う同梱フォント
+ * - usable: false … IVS でしか区別できない（×）。ゴシック体では base（IVS を除いた字）の通常の字形になる。
+ *   checked は、Adobe-Japan1 の IVS の形と見比べて、同じ形が無いと確かめたもの
+ * - usable: true … 字 char を fonts のゴシック体で使える。preview は見本に使う同梱フォント
+ *   ○・△ は文字コード ucs の字（IVS なし）。aj1 があれば、Adobe-Japan1 の IVS（aj1 はその表記）を付けた字（ゴシックIVS）。
+ *   withIvs は char が IVS を付けた字か（Adobe-Japan1 の既定の形と同じなら付けない）
  *   kusa: 艸部の △。IPAmj明朝 は艹が4画（十十）のことがあり、ゴシック体では3画になることがある
  * @param {Glyph} glyph
  * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} gothicMeta meta.json の gothic
- * @returns {{usable: false, base: string}
- *   | {usable: true, char: string, ucs: string, fonts: GothicPrintFont[], preview: GothicPreview | null, kusa: boolean}
+ * @returns {{usable: false, base: string, checked: boolean}
+ *   | {usable: true, char: string, ucs: string, aj1: string | null, withIvs: boolean, fonts: GothicPrintFont[], preview: GothicPreview | null, kusa: boolean}
  *   | null} 判定データが無ければ null
  */
 export function gothicPrint(glyph, gothicMeta) {
   const status = gothicStatus(glyph, gothicMeta);
   if (!status || !glyph.char) return null;
-  if (!glyph.impl) return { usable: false, base: String.fromCodePoint(/** @type {number} */ (glyph.char.codePointAt(0))) };
+  const base = String.fromCodePoint(/** @type {number} */ (glyph.char.codePointAt(0)));
+  if (glyph.aj1) {
+    const has = new Set(glyph.aj1.gothic);
+    const [ucs, vs] = glyph.aj1.seq.split('_');
+    return {
+      usable: true,
+      char: keyToChar(ucs) + (vs ? keyToChar(vs) : ''),
+      ucs,
+      aj1: aj1Label(glyph.aj1.seq),
+      withIvs: Boolean(vs),
+      fonts: GOTHIC_PRINT_FONTS.filter((f) => has.has(f.key)),
+      preview: GOTHIC_PREVIEW.find((p) => has.has(p.key)) ?? null,
+      kusa: false,
+    };
+  }
+  if (!glyph.impl) return { usable: false, base, checked: glyph.aj1 === null };
   const has = new Set(glyph.gothic ?? []);
   const available = GOTHIC_PRINT_FONTS.filter((f) => has.has(f.key));
   return {
     usable: true,
     char: keyToChar(glyph.impl),
     ucs: glyph.impl,
+    aj1: null,
+    withIvs: false,
     fonts: status.mark === '○' ? available.filter((f) => f.installed) : available,
     preview: GOTHIC_PREVIEW.find((p) => has.has(p.key)) ?? null,
     kusa: status.mark === '△' && Boolean(glyph.radicals?.some(([r]) => r === KUSA_RADICAL)),

@@ -138,6 +138,10 @@ RELATION_TYPES = {
 }
 
 PRESETS_PATH = ROOT / "scripts" / "data" / "name_presets.json"
+# ゴシック× の字形と、同じ形の Adobe-Japan1 IVS の対応（手作業。scripts/import_aj1_review.py で取り込む）
+AJ1_MATCHES_PATH = ROOT / "scripts" / "data" / "aj1_matches.json"
+# 既定の形（IVS なし）を選んだ対応で、同じ形と言えるフォント（見比べたのは Noto Serif JP・Noto Sans JP の既定の形）
+AJ1_DEFAULT_FONTS = ("noto", "notocjk")
 
 # 「ゴシック体で使えるか」の判定に使うフォント（文字の収録状況＝cmap だけを読む）.
 # Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体で出せるのは「実装したUCS」を持つ字形だけ。
@@ -305,6 +309,18 @@ def read_ivd(path: Path) -> tuple[dict[str, str], dict[str, int]]:
     return moji_joho, dict(counts)
 
 
+def read_ivd_sequences(path: Path, collection: str) -> set[str]:
+    """IVD のうち、collection に登録された IVS（"基底_異体字セレクタ"）."""
+    seqs = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        seq, coll, _ = (s.strip() for s in line.split(";"))
+        if coll == collection:
+            seqs.add(seq.replace(" ", "_"))
+    return seqs
+
+
 def read_unihan_variants(path: Path) -> dict[int, dict[str, set[int]]]:
     result: dict[int, dict[str, set[int]]] = defaultdict(lambda: defaultdict(set))
     with zipfile.ZipFile(path) as z:
@@ -370,7 +386,10 @@ def read_gothic_fonts(overrides: dict[str, str], offline: bool = False) -> list[
     for spec, path in found:
         font = TTCollection(str(path), lazy=True).fonts[0] if path.suffix.lower() == ".ttc" else TTFont(str(path), lazy=True)
         version = font["name"].getDebugName(5) or ""
-        loaded.append({**spec, "file": path.name, "version": version, "cmap": set(font.getBestCmap())})
+        # IVS（cmap format 14）: Adobe-Japan1 の IVS で別の形が出せるか（aj1_matches.json の対応）を確かめるのに使う
+        uvs = {f"{base:X}_{vs:X}" for table in font["cmap"].tables if table.format == 14
+               for vs, entries in table.uvsDict.items() for base, _ in entries}
+        loaded.append({**spec, "file": path.name, "version": version, "cmap": set(font.getBestCmap()), "uvs": uvs})
         log(f"  {spec['name']}: {path.name} {version} ({len(loaded[-1]['cmap'])} codepoints)")
     return loaded
 
@@ -521,6 +540,7 @@ class Sources:
     records: list[dict[str, str]]           # MJ文字情報一覧表の行
     ivd_moji_joho: dict[str, str]           # Moji_Joho の IVS → MJ文字図形名
     ivd_counts: dict[str, int]              # IVD のコレクション別件数
+    ivd_adobe_japan1: set[str]              # Adobe-Japan1 の IVS
     shrink_by_mj: dict[str, dict]           # MJ文字図形名 → MJ縮退マップの項目
     unihan: dict[int, dict[str, set[int]]]  # コードポイント → Unihan の異体字
 
@@ -546,6 +566,7 @@ def load_sources(raw: Path, offline: bool) -> Sources:
         records=records,
         ivd_moji_joho=ivd_moji_joho,
         ivd_counts=ivd_counts,
+        ivd_adobe_japan1=read_ivd_sequences(raw / SOURCES["ivd"]["file"], "Adobe-Japan1"),
         shrink_by_mj={e["MJ文字図形名"]: e for e in shrink_raw["content"]},
         unihan=read_unihan_variants(raw / SOURCES["unihan"]["file"]),
     )
@@ -609,6 +630,43 @@ def annotate_gothic(chars: dict[int, dict], fonts: list[dict]) -> dict[str, int]
             g["gothic"] = [f["key"] for f in fonts if cp in f["cmap"]]
             counts["ok" if all(k in g["gothic"] for k in required) else "partial"] += 1
     return counts
+
+
+def annotate_aj1(chars: dict[int, dict], fonts: list[dict], aj1_seqs: set[str], review: dict) -> dict[str, int]:
+    """ゴシック× の字形に、同じ形の Adobe-Japan1 IVS（glyph["aj1"]）を付ける（scripts/data/aj1_matches.json）.
+
+    同じ形あり: {"seq": "4E0E_E0101", "gothic": [その IVS を持つゴシック体のキー]}。見比べて同じ形が無かった字形: None。
+    対応表が字形の一覧・IVD と合わなければ止める（手作業の誤りを黙って載せないように）。
+    """
+    matches: dict[str, str] = review["matches"]
+    no_match = set(review["noMatch"])
+    if both := sorted(set(matches) & no_match):
+        sys.exit(f"aj1_matches.json: 同じ MJ番号が matches と noMatch の両方にあります: {both}")
+    found: set[str] = set()
+    for cp, entry in chars.items():
+        for g in entry["glyphs"]:
+            mj = g["mj"]
+            if mj not in matches and mj not in no_match:
+                continue
+            found.add(mj)
+            if "impl" in g or not g.get("ivs"):
+                sys.exit(f"aj1_matches.json: {mj} は IVS でしか区別できない字形（ゴシック×）ではありません")
+            if mj in no_match:
+                g["aj1"] = None
+                continue
+            seq = matches[mj]
+            if int(seq.split("_")[0], 16) != cp:
+                sys.exit(f"aj1_matches.json: {mj}（U+{cp:04X}）に、別の字の IVS {seq} が対応しています")
+            if "_" in seq:
+                if seq not in aj1_seqs:
+                    sys.exit(f"aj1_matches.json: {mj} の {seq} は、IVD の Adobe-Japan1 に登録されていません")
+                gothic = [f["key"] for f in fonts if seq in f["uvs"]]
+            else:
+                gothic = [f["key"] for f in fonts if f["key"] in AJ1_DEFAULT_FONTS and cp in f["cmap"]]
+            g["aj1"] = {"seq": seq, "gothic": gothic}
+    if missing := sorted((set(matches) | no_match) - found):
+        sys.exit(f"aj1_matches.json: 字形の一覧に無い MJ番号があります: {missing}")
+    return {"matches": len(matches), "noMatch": len(no_match)}
 
 
 def public_glyph(g: dict) -> dict:
@@ -676,7 +734,7 @@ def load_checked_presets(known: set[int]) -> dict:
 
 
 def build_meta(src: Sources, grouped: Grouped, gothic_fonts: list[dict], gothic_counts: dict[str, int],
-               shard_count: int, reading_count: int) -> dict:
+               aj1_counts: dict[str, int], shard_count: int, reading_count: int) -> dict:
     all_glyphs = [g for entry in grouped.chars.values() for g in entry["glyphs"]]
     ivd_seqs = set(src.ivd_moji_joho)
     return {
@@ -686,9 +744,11 @@ def build_meta(src: Sources, grouped: Grouped, gothic_fonts: list[dict], gothic_
         "flags": {"jouyou": 1, "jinmei": 2, "hasIVS": FLAG_IVS},
         "relationTypes": RELATION_TYPES,
         "gothic": {
-            "note": "Moji_Joho の IVS に対応したゴシック体は無い。ゴシック体で出せるのは実装したUCSを持つ字形だけで、IVS でしか区別できない字形は通常の字形になる。",
+            "note": "Moji_Joho の IVS に対応したゴシック体は無い。IVS でしか区別できない字形は、Moji_Joho の IVS のままではゴシック体で通常の字形になる。"
+                    "そのうち、同じ形を Adobe-Japan1 の IVS で出せると確かめた字形には aj1 を付けている（scripts/data/aj1_matches.json）。",
             "fonts": [{k: f[k] for k in ("key", "name", "ok", "file", "version", "sha256")} for f in gothic_fonts],
             "counts": gothic_counts,
+            "aj1": aj1_counts,
         } if gothic_fonts else None,
         "counts": {
             "mjGlyphs": len(src.records),
@@ -720,6 +780,8 @@ def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] 
         log("warning: --no-gothic のため、ゴシック体の判定を省きます（このデータはコミットしない）")
         gothic_fonts = []
     gothic_counts = annotate_gothic(grouped.chars, gothic_fonts)
+    aj1_counts = annotate_aj1(grouped.chars, gothic_fonts, src.ivd_adobe_japan1,
+                              json.loads(AJ1_MATCHES_PATH.read_text(encoding="utf-8")))
 
     shards, index_chars, readings, extra_radicals = build_shards_and_index(grouped.chars)
     aliases = build_aliases(grouped.chars)
@@ -734,7 +796,7 @@ def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] 
         "names": presets["names"],
         "quickAccess": presets["quickAccess"],
     }
-    meta = build_meta(src, grouped, gothic_fonts, gothic_counts, len(shards), len(readings))
+    meta = build_meta(src, grouped, gothic_fonts, gothic_counts, aj1_counts, len(shards), len(readings))
     write_outputs(out, shards, grouped.no_char, index, meta)
     return meta
 

@@ -91,6 +91,7 @@ export function gothicLegend() {
   return h('p', { class: 'gothic-legend' },
     badge('ゴシック○', 'ok'), ' ゴシック体でも使える　',
     badge('ゴシック△', 'warn'), ' 一般的なゴシック体には字が無い（使えるフォントを案内）　',
+    badge('ゴシックIVS', 'ok'), ' 別の IVS（Adobe-Japan1）でゴシック体でも同じ形が出せる　',
     badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる　',
     '（印を押すと、ゴシック体で使う方法を表示）');
 }

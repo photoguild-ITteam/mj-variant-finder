@@ -102,22 +102,31 @@ function gothicBox(glyph) {
   if (!info.usable) {
     return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
       h('p', { class: 'gothic-box__text' },
-        `この字形のゴシック体はありません。IVS でしか区別できない字形なので、ゴシック体では通常の字形（${info.base}）で表示されます。`),
+        `この字形を指す Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体では通常の字形（${info.base}）で表示されます。`,
+        info.checked ? 'Adobe-Japan1 の IVS で出せる形とも見比べましたが、同じ形はありませんでした。' : null),
       h('p', { class: 'gothic-box__note' }, '文書や印刷でこの字形を使うときは、この字だけ IPAmj明朝 で組むか、外字を作ってください。'));
   }
+  // ゴシックIVS: MJ の IVS とは番号が違う、Adobe-Japan1 の IVS を付けた字を使う
+  const seq = info.aj1 ?? `U+${info.ucs}、IVS なし`;
+  const text = !info.fonts.length
+    ? `文字コード U+${info.ucs} の字（IVS なし）がある、ゴシック体のフォントが見つかっていません。`
+    : info.withIvs
+      ? `文書・印刷では、Adobe-Japan1 の IVS（${info.aj1}）を付けた字が、次のゴシック体でこの字形と同じ形になります。MJ の IVS（${glyph.ivs?.[0].replace('_', ' ')}）とは番号が違うので、下のボタンでコピーしてください。`
+      : info.aj1
+        ? `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）が、次のゴシック体でこの字形と同じ形になります。`
+        : `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）を、次のゴシック体で使えます。`;
   return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
     info.preview ? gothicPreview(glyph, info.char, info.preview) : null,
-    h('p', { class: 'gothic-box__text' },
-      info.fonts.length
-        ? `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）を、次のゴシック体で使えます。`
-        : `文字コード U+${info.ucs} の字（IVS なし）がある、ゴシック体のフォントが見つかっていません。`),
+    h('p', { class: 'gothic-box__text' }, text),
     info.fonts.length ? h('ul', { class: 'gothic-box__fonts' }, info.fonts.map((f) => h('li', {},
       h('a', { href: f.url, target: '_blank', rel: 'noopener' }, f.name), f.note ? `（${f.note}）` : null))) : null,
     h('div', { class: 'gothic-box__buttons' },
       h('button', {
         class: 'button button--small', type: 'button',
-        onclick: () => copyText(info.char, `ゴシック体用の文字（U+${info.ucs}、IVS なし）をコピーしました`),
+        onclick: () => copyText(info.char, `ゴシック体用の文字（${seq}）をコピーしました`),
       }, 'ゴシック体用の文字をコピー')),
+    info.withIvs ? h('p', { class: 'gothic-box__note' },
+      'IVS を付けた字は、IVS に対応したアプリで使えます。同じ形かは、IPAmj明朝 と Noto Serif JP・Noto Sans JP の字形を見比べて確かめました。') : null,
     info.kusa ? h('p', { class: 'notice notice--warn notice--compact' },
       'この字形は、艹（くさかんむり）が「十 十」に分かれた4画のことがあります。ゴシック体では、つながった3画の艹で表示されることがあるので、見本で形を確かめてください。') : null,
     info.preview?.key === 'plangothic' ? h('p', { class: 'gothic-box__note' },

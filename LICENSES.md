@@ -13,6 +13,7 @@
 | `src/data/handwriting-patterns.json` | **CC BY-SA 3.0** | [KanjiVG](https://kanjivg.tagaini.net/) r20250816（Copyright (C) 2009-2013 Ulrich Apel）の筆画データを加工。[著作権表示](licenses/KANJIVG-NOTICE.txt) |
 | `src/data/names.json` | [ipadic ライセンス](licenses/IPADIC-COPYING.txt)（Copyright 2000-2003 NAIST、ICOT Free Software の無保証条項を含む）／日本郵便 | [mecab-ipadic](https://taku910.github.io/mecab/) 2.7.0-20070801（姓・名）、[郵便番号データ](https://www.post.japanpost.jp/zipcode/dl/utf-zip.html)（市区町村・町域。日本郵便は著作権を主張せず自由利用可）、`scripts/data/*.json`（手作業の置き換え表） |
 | `src/data/nicknames.json` | [MIT](LICENSE) | 字の呼び名と部首名（手作業） |
+| `scripts/data/aj1_matches.json` | [MIT](LICENSE) | ゴシック× の字形と、同じ形の Adobe-Japan1 IVS の対応（手作業）。IPAmj明朝 の字形と Noto Serif JP・Noto Sans JP の字形を見比べて決めた。IVS は [Unicode IVD](https://www.unicode.org/ivd/) の Adobe-Japan1 コレクションのもの。ビルドで字形のデータ（`src/data/chars/`）の `aj1` になる |
 | `src/data/image-index.bin`, `image-index.json` | IPAフォントライセンス v1.0 に従う | IPAmj明朝の字形を画像化した特徴量（字形そのものではない） |
 | `docs/images/*.png`, `src/images/og.png` | CC BY-SA 2.1 JP | このツールの画面写真（`og.png` はリンクを共有したときのプレビュー）。MJ文字情報一覧表のデータを表示しているため |
 | `licenses/*.txt` | それぞれの条文そのもの | 各ライセンスの原文（改変しないこと） |

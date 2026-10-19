@@ -190,9 +190,31 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     assert.equal(await page.locator('#glyph-gothic :text("見本を読み込めませんでした")').count(), 0);
     await page.screenshot({ path: OUT + '04b-gothic.png' });
     await page.click('#glyph-dialog [data-close]');
-    // ×: ゴシック体は無いと案内する
-    assert.match(await openGothic('MJ026191'), /この字形のゴシック体はありません/);
+    // ×: Moji_Joho の IVS に対応したゴシック体は無く、通常の字形になると案内する
+    assert.match(await openGothic('MJ026191'), /Moji_Joho の IVS に対応したゴシック体は無いため/);
     assert.equal(await page.locator('#glyph-gothic .gothic-box__glyph').count(), 0);
+    await page.click('#glyph-dialog [data-close]');
+    // ゴシックIVS: 同じ形を Adobe-Japan1 の IVS で出せる（与 E0103 → 与 E0101）
+    await page.fill('#q', 'MJ006311');
+    await page.press('#q', 'Enter');
+    assert.equal(await page.textContent('.glyph-card[data-mj="MJ006311"] .glyph-card__badges .badge:first-child'), 'ゴシックIVS');
+    assert.match(await openGothic('MJ006311'), /Adobe-Japan1 の IVS（4E0E E0101）/);
+    await page.click('#glyph-gothic button:has-text("ゴシック体用の文字をコピー")');
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '与\u{E0101}');
+    // 同梱の見本フォントが IVS の字形を持っている（IVS を付けた字と付けない字で、描いた形が違う）
+    const differs = await page.evaluate(async () => {
+      await document.fonts.load('64px "MJ Variant Gothic N"', '与\u{E0101}');
+      const ink = (text) => {
+        const c = new OffscreenCanvas(80, 80);
+        const ctx = c.getContext('2d');
+        ctx.font = '64px "MJ Variant Gothic N"';
+        ctx.fillText(text, 8, 64);
+        return Array.from(ctx.getImageData(0, 0, 80, 80).data.filter((_, i) => i % 4 === 3));
+      };
+      const a = ink('与'), b = ink('与\u{E0101}');
+      return a.some((v, i) => Math.abs(v - b[i]) > 128);
+    });
+    assert.ok(differs, '見本のフォントで IVS の字形が描けていない');
     await page.click('#glyph-dialog [data-close]');
     await page.fill('#q', 'MJ026190');
     await page.press('#q', 'Enter');

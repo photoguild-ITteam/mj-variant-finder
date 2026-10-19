@@ -33,6 +33,9 @@
  * @property {string} [note]
  * @property {Record<string, string>} [dict] 漢和辞典の番号（daikanwa など）
  * @property {string[]} [gothic] 字があるゴシック体のキー（meta.json の gothic.fonts）
+ * @property {{seq: string, gothic: string[]} | null} [aj1] IVS でしか区別できない字形と同じ形の Adobe-Japan1 IVS
+ *   （seq は "4E0E_E0101"、既定の形なら "4E0E"。gothic はその IVS を持つゴシック体のキー）。
+ *   null は、見比べて同じ形が無かったもの。見比べていない字形には無い（scripts/data/aj1_matches.json）
  * @property {Record<string, any>} [shrink] MJ縮退マップ（種別 → 縮退先の一覧、info は参考情報）
  */
 
