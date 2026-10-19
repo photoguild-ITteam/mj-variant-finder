@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  focusedGlyph, glyphDetailSections, gothicPrint, gothicStatus, ivsListLabel, matchesFocus, relationDirection, sequenceLabel,
+  focusedGlyph, glyphDetailSections, gothicPrint, gothicStatus, gothicVariants, ivsListLabel, matchesFocus, relationDirection, sequenceLabel,
 } from '../src/js/ui/glyph-info.js';
 
 // 邉 の字形（一部）。シャードの ivs は配列
@@ -127,6 +127,31 @@ test('ゴシックIVS: 同じ形を Adobe-Japan1 の IVS で出せる × の字�
   // 既定の形（IVS なし）と同じ: IVS を付けない。拡張B の字でも IVS の有無を取り違えない
   const plain = gothicPrint({ char: '\u{20B9F}\u{E0102}', ivs: ['20B9F_E0102'], aj1: { seq: '20B9F', gothic: ['notocjk'] } }, PRINT_META);
   assert.deepEqual([plain.char, plain.withIvs, plain.aj1], ['\u{20B9F}', false, '20B9F（IVS なし）']);
+});
+
+test('gothicVariants: 通常の字形と、Adobe-Japan1 の IVS で出せる別の形を並べる', () => {
+  const detail = {
+    glyphs: [
+      { mj: 'MJ006310', char: '与', impl: '4E0E', gothic: ['noto', 'biz', 'notocjk'] },
+      { mj: 'MJ006311', char: '与\u{E0103}', ivs: ['4E0E_E0103'], aj1: { seq: '4E0E_E0101', gothic: ['noto', 'notocjk'] } },
+      { mj: 'MJ006312', char: '与\u{E0104}', ivs: ['4E0E_E0104'], aj1: null },
+    ],
+    gothicIvs: [{ seqs: ['E0101'], gothic: ['noto', 'notocjk'] }, { seqs: ['E0102', 'E0105'], gothic: ['notocjk'] }],
+  };
+  const list = gothicVariants('4E0E', detail, PRINT_META);
+  assert.deepEqual(list.map((v) => [v.char, v.vs, v.label]), [
+    ['与', null, '通常の字形（IVS なし）'],
+    ['与\u{E0101}', 'E0101', 'E0101（VS18）'],
+    ['与\u{E0102}', 'E0102', 'E0102（VS19） / E0105（VS22）'],
+  ]);
+  assert.deepEqual(list.map((v) => v.sameShape), [[], ['MJ006311'], []]); // 見比べて確かめたものだけ
+  assert.equal(list[0].codeMj, 'MJ006310');
+  assert.deepEqual(fontKeys(list[0]), ['noto', 'biz']); // ○ は Windows に入っているゴシック体
+  assert.deepEqual(fontKeys(list[1]), ['noto', 'notocjk']);
+  assert.equal(list[1].preview.family, 'MJ Variant Gothic N');
+  assert.deepEqual(gothicVariants('4E0E', detail, null), []);
+  // 別の形が無い字は、通常の字形だけ
+  assert.equal(gothicVariants('4E0E', { glyphs: detail.glyphs.slice(0, 1) }, PRINT_META).length, 1);
 });
 
 test('gothicStatus: × の説明は、見比べて同じ形が無かったものだけ、そう書く', () => {

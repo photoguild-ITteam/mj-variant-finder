@@ -68,6 +68,8 @@ Python 3.10 以上、標準ライブラリのみ。
 
 ただし、Noto Sans JP（Windows 11 に入っている版も）・Noto Sans CJK JP・BIZ UDゴシックは Adobe-Japan1 の IVS に対応していて、× の字形と同じ形を、番号の違う Adobe-Japan1 の IVS で出せることがある（× の字形がある 5,000 字のうち 1,017 字は、Adobe-Japan1 の IVS で別の形を持つ）。どの × の字形が、どの Adobe-Japan1 の IVS と同じ形かは公式の対応表が無いので、IPAmj明朝 の字形と Noto Serif JP・Noto Sans JP の字形を目で見比べて決め、`scripts/data/aj1_matches.json` に手作業で書く（確認ページで書き出した CSV を `python scripts/import_aj1_review.py 〜.csv` で取り込む）。`build_variant_db.py` は、MJ番号が × の字形か、IVS が IVD の Adobe-Japan1 にあるかを確かめ（合わなければ止める）、字形に `aj1: {seq, gothic}`（`gothic` はその IVS を cmap format 14 に持つゴシック体）を付ける。見比べて同じ形が無かった字形は `aj1: null`。`aj1` のある字形の印は「ゴシックIVS」で、字形の詳細では Adobe-Japan1 の IVS を付けた字をコピーでき、見本は MJ Variant Gothic N（その字を含むファイルにだけ Adobe-Japan1 の IVS を残す）で描く。
 
+検索結果の「ゴシック体の字形」は、字ごとのゴシック体の異体字（`chars/<shard>.json` の字の `gothicIvs`）を使う。`build_variant_db.py` が Noto Sans CJK JP（`GOTHIC_IVS_REFERENCE`）の cmap format 14 から、IVD の Adobe-Japan1 にある IVS のうち通常の字形と違う形を指すものを、同じ字形ごとにまとめて `{seqs, gothic}`（`gothic` はその IVS を持つゴシック体）として付ける（1,207 字。`meta.json` の `gothic.ivsChars`）。画面では、通常の字形とこれらを見本付きで並べ（`glyph-info.js` の `gothicVariants()`）、`aj1` で同じ形と確かめた MJ の字形を結び付ける。
+
 `scripts/data/name_presets.json` は、姓・地名の読みから表記を引くための手作業の辞書。MJ の読みは1文字単位なので、「わたなべ → 渡辺・渡邊・渡邉」のような読み検索はこの辞書で補う。
 
 `src/data/nicknames.json` は、字の呼び名（「はしごだか」「たてにし」等）と部首名（約135種）を定義した手作業の辞書。読み検索での解釈や「部首名＋読み」検索で使用され、`tests/nicknames.test.mjs` で検証する。

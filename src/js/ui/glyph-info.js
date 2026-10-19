@@ -206,6 +206,43 @@ export function gothicPrint(glyph, gothicMeta) {
   };
 }
 
+/**
+ * 字のゴシック体の字形の一覧（検索結果の「ゴシック体の字形」）: 通常の字形と、Adobe-Japan1 の IVS で出せる別の形.
+ * - char: コピーする字（別の形は Adobe-Japan1 の IVS を付ける）。vs: その異体字セレクタ（通常の字形は null）
+ * - sameShape: 見比べて同じ形と確かめた MJ の字形（字形の aj1）
+ * - codeMj: 文字コードで表す MJ の字形（通常の字形だけ。同じ形とは限らない）
+ * @param {string} key 字の UCS（16進）
+ * @param {import('../db.js').CharDetail} detail
+ * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} gothicMeta meta.json の gothic
+ * @returns {{char: string, vs: string | null, label: string, fonts: GothicPrintFont[], preview: GothicPreview | null,
+ *   sameShape: string[], codeMj: string | null}[]}
+ */
+export function gothicVariants(key, detail, gothicMeta) {
+  if (!gothicMeta) return [];
+  const { glyphs } = detail;
+  /** @param {string} seq */
+  const sameShape = (seq) => glyphs.filter((g) => g.aj1?.seq === seq).map((g) => g.mj);
+  const list = [];
+  const plain = glyphs.find((g) => g.impl === key);
+  const info = plain && gothicPrint(plain, gothicMeta);
+  if (plain && info?.usable && info.fonts.length) {
+    list.push({ char: info.char, vs: null, label: '通常の字形（IVS なし）', fonts: info.fonts, preview: info.preview, sameShape: sameShape(key), codeMj: plain.mj });
+  }
+  for (const g of detail.gothicIvs ?? []) {
+    const has = new Set(g.gothic);
+    list.push({
+      char: keyToChar(key) + keyToChar(g.seqs[0]),
+      vs: g.seqs[0],
+      label: g.seqs.map((vs) => `${vs}（VS${vsNumber(parseInt(vs, 16))}）`).join(' / '),
+      fonts: GOTHIC_PRINT_FONTS.filter((f) => has.has(f.key)),
+      preview: GOTHIC_PREVIEW.find((p) => has.has(p.key)) ?? null,
+      sameShape: g.seqs.flatMap((vs) => sameShape(`${key}_${vs}`)),
+      codeMj: null,
+    });
+  }
+  return list;
+}
+
 const DICT_ORDER = ['daikanwa', 'daijigen', 'shinDaijiten', 'daikangorin', 'nihongoKanji'];
 
 /** @typedef {[label: string, value: unknown]} DetailRow 詳細の1行（値が空の行は出さない） */

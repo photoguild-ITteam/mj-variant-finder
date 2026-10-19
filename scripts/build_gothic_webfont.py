@@ -5,8 +5,8 @@
 予約名・商標（Noto、Source、Plangothic、遍黑 など）を使わない名前に変える:
   - MJ Variant Gothic N … Noto Sans CJK JP 2.004 から（○ の字形と、基本の漢字・拡張A の △ の字形）
   - MJ Variant Gothic P … 遍黒体 P1 V2.9.5795 から（Noto Sans CJK JP に無い △ の字形。拡張B 以降）
-ゴシック× の字形のうち、同じ形を Adobe-Japan1 の IVS で出せる字（字形の aj1）があるファイルには、
-その字の IVS の字形も入れる（cmap format 14 を残す）。
+ゴシック体の異体字（Adobe-Japan1 の IVS で出せる別の形。字の gothicIvs）がある字と、ゴシック× の字形のうち同じ形を
+Adobe-Japan1 の IVS で出せる字（字形の aj1）を含むファイルには、その字の IVS の字形も入れる（cmap format 14 を残す）。
 著作権表示とライセンス（name の 0・13・14）はそのまま残し、src/fonts/gothic/ に条文を置く。
 
 入力: data/raw/NotoSansCJKjp-Regular.otf, data/raw/PlangothicP1-Regular.ttf
@@ -58,13 +58,15 @@ def font_path(key: str) -> Path:
 
 def plan_codepoints() -> tuple[dict[str, list[int]], set[int]]:
     """字形の gothic から、どの字をどちらのフォントに入れるか（Noto Sans CJK JP にあればそちら）と、
-    Adobe-Japan1 の IVS の字形も入れる字（字形の aj1 が Noto Sans CJK JP の IVS を指す字）."""
+    Adobe-Japan1 の IVS の字形も入れる字（ゴシック体の異体字（gothicIvs）がある字と、字形の aj1 が IVS を指す字）."""
     out: dict[str, set[int]] = {"n": set(), "p": set()}
     aj1: set[int] = set()
     for path in sorted((ROOT / "src" / "data" / "chars").glob("*.json")):
         if path.name == "none.json":
             continue
-        for entry in json.loads(path.read_text(encoding="utf-8")).values():
+        for key, entry in json.loads(path.read_text(encoding="utf-8")).items():
+            if entry.get("gothicIvs"):
+                aj1.add(int(key, 16))
             for g in entry["glyphs"]:
                 keys = set(g.get("gothic") or [])
                 if g.get("aj1") and "_" in g["aj1"]["seq"] and "notocjk" in g["aj1"]["gothic"]:
@@ -75,6 +77,9 @@ def plan_codepoints() -> tuple[dict[str, list[int]], set[int]]:
                     out["n"].add(int(g["impl"], 16))
                 elif "plangothic" in keys:
                     out["p"].add(int(g["impl"], 16))
+    # IVS の字形を入れる字は、通常の字形も Noto Sans CJK JP から入れる（見本を同じフォントで並べる）
+    out["n"] |= aj1
+    out["p"] -= aj1
     return {k: sorted(v) for k, v in out.items()}, aj1
 
 

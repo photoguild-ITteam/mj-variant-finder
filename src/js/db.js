@@ -44,7 +44,12 @@
  * @typedef {{ucs: string, out: string[], in: string[]}} Relation
  */
 
-/** @typedef {{glyphs: Glyph[], related?: Relation[]}} CharDetail chars/<shard>.json の1文字分 */
+/**
+ * chars/<shard>.json の1文字分.
+ * gothicIvs: ゴシック体の異体字（Adobe-Japan1 の IVS で出せる、通常と違う形）。seqs は同じ形になる異体字セレクタ、
+ * gothic はその IVS を持つゴシック体のキー（meta.json の gothic.fonts）
+ * @typedef {{glyphs: Glyph[], related?: Relation[], gothicIvs?: {seqs: string[], gothic: string[]}[]}} CharDetail
+ */
 
 /**
  * search-index.json.

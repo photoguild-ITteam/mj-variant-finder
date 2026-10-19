@@ -7,7 +7,9 @@ import { COMPARE_MAX, addToCompare } from './compare.js';
 import { badge, h, loading, queryButton } from './dom.js';
 import { copyText, errorMessage, showToast } from './feedback.js';
 import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
-import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.js';
+import { openGlyphDialog } from './glyph-dialog.js';
+import { DIRECTION_HELP, RELATION_SHORT, gothicVariants, relationDirection } from './glyph-info.js';
+import { loadGothicSample } from './gothic-fonts.js';
 import { isFavorite, toggleFavorite } from './history.js';
 import { reportError } from './session.js';
 
@@ -27,6 +29,8 @@ export async function charPanel(item) {
   const sections = [hero(entry, detail.glyphs)];
   if (confSection) sections.push(confSection);
   sections.push(glyphSection(detail.glyphs, item.focus));
+  const gothic = gothicSection(entry.key, detail);
+  if (gothic) sections.push(gothic);
   if (related.primary.length || related.reference.length) sections.push(relatedSection(related));
   return h('article', { class: 'char-panel' }, sections);
 }
@@ -89,6 +93,51 @@ function glyphSection(glyphs, focus) {
   // 絞り込みは grid の直後に「該当なし」の表示を足すので、grid を置いてから作る
   grid.before(glyphTools(glyphs, grid));
   return section;
+}
+
+/**
+ * ゴシック体の字形: 通常の字形と、Adobe-Japan1 の IVS で出せる別の形を、ゴシック体の見本で並べる
+ * @param {string} key
+ * @param {import('../db.js').CharDetail} detail
+ */
+function gothicSection(key, detail) {
+  const variants = gothicVariants(key, detail, app.db.meta.gothic);
+  if (!variants.length) return null;
+  const byMj = new Map(detail.glyphs.map((g) => [g.mj, g]));
+  /** @param {string} mj */
+  const mjChip = (mj) => {
+    const g = byMj.get(mj);
+    return h('button', { class: 'chip', type: 'button', title: `${mj} の詳細`, onclick: () => g && openGlyphDialog(g) },
+      g?.char ? h('span', { class: 'glyph' }, g.char) : null, ` ${mj}`);
+  };
+  const cards = variants.map((v) => {
+    const face = h('div', { class: `gothic-card__face gothic-box__glyph--${v.preview?.key ?? 'none'}` }, v.char);
+    // 読み込めなかったら、別のフォントで描いた字を見本と取り違えないよう、見本を消す
+    if (v.preview) {
+      loadGothicSample(v.preview.family, v.char).catch(() => {
+        if (face.isConnected) face.replaceWith(h('p', { class: 'gothic-card__missing' }, '見本を読み込めませんでした'));
+      });
+    }
+    return h('article', { class: 'gothic-card', dataset: { vs: v.vs ?? '' } },
+      v.preview ? face : h('p', { class: 'gothic-card__missing' }, '見本なし'),
+      h('div', { class: 'gothic-card__body' },
+        h('span', { class: 'gothic-card__label' }, v.label),
+        h('span', { class: 'gothic-card__fonts' }, v.fonts.map((f) => f.name).join('・')),
+        v.sameShape.length ? h('div', { class: 'gothic-card__same' }, h('span', {}, '同じ形の MJ 字形'), v.sameShape.map(mjChip)) : null,
+        v.codeMj ? h('div', { class: 'gothic-card__same' }, h('span', {}, '文字コードで表す MJ 字形'), mjChip(v.codeMj)) : null),
+      h('div', { class: 'gothic-card__actions' },
+        h('button', {
+          class: 'button', type: 'button',
+          onclick: () => copyText(v.char, `ゴシック体の字（${v.vs ? `U+${key} U+${v.vs}` : `U+${key}`}）をコピーしました`),
+        }, 'コピー')));
+  });
+  return h('section', { class: 'panel-section', id: 'gothic-variants' },
+    h('div', { class: 'panel-section__head' },
+      h('h3', {}, `ゴシック体の字形（${variants.length}）`),
+      h('p', {}, 'Noto Sans JP などのゴシック体で出せる形。IVS の形は Adobe-Japan1 の IVS で、MJ の IVS とは番号が違います')),
+    h('div', { class: 'gothic-grid' }, cards),
+    h('p', { class: 'gothic-section__note' },
+      '「同じ形の MJ 字形」は、字形を見比べて確かめたものだけ出しています。IVS を付けた字は、IVS に対応したフォントとアプリで使えます。見本は、Noto Sans CJK JP・遍黒体から字を抜き出して同梱したものです。'));
 }
 
 /** @param {{primary: RelatedChar[], reference: RelatedChar[]}} related db.related() の戻り値 */
