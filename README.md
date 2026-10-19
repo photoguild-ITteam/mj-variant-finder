@@ -190,6 +190,7 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事
 | 人名・地名辞書 | `src/data/names.json` | [ipadic ライセンス](licenses/IPADIC-COPYING.txt) | 奈良先端科学技術大学院大学（mecab-ipadic）、日本郵便（郵便番号データ） |
 | 俗称・呼び名辞書 | `src/data/nicknames.json` | [MIT](LICENSE) | 株式会社フォトギルド |
 | Webフォント | `src/fonts/` | [IPAフォントライセンス v1.0](src/fonts/LICENSE_IPA_Font_v1.0.txt) | 情報処理推進機構（IPAmj明朝）。派生フォント「MJ Variant Mincho」 |
+| ゴシック体の見本用Webフォント | `src/fonts/gothic/` | [SIL Open Font License 1.1](src/fonts/gothic/README.md) | Adobe（Noto Sans CJK JP）、Fitzgerald P. Köeingsegg（遍黒体）。派生フォント「MJ Variant Gothic N / P」 |
 | 画像検索データ | `src/data/image-index.*` | IPAフォントライセンス v1.0 | IPAmj明朝から算出した字形特徴量データ |
 | 同梱ライブラリ | `src/vendor/` | [MIT](src/vendor/kanji-canvas.LICENSE.txt)・[Apache-2.0 ほか](src/vendor/THIRD_PARTY_LICENSES.txt) | Kanji Canvas、fontkit と依存パッケージ |
 
@@ -199,12 +200,12 @@ npm run test:e2e         # ブラウザテスト（Playwright。要 Chrome、事
 
 | やりたいこと | 必要なこと |
 |---|---|
-| このツールをそのまま自社サイトや社内で動かす | `LICENSE`・`LICENSES.md`・`licenses/`・`src/fonts/LICENSE_IPA_Font_v1.0.txt` を消さずに一緒に置く。画面の「データ出典・ライセンス」も残す |
+| このツールをそのまま自社サイトや社内で動かす | `LICENSE`・`LICENSES.md`・`licenses/`・`src/fonts/LICENSE_IPA_Font_v1.0.txt`・`src/fonts/gothic/OFL-*.txt` を消さずに一緒に置く。画面の「データ出典・ライセンス」も残す |
 | プログラム（`src/js/` など）を自分のソフトに流用する | MIT: 著作権表示と許諾文（[LICENSE](LICENSE)）を残す |
 | 異体字データを加工して配布する | CC BY-SA 2.1 JP: 出典（MJ文字情報一覧表など）を表示し、加工したことを明記し、加工後のデータも CC BY-SA 2.1 JP で配布する。IVD・Unihan 由来の部分には [Unicode License](licenses/UNICODE-LICENSE.txt) の条文を添える |
 | 手書き認識データを加工して配布する | CC BY-SA 3.0: KanjiVG と Ulrich Apel の名前・リンクを表示し、CC BY-SA 3.0 で配布する |
 | 人名・地名の辞書を配布する | [licenses/IPADIC-COPYING.txt](licenses/IPADIC-COPYING.txt) を必ず添える（加工した場合も。無保証の条項も省かない） |
-| Webフォントを配布・改変する | IPAフォントライセンス第3条: フォント名・ファイル名に「IPAmj明朝」を使わない、ライセンス本文を添える、作り方とオリジナルへの置き換え方を提供する（[src/fonts/README.md](src/fonts/README.md) がその例） |
+| Webフォントを配布・改変する | IPAフォントライセンス第3条: フォント名・ファイル名に「IPAmj明朝」を使わない、ライセンス本文を添える、作り方とオリジナルへの置き換え方を提供する（[src/fonts/README.md](src/fonts/README.md) がその例）。ゴシック体の見本用（`src/fonts/gothic/`）は SIL Open Font License 1.1: 同じライセンスで配布し、元のフォントの予約名・商標をフォント名に使わない |
 | 書き出した PNG・SVG や印刷物を使う | 自由に使えます（商用可）。IPAフォントライセンス第2条で、フォントを使って作った印刷物・画像などは用途を問わず利用・配布できるとされています |
 
 詳細なファイル対応は [LICENSES.md](LICENSES.md) をご確認ください。商用利用を含め、各ライセンスの利用条件を満たしていれば自由に活用いただけます。
