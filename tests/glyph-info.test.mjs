@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  focusedGlyph, glyphDetailSections, gothicStatus, ivsListLabel, matchesFocus, relationDirection, sequenceLabel,
+  focusedGlyph, glyphDetailSections, gothicPrint, gothicStatus, ivsListLabel, matchesFocus, relationDirection, sequenceLabel,
 } from '../src/js/ui/glyph-info.js';
 
 // 邉 の字形（一部）。シャードの ivs は配列
@@ -72,6 +72,42 @@ test('gothicStatus: × は実装したUCS が無い（IVS でしか区別でき�
 test('gothicStatus: 判定データや文字が無ければ null', () => {
   assert.equal(gothicStatus({ char: '邉', impl: '9089' }, null), null);
   assert.equal(gothicStatus({ impl: '9089' }, GOTHIC_META), null);
+});
+
+const PRINT_META = {
+  fonts: [...GOTHIC_META.fonts, { key: 'notocjk', name: 'Noto Sans CJK JP', ok: false }, { key: 'plangothic', name: '遍黒体', ok: false }],
+};
+const fontKeys = (info) => info.fonts.map((f) => f.key);
+
+test('gothicPrint: ○ は Windows に入っているゴシック体を案内し、IVS を除いた字を使う', () => {
+  const info = gothicPrint({ char: '邉\u{E010F}', impl: '9089', ivs: ['9089_E010F'], gothic: ['noto', 'biz', 'notocjk'] }, PRINT_META);
+  assert.equal(info.usable, true);
+  assert.equal(info.char, '邉');
+  assert.deepEqual(fontKeys(info), ['noto', 'biz']);
+  assert.equal(info.preview.family, 'MJ Variant Gothic N');
+  assert.equal(info.kusa, false);
+});
+
+test('gothicPrint: △ は入手できるフォントを案内する。見本は Noto Sans CJK JP を先に使う', () => {
+  const ext = gothicPrint({ char: '\u{20000}', impl: '20000', gothic: ['plangothic'] }, PRINT_META);
+  assert.deepEqual(fontKeys(ext), ['plangothic']);
+  assert.equal(ext.preview.family, 'MJ Variant Gothic P');
+  const both = gothicPrint({ char: '䁩', impl: '4069', gothic: ['notocjk', 'plangothic'] }, PRINT_META);
+  assert.deepEqual(fontKeys(both), ['notocjk', 'plangothic']);
+  assert.equal(both.preview.key, 'notocjk');
+  const none = gothicPrint({ char: '\u{20000}', impl: '20000', gothic: [] }, PRINT_META);
+  assert.deepEqual([none.fonts, none.preview], [[], null]);
+});
+
+test('gothicPrint: 艸部の △ には、艹の画数の注意を付ける（○ には付けない）', () => {
+  assert.equal(gothicPrint({ char: '\u{26AF7}', impl: '26AF7', radicals: [[140, 3]], gothic: ['plangothic'] }, PRINT_META).kusa, true);
+  assert.equal(gothicPrint({ char: '\u{26AF7}', impl: '26AF7', radicals: [[5, 3], [140, 3]], gothic: ['plangothic'] }, PRINT_META).kusa, true);
+  assert.equal(gothicPrint({ char: '葛', impl: '845B', radicals: [[140, 9]], gothic: ['noto'] }, PRINT_META).kusa, false);
+});
+
+test('gothicPrint: × はゴシック体が無く、IVS を除いた通常の字形になる', () => {
+  assert.deepEqual(gothicPrint({ char: '邉\u{E0119}', ivs: ['9089_E0119'] }, PRINT_META), { usable: false, base: '邉' });
+  assert.equal(gothicPrint({ char: '邉', impl: '9089' }, null), null);
 });
 
 test('glyphDetailSections: セクション分割と出典・典拠の整理', () => {

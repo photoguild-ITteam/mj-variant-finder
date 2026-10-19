@@ -1,12 +1,17 @@
-// 字形の詳細ダイアログ: コピー形式、画像の書き出し、MJ文字情報一覧表・縮退マップの全項目。
+// 字形の詳細ダイアログ: コピー形式、画像の書き出し、ゴシック体で使う方法、MJ文字情報一覧表・縮退マップの全項目。
 
 import { copyFormats, keyToChar } from '../db.js';
 import { app } from './context.js';
-import { $, h } from './dom.js';
+import { $, h, scrollBehavior } from './dom.js';
 import { toggleCompare } from './compare.js';
 import { exportImage } from './export-actions.js';
 import { copyText } from './feedback.js';
-import { glyphDetailSections } from './glyph-info.js';
+import { glyphDetailSections, gothicPrint } from './glyph-info.js';
+
+// ゴシック体の見本用フォント（scripts/build_gothic_webfont.py）。約 120KB あるので、初めて詳細を開いたときに読む
+const GOTHIC_CSS = new URL('../../fonts/gothic/gothic.css', import.meta.url).href;
+/** @type {Promise<void> | null} gothic.css を読み終えたら解決する（読めなければ、次に開いたときに読み直す） */
+let gothicCss = null;
 
 /** @typedef {import('../db.js').Glyph} Glyph */
 /**
@@ -14,8 +19,11 @@ import { glyphDetailSections } from './glyph-info.js';
  * @typedef {{ucs: string, x0213?: string, table?: string, rank?: string, kind?: string, hops?: number, remark?: string}} ShrinkItem
  */
 
-/** @param {Glyph} glyph */
-export function openGlyphDialog(glyph) {
+/**
+ * @param {Glyph} glyph
+ * @param {'gothic'} [section] 開いたときに見せる欄（字形カードのゴシック体の印から開いたとき）
+ */
+export function openGlyphDialog(glyph, section) {
   $('#glyph-dialog-title').textContent = `${glyph.mj} の詳細`;
   const sections = glyphDetailSections(glyph, app.db.meta.gothic);
 
@@ -29,11 +37,13 @@ export function openGlyphDialog(glyph) {
           glyph.char ? copyRows(glyph) : h('p', {}, 'この字形には符号位置がありません。'),
           h('div', { class: 'glyph-detail__actions' },
             h('button', { class: 'button button--small', type: 'button', onclick: () => toggleCompare(glyph) }, '比較に追加/削除')),
-          glyph.char ? exportBox(glyph) : null)),
+          glyph.char ? exportBox(glyph) : null,
+          gothicBox(glyph))),
       h('div', { class: 'glyph-detail__sections' },
         sections.map((sec) => renderSection(sec)))),
   );
   $('#glyph-dialog').showModal();
+  if (section === 'gothic') $('#glyph-gothic')?.scrollIntoView({ block: 'center', behavior: scrollBehavior() });
 }
 
 /** @param {Glyph} glyph */
@@ -66,6 +76,79 @@ function exportBox(glyph) {
       button('SVGで保存', 'downloadSvg')),
     h('p', { class: 'export-box__note' },
       'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'));
+}
+
+/** 見本用のゴシック体の @font-face を、初めて要るときに読み込む */
+function loadGothicFonts() {
+  gothicCss ??= new Promise((resolve, reject) => {
+    const link = h('link', {
+      rel: 'stylesheet', href: GOTHIC_CSS,
+      onload: () => resolve(),
+      onerror: () => { link.remove(); gothicCss = null; reject(new Error(`${GOTHIC_CSS} を読み込めませんでした`)); },
+    });
+    document.head.append(link);
+  });
+  return gothicCss;
+}
+
+/**
+ * ゴシック体で使う方法: 使えるフォント・見本・ゴシック体用の文字（IVS なし）. 使えない（×）ときはその理由と代わりの方法
+ * @param {Glyph} glyph
+ */
+function gothicBox(glyph) {
+  const info = gothicPrint(glyph, app.db.meta.gothic);
+  if (!info) return null;
+  const label = h('span', { class: 'gothic-box__label' }, 'ゴシック体で使う');
+  if (!info.usable) {
+    return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
+      h('p', { class: 'gothic-box__text' },
+        `この字形のゴシック体はありません。IVS でしか区別できない字形なので、ゴシック体では通常の字形（${info.base}）で表示されます。`),
+      h('p', { class: 'gothic-box__note' }, '文書や印刷でこの字形を使うときは、この字だけ IPAmj明朝 で組むか、外字を作ってください。'));
+  }
+  return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
+    info.preview ? gothicPreview(glyph, info.char, info.preview) : null,
+    h('p', { class: 'gothic-box__text' },
+      info.fonts.length
+        ? `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）を、次のゴシック体で使えます。`
+        : `文字コード U+${info.ucs} の字（IVS なし）がある、ゴシック体のフォントが見つかっていません。`),
+    info.fonts.length ? h('ul', { class: 'gothic-box__fonts' }, info.fonts.map((f) => h('li', {},
+      h('a', { href: f.url, target: '_blank', rel: 'noopener' }, f.name), f.note ? `（${f.note}）` : null))) : null,
+    h('div', { class: 'gothic-box__buttons' },
+      h('button', {
+        class: 'button button--small', type: 'button',
+        onclick: () => copyText(info.char, `ゴシック体用の文字（U+${info.ucs}、IVS なし）をコピーしました`),
+      }, 'ゴシック体用の文字をコピー')),
+    info.kusa ? h('p', { class: 'notice notice--warn notice--compact' },
+      'この字形は、艹（くさかんむり）が「十 十」に分かれた4画のことがあります。ゴシック体では、つながった3画の艹で表示されることがあるので、見本で形を確かめてください。') : null,
+    info.preview?.key === 'plangothic' ? h('p', { class: 'gothic-box__note' },
+      '遍黒体は中国大陸の字形を基準にしたフォントで、細部が IPAmj明朝 と違うことがあります。') : null,
+    info.preview ? h('p', { class: 'gothic-box__note' },
+      `見本は、${info.preview.name} から字を抜き出して同梱したもので表示しています。`,
+      info.fonts.some((f) => !f.installed) ? '文書で使うには、フォントを入手して端末にインストールしてください。' : null) : null);
+}
+
+/**
+ * 明朝体とゴシック体の見本を並べる
+ * @param {Glyph} glyph
+ * @param {string} char ゴシック体用の文字（IVS なし）
+ * @param {import('./glyph-info.js').GothicPreview} preview
+ */
+function gothicPreview(glyph, char, preview) {
+  // フォント名は CSS の .gothic-box__glyph--<key>（gothic.css のフォント名と同じ）
+  const figure = h('figure', { class: 'gothic-box__figure' },
+    h('div', { class: `gothic-box__glyph gothic-box__glyph--${preview.key}` }, char), h('figcaption', {}, preview.name));
+  // 読み込めなかったら、別のフォントで描いた字を見本と取り違えないよう、見本を消す
+  // （待つ間に別の字形の詳細に替わっていたら、その画面には触らない）
+  loadGothicFonts()
+    .then(() => document.fonts.load(`32px "${preview.family}"`, char))
+    .then((faces) => { if (!faces.length) throw new Error(`${preview.family} に ${char} がありません`); })
+    .catch(() => {
+      if (figure.isConnected) figure.replaceWith(h('p', { class: 'gothic-box__note' }, 'ゴシック体の見本を読み込めませんでした。'));
+    });
+  return h('div', { class: 'gothic-box__pair' },
+    h('figure', { class: 'gothic-box__figure' },
+      h('div', { class: 'gothic-box__glyph glyph' }, glyph.char), h('figcaption', {}, 'IPAmj明朝')),
+    figure);
 }
 
 /** @param {ReturnType<typeof glyphDetailSections>[number]} sec */
