@@ -66,7 +66,12 @@
         <div class="search-tools">
           <button type="button" class="button button--small" id="handwriting-open" title="手書きで探す">✍ 手書きで探す</button>
           <button type="button" class="button button--small" id="image-open" title="画像から探す（スクリーンショットの貼り付けも可）">🖼 画像から探す</button>
+          <div class="font-mode" role="group" aria-label="表示する書体">
+            <button type="button" class="font-mode__option" data-font-mode="mincho" aria-pressed="true" title="IPAmj明朝 の字形（MJ）をすべて表示">明朝</button>
+            <button type="button" class="font-mode__option" data-font-mode="gothic" aria-pressed="false" title="ゴシック体で出せる字形だけを表示（表示できる字形が限られます）">ゴシック</button>
+          </div>
         </div>
+        <p class="font-mode__note" id="font-mode-note" hidden>ゴシックモード: ゴシック体（Noto Sans JP など）で出せる字形だけを表示します。明朝体（MJ）より、表示できる字形が限られます。</p>
       </form>
 
       <div class="examples" aria-label="入力例">

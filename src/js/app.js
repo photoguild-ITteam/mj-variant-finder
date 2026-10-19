@@ -6,6 +6,7 @@ import { setupCompare } from './ui/compare.js';
 import { app } from './ui/context.js';
 import { $, h, scrollBehavior } from './ui/dom.js';
 import { renderQuickAccess, setupFilters } from './ui/filters.js';
+import { setupFontMode } from './ui/font-mode.js';
 import { setupFontStatus } from './ui/font-status.js';
 import { setupGlyphDiff } from './ui/glyph-diff.js';
 import { setupHandwriting } from './ui/handwriting.js';
@@ -53,6 +54,9 @@ async function init() {
   setupImageSearch();
   setupFilters(() => {
     if (isFilterable(app.result)) search(app.query, { fromHash: true });
+  });
+  setupFontMode(() => {
+    if (app.query) search(app.query, { fromHash: true });
   });
   renderQuickAccess();
   renderHistoryBar();
