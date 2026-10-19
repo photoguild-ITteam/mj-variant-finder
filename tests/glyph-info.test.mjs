@@ -106,8 +106,32 @@ test('gothicPrint: 艸部の △ には、艹の画数の注意を付ける（�
 });
 
 test('gothicPrint: × はゴシック体が無く、IVS を除いた通常の字形になる', () => {
-  assert.deepEqual(gothicPrint({ char: '邉\u{E0119}', ivs: ['9089_E0119'] }, PRINT_META), { usable: false, base: '邉' });
+  assert.deepEqual(gothicPrint({ char: '邉\u{E0119}', ivs: ['9089_E0119'] }, PRINT_META), { usable: false, base: '邉', checked: false });
+  // Adobe-Japan1 の IVS の形と見比べて、同じ形が無かったもの
+  assert.deepEqual(gothicPrint({ char: '与\u{E0104}', ivs: ['4E0E_E0104'], aj1: null }, PRINT_META), { usable: false, base: '与', checked: true });
   assert.equal(gothicPrint({ char: '邉', impl: '9089' }, null), null);
+});
+
+test('ゴシックIVS: 同じ形を Adobe-Japan1 の IVS で出せる × の字形', () => {
+  const glyph = { char: '与\u{E0103}', ivs: ['4E0E_E0103'], aj1: { seq: '4E0E_E0101', gothic: ['noto', 'notocjk'] } };
+  const s = gothicStatus(glyph, PRINT_META);
+  assert.equal(s.mark, 'IVS');
+  assert.match(s.detail, /Adobe-Japan1 の IVS（4E0E E0101）/);
+  assert.match(s.detail, /Noto Sans JP・Noto Sans CJK JP/);
+  const info = gothicPrint(glyph, PRINT_META);
+  assert.equal(info.char, '与\u{E0101}'); // MJ の IVS（E0103）ではなく、Adobe-Japan1 の IVS を付けた字
+  assert.equal(info.aj1, '4E0E E0101');
+  assert.equal(info.withIvs, true);
+  assert.deepEqual(fontKeys(info), ['noto', 'notocjk']);
+  assert.equal(info.preview.family, 'MJ Variant Gothic N');
+  // 既定の形（IVS なし）と同じ: IVS を付けない。拡張B の字でも IVS の有無を取り違えない
+  const plain = gothicPrint({ char: '\u{20B9F}\u{E0102}', ivs: ['20B9F_E0102'], aj1: { seq: '20B9F', gothic: ['notocjk'] } }, PRINT_META);
+  assert.deepEqual([plain.char, plain.withIvs, plain.aj1], ['\u{20B9F}', false, '20B9F（IVS なし）']);
+});
+
+test('gothicStatus: × の説明は、見比べて同じ形が無かったものだけ、そう書く', () => {
+  assert.doesNotMatch(gothicStatus({ char: '邉\u{E0119}', ivs: ['9089_E0119'] }, PRINT_META).detail, /見比べ/);
+  assert.match(gothicStatus({ char: '与\u{E0104}', ivs: ['4E0E_E0104'], aj1: null }, PRINT_META).detail, /同じ形はありませんでした/);
 });
 
 test('glyphDetailSections: セクション分割と出典・典拠の整理', () => {

@@ -5,6 +5,8 @@
 予約名・商標（Noto、Source、Plangothic、遍黑 など）を使わない名前に変える:
   - MJ Variant Gothic N … Noto Sans CJK JP 2.004 から（○ の字形と、基本の漢字・拡張A の △ の字形）
   - MJ Variant Gothic P … 遍黒体 P1 V2.9.5795 から（Noto Sans CJK JP に無い △ の字形。拡張B 以降）
+ゴシック× の字形のうち、同じ形を Adobe-Japan1 の IVS で出せる字（字形の aj1）があるファイルには、
+その字の IVS の字形も入れる（cmap format 14 を残す）。
 著作権表示とライセンス（name の 0・13・14）はそのまま残し、src/fonts/gothic/ に条文を置く。
 
 入力: data/raw/NotoSansCJKjp-Regular.otf, data/raw/PlangothicP1-Regular.ttf
@@ -30,7 +32,7 @@ from fontTools.ttLib import TTFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import GOTHIC_FONTS, resolve_path, verify_sha256  # noqa: E402
-from build_webfont import css_range, log, plan_groups, to_ranges  # noqa: E402
+from build_webfont import VARIATION_SELECTORS, css_range, log, plan_groups, to_ranges  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FACES = {
@@ -54,22 +56,26 @@ def font_path(key: str) -> Path:
     return path
 
 
-def plan_codepoints() -> dict[str, list[int]]:
-    """字形の gothic から、どの字をどちらのフォントに入れるか. Noto Sans CJK JP にあればそちら."""
+def plan_codepoints() -> tuple[dict[str, list[int]], set[int]]:
+    """字形の gothic から、どの字をどちらのフォントに入れるか（Noto Sans CJK JP にあればそちら）と、
+    Adobe-Japan1 の IVS の字形も入れる字（字形の aj1 が Noto Sans CJK JP の IVS を指す字）."""
     out: dict[str, set[int]] = {"n": set(), "p": set()}
+    aj1: set[int] = set()
     for path in sorted((ROOT / "src" / "data" / "chars").glob("*.json")):
         if path.name == "none.json":
             continue
         for entry in json.loads(path.read_text(encoding="utf-8")).values():
             for g in entry["glyphs"]:
                 keys = set(g.get("gothic") or [])
+                if g.get("aj1") and "_" in g["aj1"]["seq"] and "notocjk" in g["aj1"]["gothic"]:
+                    aj1.add(int(g["aj1"]["seq"].split("_")[0], 16))
                 if "impl" not in g:
                     continue
                 if "notocjk" in keys:
                     out["n"].add(int(g["impl"], 16))
                 elif "plangothic" in keys:
                     out["p"].add(int(g["impl"], 16))
-    return {k: sorted(v) for k, v in out.items()}
+    return {k: sorted(v) for k, v in out.items()}, aj1
 
 
 def rename(font: TTFont, face: dict) -> None:
@@ -87,8 +93,8 @@ def rename(font: TTFont, face: dict) -> None:
     font["post"].formatType = 3.0  # グリフ名を持たせない（サイズ削減）
 
 
-def build_one(args: tuple[str, str, str, list[int]]) -> tuple[str, int]:
-    face_key, font_file, out_path, codepoints = args
+def build_one(args: tuple[str, str, str, list[int], bool]) -> tuple[str, int]:
+    face_key, font_file, out_path, codepoints, with_ivs = args
     options = subset.Options()
     options.flavor = "woff2"
     options.layout_features = []  # 見本は 1 字ずつ横書きで出すだけ
@@ -101,7 +107,8 @@ def build_one(args: tuple[str, str, str, list[int]]) -> tuple[str, int]:
     # 作成日時を元のフォントのままにする（作り直しても中身が同じならファイルも同じになる）
     font = TTFont(font_file, lazy=True, recalcTimestamp=False)
     subsetter = subset.Subsetter(options)
-    subsetter.populate(unicodes=codepoints)
+    # 異体字セレクタを要求に含めると、入れた字の IVS（cmap format 14）と、その字形が残る
+    subsetter.populate(unicodes=codepoints + (VARIATION_SELECTORS if with_ivs else []))
     subsetter.subset(font)
     rename(font, FACES[face_key])
     subset.save_font(font, out_path, options)
@@ -115,12 +122,14 @@ def main() -> None:
     args = parser.parse_args()
 
     files = {k: font_path(face["key"]) for k, face in FACES.items()}
-    codepoints = plan_codepoints()
+    codepoints, aj1 = plan_codepoints()
     jobs = []
     for k, cps in codepoints.items():
         groups = plan_groups(cps)
         log(f"{FACES[k]['family']}: {len(cps)} codepoints → {len(groups)} files")
-        jobs += [(k, str(files[k]), str(args.out / f"mjg-{k}-{g[0]:04X}.woff2"), g) for g in groups]
+        jobs += [(k, str(files[k]), str(args.out / f"mjg-{k}-{g[0]:04X}.woff2"), g, k == "n" and bool(aj1 & set(g)))
+                 for g in groups]
+    log(f"Adobe-Japan1 の IVS を入れる字 {len(aj1)}（{sum(1 for j in jobs if j[4])} files）")
 
     args.out.mkdir(parents=True, exist_ok=True)
     for old in args.out.glob("mjg-*.woff2"):
@@ -139,7 +148,7 @@ def main() -> None:
         f'src:url("{Path(path).name}") format("woff2");'
         f"unicode-range:{css_range(to_ranges(group))};"
         "}"
-        for k, _, path, group in jobs
+        for k, _, path, group, _ in jobs
     ]
     header = (
         "/* MJ Variant Gothic N / P: Noto Sans CJK JP 2.004・遍黒体 V2.9.5795 の派生フォント（SIL Open Font License 1.1）。"

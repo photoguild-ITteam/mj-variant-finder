@@ -10,6 +10,7 @@
 元のフォントに次の変更を加えています。
 
 - 字形の一覧（`src/data/chars/`）で使う字だけを抜き出し、Unicode のブロック単位で分割した（`unicode-range` で必要なファイルだけを読み込む）
+- 「ゴシックIVS」の字形（同じ形を Adobe-Japan1 の IVS で出せる字形。字形の `aj1`）を含むファイルにだけ、その字の Adobe-Japan1 IVS の字形と対応表（cmap format 14）を残した
 - WOFF2 形式に変換し、ヒンティング・グリフ名・OpenType のレイアウト機能を削除した
 - OFL の予約名・商標を使わないよう、フォント名を「MJ Variant Gothic N / P」に変えた
 
