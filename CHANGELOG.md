@@ -5,6 +5,8 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-20
+
 ### 追加
 
 - 使い方ガイドの「MJ Variant Finder とは」に、開発の背景（卒業アルバムのお名前を正しい字形で載せるために、株式会社フォトギルドが社内で使ってきたこと）と、フォトギルドの卒業アルバム制作の案内へのリンクを足した
@@ -12,13 +14,13 @@
 - 表示する書体を、明朝モードとゴシックモードで切り替えられるようにした（検索欄の下の「明朝｜ゴシック」。選んだモードはブラウザに保存する）。ゴシックモードでは、字の検索結果を「ゴシック体の字形」にする。Noto Sans JP などのゴシック体で出せる形（通常の字形と、Adobe-Japan1 の IVS で出せる異体字）を見本付きで並べ、IVS を付けた字をコピーできる。MJ の字形と同じ形と確かめたものは、その字形を結び付けて出す。MJ の字形は畳んでおき、開いて見られる。字の見出し・タブ・関連字もゴシック体で表示する
 - 印「ゴシックIVS」を足した。IVS でしか区別できない字形でも、同じ形を別の IVS（Adobe-Japan1）で出せるゴシック体（Windows 11 の Noto Sans JP など）がある字形に付ける。字形の詳細で、その IVS を付けた字のコピーと見本を出す
 
-### 修正
-
-- ゴシック× の説明を正した。「この字形のゴシック体はありません」「明朝体でのみ使えます」としていたが、正しくは「この字形を指す Moji_Joho の IVS に対応したゴシック体は無い」で、Adobe-Japan1 の IVS で同じ形を出せる字形もある
-
 ### 変更
 
 - 公開先を https://tools.photoguild.jp/ （株式会社フォトギルドのドメイン）に移した。配信は今までどおり GitHub Pages で、github.io のアドレスは新しいアドレスへ転送される。ブラウザの保存場所はアドレスごとに分かれるため、github.io で保存した検索履歴・お気に入り・設定は、新しいアドレスには引き継がれない
+
+### 修正
+
+- ゴシック× の説明を正した。「この字形のゴシック体はありません」「明朝体でのみ使えます」としていたが、正しくは「この字形を指す Moji_Joho の IVS に対応したゴシック体は無い」で、Adobe-Japan1 の IVS で同じ形を出せる字形もある
 
 ### データ
 
@@ -197,7 +199,8 @@
 | KanjiVG | r20250816 |
 | mecab-ipadic | 2.7.0-20070801 |
 
-[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/photoguild-ITteam/mj-variant-finder/compare/v0.5.0...v0.6.0
