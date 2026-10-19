@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T21:10:17+00:00",
+  "generatedAt": "2026-10-19T21:42:10+00:00",
   "sources": {
     "mji": {
       "url": "https://moji.or.jp/wp-content/uploads/2024/01/mji.00602.xlsx",
@@ -98,7 +98,8 @@
     "aj1": {
       "matches": 19,
       "noMatch": 15
-    }
+    },
+    "ivsChars": 1207
   },
   "counts": {
     "mjGlyphs": 58862,

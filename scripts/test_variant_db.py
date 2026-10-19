@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_variant_db import (  # noqa: E402
     AJ1_MATCHES_PATH, GOTHIC_FONTS, ROOT, SOURCES, annotate_aj1, build_glyph, find_gothic_fonts, gothic_font_arg, jis_level,
-    json_lines, kata_to_hira, read_ivd, read_strict_xlsx, to_version, verify_sha256
+    json_lines, kata_to_hira, read_ivd, read_ivd_sequences, read_strict_xlsx, to_version, verify_sha256
 )
 from build_names_db import make_variants, read_postal  # noqa: E402
 from import_aj1_review import merge as merge_aj1_review, parse_sequence  # noqa: E402
@@ -237,6 +237,30 @@ class TestDatabase(unittest.TestCase):
         self.assertIn("noto", glyphs["MJ006311"]["aj1"]["gothic"])              # Windows の Noto Sans JP で出せる
         self.assertIsNone(glyphs["MJ006312"]["aj1"])                            # 見比べて、同じ形は無かった
         self.assertNotIn("aj1", glyphs["MJ006310"])                             # ○ の字形には付けない
+
+    def test_gothic_ivs(self):
+        # ゴシック体の異体字（Adobe-Japan1 の IVS で出せる、通常と違う形）: 辻 は E0100 で1点しんにょうになる
+        meta = load(DATA / "meta.json")["gothic"]
+        if meta is None:
+            self.skipTest("ゴシック体のフォントが無い環境でビルドされた")
+        self.assertEqual(detail("辻")["gothicIvs"], [{"seqs": ["E0100"], "gothic": ["noto", "biz", "notocjk"]}])
+        self.assertIn({"seqs": ["E0101"], "gothic": ["noto", "notocjk"]}, detail("与")["gothicIvs"])
+        aj1 = read_ivd_sequences(RAW / SOURCES["ivd"]["file"], "Adobe-Japan1") if (RAW / SOURCES["ivd"]["file"]).exists() else None
+        count = 0
+        for path in sorted((DATA / "chars").glob("*.json")):
+            if path.name == "none.json":
+                continue
+            for key, entry in load(path).items():
+                if "gothicIvs" not in entry:
+                    continue
+                count += 1
+                seqs = [vs for g in entry["gothicIvs"] for vs in g["seqs"]]
+                self.assertEqual(len(seqs), len(set(seqs)), key)                       # 同じ IVS を2度挙げない
+                for g in entry["gothicIvs"]:
+                    self.assertIn("notocjk", g["gothic"], key)                         # 見本（Noto Sans CJK JP から作る）で描ける
+                    if aj1 is not None:
+                        self.assertTrue(all(f"{key}_{vs}" in aj1 for vs in g["seqs"]), key)
+        self.assertEqual(count, meta["ivsChars"])
 
     def test_gothic_print_fonts_cover_partial(self):
         # △ の字形は、印刷に使うフォント（Noto Sans CJK JP・遍黒体）のどちらかにすべてある（字形の詳細で案内する）
