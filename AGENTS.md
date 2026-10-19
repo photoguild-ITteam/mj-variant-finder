@@ -53,7 +53,9 @@ CONTRIBUTING.md の「開発の手順」に加えて:
 
 - `src/data/`（`nicknames.json` を除く）と `src/fonts/` は **生成物**。手で編集せず、`scripts/` を直して作り直す（CONTRIBUTING.md）。
 - 作り直しには `data/raw/` の元データ（Git 管理外）が要る。多くは自動でダウンロードされるが、郵便番号データなど手動で置くものもある（docs/ARCHITECTURE.md）。
-- **ゴシック体の判定（字形の `gothic`）には、版を固定したフォントが要る**（`scripts/build_variant_db.py` の `GOTHIC_FONTS`。Windows 11 の `C:\Windows\Fonts\NotoSansJP-VF.ttf` と `BIZ-UDGothicR.ttc` を sha256 で固定）。フォントが無い・版が違う環境では、作り直しが止まる。`--no-gothic` で判定を省いて作れるが、その出力はコミットしない。
+- **ゴシック体の判定（字形の `gothic`）には、版を固定したフォントが要る**（`scripts/build_variant_db.py` の `GOTHIC_FONTS`。Windows 11 の `C:\Windows\Fonts\NotoSansJP-VF.ttf` と `BIZ-UDGothicR.ttc` を sha256 で固定。Noto Sans CJK JP と遍黒体は `data/raw/` に無ければ自動で取得する）。フォントが無い・版が違う環境では、作り直しが止まる。`--no-gothic` で判定を省いて作れるが、その出力はコミットしない。
+- 字形の `gothic`・`aj1`、字の `gothicIvs` が変わったら、`python scripts/build_gothic_webfont.py` でゴシック体の見本用フォント（`src/fonts/gothic/`）も作り直す（`tests/fonts.test.mjs` が漏れを検出する）。
+- `scripts/data/aj1_matches.json`（ゴシック× と Adobe-Japan1 IVS の対応）は、依頼者が字形を目で見比べて決めたものだけを書く。推定で足さない。
 - 元データ・フォント（IPAmj明朝・人名辞書の入力も）は sha256 か MD5 で版を固定している。Python の依存は `scripts/requirements.txt` の版を使う（`pip install -r scripts/requirements.txt`）。
 - 作り直したら、**意図した項目以外が変わっていないか**を確かめる（例: JSON を読んで、変わった項目の種類と件数を数える）。`gothic` など関係のない項目が変わっていたら、コミットせずに依頼者に伝える。
 - `meta.json`・`names.json` の `generatedAt` は作り直すたびに変わる（これ自体は問題ない）。

@@ -30,6 +30,7 @@
 | `src/js/image-search/` | 画像の前処理（`features.js`）と索引との照合（`matcher.js`） |
 | `src/js/handwriting/` | 認識の中核（`recognizer.js`）、指紋（`signature.js`）、別スレッド実行（`worker.js`） |
 | `src/js/ui/theme.js` / `font-status.js` / `dom.js` / `context.js` | テーマ切り替え / フォント状態表示 / DOM 組み立て / 共有状態 |
+| `src/js/ui/font-mode.js` / `gothic-fonts.js` | 明朝モード・ゴシックモードの切り替え / ゴシック体の見本用フォントの読み込み |
 | `src/js/font-detector.js` | 端末の IPAmj明朝の検出と、IVS が描き分けられるかの判定 |
 | `src/js/glyph-export.js` | 字形の画像書き出し（透明PNGのコピー/保存、SVGアウトラインの保存）。Canva などへの貼り付け用 |
 | `jsconfig.json` | `src/js/` の型検査の設定（`npm run test:types`。JSDoc の型を `tsc` で検査するだけで、ビルドはしない）。データの形の型は `db.js` の `@typedef`、同梱の Kanji Canvas の型は `src/vendor/kanji-canvas.bundle.d.ts`（JS 本体の隣に置くと tsc がこちらを読み、同梱ライブラリ自体は検査しない） |
@@ -68,6 +69,8 @@ Python 3.10 以上、標準ライブラリのみ。
 
 ただし、Noto Sans JP（Windows 11 に入っている版も）・Noto Sans CJK JP・BIZ UDゴシックは Adobe-Japan1 の IVS に対応していて、× の字形と同じ形を、番号の違う Adobe-Japan1 の IVS で出せることがある（× の字形がある 5,000 字のうち 1,017 字は、Adobe-Japan1 の IVS で別の形を持つ）。どの × の字形が、どの Adobe-Japan1 の IVS と同じ形かは公式の対応表が無いので、IPAmj明朝 の字形と Noto Serif JP・Noto Sans JP の字形を目で見比べて決め、`scripts/data/aj1_matches.json` に手作業で書く（確認ページで書き出した CSV を `python scripts/import_aj1_review.py 〜.csv` で取り込む）。`build_variant_db.py` は、MJ番号が × の字形か、IVS が IVD の Adobe-Japan1 にあるかを確かめ（合わなければ止める）、字形に `aj1: {seq, gothic}`（`gothic` はその IVS を cmap format 14 に持つゴシック体）を付ける。見比べて同じ形が無かった字形は `aj1: null`。`aj1` のある字形の印は「ゴシックIVS」で、字形の詳細では Adobe-Japan1 の IVS を付けた字をコピーでき、見本は MJ Variant Gothic N（その字を含むファイルにだけ Adobe-Japan1 の IVS を残す）で描く。
 
+ゴシックモード（検索欄の下の「明朝｜ゴシック」。`font-mode.js`、保存のキーは `mjv_font_mode`）では、字の検索結果を「ゴシック体の字形」にし（MJ の字形は畳む）、字の見出し・タブ・関連字をゴシック体で描く（`<html data-font-mode>` を CSS が見る）。「ゴシック体の字形」は、字ごとのゴシック体の異体字（`chars/<shard>.json` の字の `gothicIvs`）を使う。`build_variant_db.py` が Noto Sans CJK JP（`GOTHIC_IVS_REFERENCE`）の cmap format 14 から、IVD の Adobe-Japan1 にある IVS のうち通常の字形と違う形を指すものを、同じ字形ごとにまとめて `{seqs, gothic}`（`gothic` はその IVS を持つゴシック体）として付ける（1,207 字。`meta.json` の `gothic.ivsChars`）。画面では、通常の字形とこれらを見本付きで並べ（`glyph-info.js` の `gothicVariants()`）、`aj1` で同じ形と確かめた MJ の字形を結び付ける。
+
 `scripts/data/name_presets.json` は、姓・地名の読みから表記を引くための手作業の辞書。MJ の読みは1文字単位なので、「わたなべ → 渡辺・渡邊・渡邉」のような読み検索はこの辞書で補う。
 
 `src/data/nicknames.json` は、字の呼び名（「はしごだか」「たてにし」等）と部首名（約135種）を定義した手作業の辞書。読み検索での解釈や「部首名＋読み」検索で使用され、`tests/nicknames.test.mjs` で検証する。
@@ -88,8 +91,9 @@ Python 3.10 以上、標準ライブラリのみ。
   - `extraRadicals`: 一覧表で2つ目以降に定義されている部首（UCS → 2つ目以降の部首番号の配列。例: `"3427": [3, 6]`。部首名検索や2つ目以降の部首での絞り込みに使用）
   - `names` / `quickAccess`: 人名・地名プリセット
 - `chars/<shard>.json`: UCS 単位の詳細データ。表示するときに必要なシャードだけ読み込む。シャード名は `(コードポイント >> 10)` の16進表記
-  - `glyphs[]`: MJ字形ごとの IVS・コピー用文字列・戸籍/住基/入管コード・JIS水準・部首/画数・読み・縮退マップ情報
+  - `glyphs[]`: MJ字形ごとの IVS・コピー用文字列・戸籍/住基/入管コード・JIS水準・部首/画数・読み・縮退マップ情報。`gothic`（字があるゴシック体のキー）、`aj1`（同じ形の Adobe-Japan1 IVS。見比べた字形だけ。同じ形が無ければ `null`）
   - `related[]`: 1ホップ先の関連UCSと関係の種別（`out` はこの字から見た縮退先、`in` は相手から参照されている）
+  - `gothicIvs[]`: ゴシック体の異体字（Adobe-Japan1 の IVS で出せる、通常と違う形）。`seqs` は同じ形になる異体字セレクタ、`gothic` はその IVS を持つゴシック体のキー。別の形がある字だけ
 - `chars/none.json`: UCS を持たない MJ 字形
 
 JSON は**1項目1行**で書く（`write_json` の `lines`。シャードは1行 = 1文字、`search-index.json` は `chars`・`readings` などの1項目、`names.json` は1つの読み）。作り直したときに、変わった字・読みの行だけが差分になるので、`git diff` で「意図した項目以外が変わっていないか」を確かめられる。1行に詰めた場合と比べて、gzip 後の大きさは 0.1〜0.4% しか増えない。`meta.json` だけは字下げして書く。

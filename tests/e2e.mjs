@@ -216,6 +216,31 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     });
     assert.ok(differs, '見本のフォントで IVS の字形が描けていない');
     await page.click('#glyph-dialog [data-close]');
+    // ゴシックモード: 字の検索結果は「ゴシック体の字形」（通常の字形と、Adobe-Japan1 の IVS で出せる別の形）。
+    // 与 E0101 は MJ006311 と同じ形。MJ の字形は畳んでおく
+    await page.fill('#q', '与');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.glyph-card[data-mj="MJ006311"]');
+    assert.equal(await page.locator('#gothic-variants').count(), 0, '明朝モードでは出さない');
+    await page.click('[data-font-mode="gothic"]');
+    await page.waitForSelector('#gothic-variants .gothic-card[data-vs="E0101"]');
+    assert.equal(await page.evaluate(() => localStorage.getItem('mjv_font_mode')), 'gothic');
+    assert.ok(await page.isVisible('#font-mode-note'));
+    assert.equal(await page.locator('.mincho-glyphs[open]').count(), 0);
+    assert.deepEqual(await page.$$eval('#gothic-variants .gothic-card', (els) => els.map((e) => e.dataset.vs)), ['', 'E0101']);
+    const card = '#gothic-variants .gothic-card[data-vs="E0101"]';
+    assert.match(await page.textContent(card), /同じ形の MJ 字形.*MJ006311/);
+    await page.click(`${card} .gothic-card__actions .button`);
+    assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '与\u{E0101}');
+    await page.click(`${card} .chip`);
+    await page.waitForSelector('#glyph-dialog[open]');
+    assert.equal(await page.textContent('#glyph-dialog-title'), 'MJ006311 の詳細');
+    await page.click('#glyph-dialog [data-close]');
+    // 明朝モードに戻すと、MJ の字形の一覧に戻る（後のテストは明朝モードで動かす）
+    await page.click('[data-font-mode="mincho"]');
+    await page.waitForSelector('.char-panel > .panel-section .glyph-card[data-mj="MJ006311"]');
+    assert.equal(await page.locator('#gothic-variants').count(), 0);
+    assert.equal(await page.evaluate(() => localStorage.getItem('mjv_font_mode')), 'mincho');
     await page.fill('#q', 'MJ026190');
     await page.press('#q', 'Enter');
     await page.waitForSelector('.glyph-card.is-focus');

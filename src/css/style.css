@@ -265,6 +265,29 @@ a.icon-button { color: inherit; }
 .search-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .search-tools .button { flex: 1 1 auto; }
 
+/* 表示する書体（明朝モード・ゴシックモード。font-mode.js） */
+.font-mode { display: inline-flex; flex: 1 1 auto; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
+.font-mode__option {
+  flex: 1; padding: 4px 12px; border: 0; background: var(--surface); color: var(--text-muted);
+  font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+@media (max-width: 560px) { .font-mode { flex-basis: 100%; } }
+.font-mode__option + .font-mode__option { border-left: 1px solid var(--border-strong); }
+.font-mode__option[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-fg); font-weight: 600; }
+.font-mode__option:focus-visible { outline: 2px solid var(--crimson-bright); outline-offset: -2px; }
+.font-mode__note { margin: 6px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+/* ゴシックモードでは、字の見出し・タブ・関連字をゴシック体（同梱の見本用フォント。無い字は画面の字体）で描く */
+:root[data-font-mode="gothic"] .char-hero__glyph,
+:root[data-font-mode="gothic"] .char-hero__title .glyph,
+:root[data-font-mode="gothic"] .tab .glyph,
+:root[data-font-mode="gothic"] .related__glyph {
+  font-family: "MJ Variant Gothic N", "MJ Variant Gothic P", var(--font-ui);
+}
+.mincho-glyphs { margin: 0; border-top: 1px solid var(--border); }
+.mincho-glyphs > summary { padding: 12px 24px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.mincho-glyphs[open] > summary { padding-bottom: 0; }
+.mincho-glyphs > .panel-section { border-top: 0; }
+
 .examples { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 0; }
 .examples__label { font-size: 12.5px; color: var(--text-muted); }
 
@@ -691,6 +714,26 @@ button.badge:hover { border-style: solid; border-color: currentColor; }
 }
 .gothic-box__glyph--notocjk { font-family: "MJ Variant Gothic N"; }
 .gothic-box__glyph--plangothic { font-family: "MJ Variant Gothic P"; }
+
+/* 検索結果の「ゴシック体の字形」（字形カードと同じ大きさで並べる） */
+.gothic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; }
+@media (max-width: 420px) { .gothic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gothic-card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.gothic-card__face {
+  display: grid; place-items: center; aspect-ratio: 1 / 0.86; margin: 6px 6px 0;
+  border-radius: calc(var(--radius) - 4px); background: var(--glyph-bg);
+  font-size: clamp(56px, 7vw, 72px); line-height: 1; font-weight: 400;
+}
+.gothic-card__missing { display: grid; place-items: center; aspect-ratio: 1 / 0.86; margin: 6px 6px 0; font-size: 12px; color: var(--text-muted); }
+.gothic-card__body { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px 4px; font-size: 12px; }
+.gothic-card__label { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+.gothic-card__fonts { color: var(--text-muted); font-size: 11.5px; line-height: 1.5; }
+.gothic-card__same { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 2px; }
+.gothic-card__same > span { width: 100%; font-size: 11px; color: var(--text-muted); }
+.gothic-card__same .chip .glyph { font-size: 15px; }
+.gothic-card__actions { display: flex; gap: 6px; padding: 6px 10px 10px; margin-top: auto; }
+.gothic-card__actions .button { flex: 1; }
+.gothic-section__note { margin: 10px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 .gothic-box__text { margin: 0; font-size: 13px; line-height: 1.6; }
 .gothic-box__fonts { margin: 4px 0 8px; padding-left: 1.4em; font-size: 13px; line-height: 1.7; }
 .gothic-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }

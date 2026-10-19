@@ -1,4 +1,5 @@
 // 1文字分のパネル: 概要（読み・画数・部首など）、字形バリエーション、関連する異体字。
+// ゴシックモード（font-mode.js）では、字形バリエーションの代わりに「ゴシック体の字形」を出し、MJ の字形は畳んでおく。
 
 import { radicalChar } from '../db.js';
 import { getConfusablesForChar } from '../confusables.js';
@@ -6,8 +7,11 @@ import { app } from './context.js';
 import { COMPARE_MAX, addToCompare } from './compare.js';
 import { badge, h, loading, queryButton } from './dom.js';
 import { copyText, errorMessage, showToast } from './feedback.js';
+import { fontMode } from './font-mode.js';
 import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
-import { DIRECTION_HELP, RELATION_SHORT, relationDirection } from './glyph-info.js';
+import { openGlyphDialog } from './glyph-dialog.js';
+import { DIRECTION_HELP, RELATION_SHORT, gothicVariants, relationDirection } from './glyph-info.js';
+import { loadGothicSample } from './gothic-fonts.js';
 import { isFavorite, toggleFavorite } from './history.js';
 import { reportError } from './session.js';
 
@@ -22,17 +26,31 @@ export async function charPanel(item) {
   const entry = /** @type {Entry} */ (db.entry(item.key));
   const [detail, related] = await Promise.all([db.detail(item.key), db.related(item.key)]);
 
+  const gothicMode = fontMode() === 'gothic';
+  const variants = gothicMode ? gothicVariants(entry.key, detail, app.db.meta.gothic) : [];
   const confSection = confusablesSection(entry, detail.glyphs);
   /** @type {HTMLElement[]} */
-  const sections = [hero(entry, detail.glyphs)];
+  const sections = [hero(entry, detail.glyphs, gothicMode ? variants : null)];
   if (confSection) sections.push(confSection);
-  sections.push(glyphSection(detail.glyphs, item.focus));
+  if (gothicMode) {
+    sections.push(gothicSection(entry.key, detail, variants));
+    // MJ の字形は畳んでおく（MJ番号・IVS で検索したときは、その字形が見えるよう開く）
+    sections.push(h('details', { class: 'mincho-glyphs', open: Boolean(item.focus) },
+      h('summary', {}, `明朝体（IPAmj明朝）の字形も見る（${detail.glyphs.length}）`),
+      glyphSection(detail.glyphs, item.focus)));
+  } else {
+    sections.push(glyphSection(detail.glyphs, item.focus));
+  }
   if (related.primary.length || related.reference.length) sections.push(relatedSection(related));
   return h('article', { class: 'char-panel' }, sections);
 }
 
-/** @param {Entry} entry @param {Glyph[]} glyphs */
-function hero(entry, glyphs) {
+/**
+ * @param {Entry} entry
+ * @param {Glyph[]} glyphs
+ * @param {ReturnType<typeof gothicVariants> | null} gothic ゴシックモードのとき、ゴシック体の字形
+ */
+function hero(entry, glyphs, gothic) {
   const primary = glyphs.find((g) => g.impl === entry.key) ?? glyphs[0];
   const ivsCount = glyphs.filter((g) => g.ivs).length;
   const readings = [...new Set(glyphs.flatMap((g) => g.readings ?? []))];
@@ -42,10 +60,12 @@ function hero(entry, glyphs) {
     primary.jisLevel && badge(`JIS ${primary.jisLevel}`, 'navy'),
     entry.strokes > 0 && badge(`総画数 ${entry.strokes}`),
     entry.radical > 0 && badge(`部首 ${radicalChar(entry.radical)} (${entry.radical})`),
-    badge(`字形 ${glyphs.length}`),
-    ivsCount > 0 && badge(`IVS ${ivsCount}`, 'crimson'),
+    gothic ? badge(`ゴシック体の字形 ${gothic.length}`) : badge(`字形 ${glyphs.length}`),
+    !gothic && ivsCount > 0 && badge(`IVS ${ivsCount}`, 'crimson'),
   ];
-  const copyAll = () => copyText(glyphs.filter((g) => g.char).map((g) => g.char).join(' '), `${glyphs.length} 字形をコピーしました`);
+  const copyAll = gothic
+    ? () => copyText(gothic.map((v) => v.char).join(' '), `ゴシック体の ${gothic.length} 字形をコピーしました`)
+    : () => copyText(glyphs.filter((g) => g.char).map((g) => g.char).join(' '), `${glyphs.length} 字形をコピーしました`);
   const compareAll = () => {
     glyphs.slice(0, COMPARE_MAX).forEach((g) => addToCompare(g, { silent: true }));
     showToast('比較リストに追加しました');
@@ -73,7 +93,8 @@ function hero(entry, glyphs) {
       readings.length ? h('p', { class: 'char-hero__readings' }, `読み: ${readings.join('・')}`) : null,
       h('div', { class: 'char-hero__actions' },
         h('button', { class: 'button button--small', type: 'button', onclick: copyAll }, '全バリエーションをコピー'),
-        h('button', { class: 'button button--small', type: 'button', onclick: compareAll }, '比較に追加'),
+        // 比較は MJ の字形どうしを重ねるものなので、ゴシックモードでは出さない
+        gothic ? null : h('button', { class: 'button button--small', type: 'button', onclick: compareAll }, '比較に追加'),
         favBtn)));
 }
 
@@ -89,6 +110,55 @@ function glyphSection(glyphs, focus) {
   // 絞り込みは grid の直後に「該当なし」の表示を足すので、grid を置いてから作る
   grid.before(glyphTools(glyphs, grid));
   return section;
+}
+
+/**
+ * ゴシック体の字形（ゴシックモード）: 通常の字形と、Adobe-Japan1 の IVS で出せる別の形を、ゴシック体の見本で並べる
+ * @param {string} key
+ * @param {import('../db.js').CharDetail} detail
+ * @param {ReturnType<typeof gothicVariants>} variants
+ */
+function gothicSection(key, detail, variants) {
+  if (!variants.length) {
+    return h('section', { class: 'panel-section', id: 'gothic-variants' },
+      h('div', { class: 'panel-section__head' }, h('h3', {}, 'ゴシック体の字形（0）')),
+      h('p', { class: 'muted' }, 'この字は、判定に使ったゴシック体に字がありません。明朝体の字形は下の「明朝体（IPAmj明朝）の字形も見る」にあります。'));
+  }
+  const byMj = new Map(detail.glyphs.map((g) => [g.mj, g]));
+  /** @param {string} mj */
+  const mjChip = (mj) => {
+    const g = byMj.get(mj);
+    return h('button', { class: 'chip', type: 'button', title: `${mj} の詳細`, onclick: () => g && openGlyphDialog(g) },
+      g?.char ? h('span', { class: 'glyph' }, g.char) : null, ` ${mj}`);
+  };
+  const cards = variants.map((v) => {
+    const face = h('div', { class: `gothic-card__face gothic-box__glyph--${v.preview?.key ?? 'none'}` }, v.char);
+    // 読み込めなかったら、別のフォントで描いた字を見本と取り違えないよう、見本を消す
+    if (v.preview) {
+      loadGothicSample(v.preview.family, v.char).catch(() => {
+        if (face.isConnected) face.replaceWith(h('p', { class: 'gothic-card__missing' }, '見本を読み込めませんでした'));
+      });
+    }
+    return h('article', { class: 'gothic-card', dataset: { vs: v.vs ?? '' } },
+      v.preview ? face : h('p', { class: 'gothic-card__missing' }, '見本なし'),
+      h('div', { class: 'gothic-card__body' },
+        h('span', { class: 'gothic-card__label' }, v.label),
+        h('span', { class: 'gothic-card__fonts' }, v.fonts.map((f) => f.name).join('・')),
+        v.sameShape.length ? h('div', { class: 'gothic-card__same' }, h('span', {}, '同じ形の MJ 字形'), v.sameShape.map(mjChip)) : null,
+        v.codeMj ? h('div', { class: 'gothic-card__same' }, h('span', {}, '文字コードで表す MJ 字形'), mjChip(v.codeMj)) : null),
+      h('div', { class: 'gothic-card__actions' },
+        h('button', {
+          class: 'button', type: 'button',
+          onclick: () => copyText(v.char, `ゴシック体の字（${v.vs ? `U+${key} U+${v.vs}` : `U+${key}`}）をコピーしました`),
+        }, 'コピー')));
+  });
+  return h('section', { class: 'panel-section', id: 'gothic-variants' },
+    h('div', { class: 'panel-section__head' },
+      h('h3', {}, `ゴシック体の字形（${variants.length}）`),
+      h('p', {}, 'Noto Sans JP などのゴシック体で出せる形。IVS の形は Adobe-Japan1 の IVS で、MJ の IVS とは番号が違います')),
+    h('div', { class: 'gothic-grid' }, cards),
+    h('p', { class: 'gothic-section__note' },
+      '「同じ形の MJ 字形」は、字形を見比べて確かめたものだけ出しています。IVS を付けた字は、IVS に対応したフォントとアプリで使えます。見本は、Noto Sans CJK JP・遍黒体から字を抜き出して同梱したものです。'));
 }
 
 /** @param {{primary: RelatedChar[], reference: RelatedChar[]}} related db.related() の戻り値 */

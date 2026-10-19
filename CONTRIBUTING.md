@@ -46,6 +46,8 @@ BROWSER=webkit npm run test:e2e:smoke   # WebKit で主な機能を確認（先�
 | `scripts/data/name_presets.json` | 姓・地名の読み → 表記（例: `わたなべ` → 渡辺・渡邊・渡邉）。「よく検索される異体字」もここ |
 | `scripts/data/name_variants.json` | 異体字の置き換え表（例: 高 → 髙、崎 → 﨑・嵜）。この表の字だけを置き換えて、辞書に無い表記を補う |
 
+IVS でしか区別できない字形（ゴシック×）と、同じ形の Adobe-Japan1 IVS の対応（「ゴシックIVS」）は、`scripts/data/aj1_matches.json` に手作業で書きます。IPAmj明朝 の字形と、Noto Serif JP・Noto Sans JP の Adobe-Japan1 IVS の字形を目で見比べて決めたものだけを書いてください（`matches` は MJ文字図形名 → `"4E0E_E0101"` のような IVS、`noMatch` は同じ形が無かった字形）。見比べた結果の CSV（列「MJ番号」「判定」「Adobe-Japan1 IVS」）は `python scripts/import_aj1_review.py 結果.csv` で取り込めます。取り込んだ後は `python scripts/build_variant_db.py` と `python scripts/build_gothic_webfont.py` で作り直し、`npm test` を通してください（対応表が字形の一覧・IVD と合わなければ、作り直しが止まります）。
+
 字の呼び名（はしごだか・つちよし など）と部首名（さんずい・やまへん など）は `src/data/nicknames.json` に直接書きます。呼び名が IVS の字形を指すときは `targets` に `897F_E0102` のように書き、`mj` に MJ文字図形名を添えてください。部首名には、その部首を持つ字を `example` に書きます（`npm test` が部首番号の誤りを確かめます）。**地域や業界だけの呼び名も歓迎します**が、`note` にどういう字形かを書いてください。
 
 追加・更新には、自動判定・重複検査を行う支援スクリプトも利用できます:

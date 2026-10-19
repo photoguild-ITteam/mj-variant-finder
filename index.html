@@ -66,7 +66,12 @@
         <div class="search-tools">
           <button type="button" class="button button--small" id="handwriting-open" title="手書きで探す">✍ 手書きで探す</button>
           <button type="button" class="button button--small" id="image-open" title="画像から探す（スクリーンショットの貼り付けも可）">🖼 画像から探す</button>
+          <div class="font-mode" role="group" aria-label="表示する書体">
+            <button type="button" class="font-mode__option" data-font-mode="mincho" aria-pressed="true" title="IPAmj明朝 の字形（MJ）をすべて表示">明朝</button>
+            <button type="button" class="font-mode__option" data-font-mode="gothic" aria-pressed="false" title="ゴシック体で出せる字形だけを表示（表示できる字形が限られます）">ゴシック</button>
+          </div>
         </div>
+        <p class="font-mode__note" id="font-mode-note" hidden>ゴシックモード: ゴシック体（Noto Sans JP など）で出せる字形だけを表示します。明朝体（MJ）より、表示できる字形が限られます。</p>
       </form>
 
       <div class="examples" aria-label="入力例">
@@ -271,6 +276,7 @@
         <tr><th>文字コード</th><td><button type="button" class="chip" data-query="U+8FBB">U+8FBB</button> <button type="button" class="chip" data-query="9089_E010F">9089_E010F</button> IVS 付きは、その字形を強調して表示</td></tr>
       </table>
       <p>字を入力できないときは、検索欄の下の「手書きで探す」「画像から探す」（スクリーンショットを貼り付けて1文字を囲む）が使えます。左の「絞り込み」では、部首・画数・漢字施策から一覧できます。</p>
+      <p>検索欄の下の「明朝｜ゴシック」で、表示する書体を切り替えられます。<strong>ゴシックモード</strong>では、ゴシック体（Noto Sans JP など）で出せる字形だけを並べます（通常の字形と、Adobe-Japan1 の IVS で出せる異体字）。明朝体より、表示できる字形が限られます。</p>
 
       <h3>2. 字形を見比べる</h3>
       <ul>
@@ -289,9 +295,11 @@
         <li><span class="badge badge--navy">第1</span>〜<span class="badge badge--navy">第4</span> JIS X 0213 の水準</li>
         <li><span class="badge badge--gold">常用</span> <span class="badge badge--gold">人名用</span> 漢字施策</li>
         <li><span class="badge badge--ok">ゴシック○</span> ゴシック体でも使える</li>
-        <li><span class="badge badge--warn">ゴシック△</span> ゴシック体に字が無いことがある</li>
+        <li><span class="badge badge--warn">ゴシック△</span> 一般的なゴシック体には字が無い（使えるフォントを案内）</li>
+        <li><span class="badge badge--ok">ゴシックIVS</span> 別の IVS（Adobe-Japan1）で、ゴシック体でも同じ形が出せる</li>
         <li><span class="badge badge--muted">ゴシック×</span> IVS でのみ区別でき、ゴシック体では通常の字形になる</li>
       </ul>
+      <p>ゴシック体の札を押すと、字形の詳細の「ゴシック体で使う」が開き、使えるフォント・見本・ゴシック体用の文字のコピーを確かめられます。</p>
 
       <h3>4. 使う</h3>
       <ul>

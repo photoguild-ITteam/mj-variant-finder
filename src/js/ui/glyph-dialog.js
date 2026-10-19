@@ -7,11 +7,7 @@ import { toggleCompare } from './compare.js';
 import { exportImage } from './export-actions.js';
 import { copyText } from './feedback.js';
 import { glyphDetailSections, gothicPrint } from './glyph-info.js';
-
-// ゴシック体の見本用フォント（scripts/build_gothic_webfont.py）。約 120KB あるので、初めて詳細を開いたときに読む
-const GOTHIC_CSS = new URL('../../fonts/gothic/gothic.css', import.meta.url).href;
-/** @type {Promise<void> | null} gothic.css を読み終えたら解決する（読めなければ、次に開いたときに読み直す） */
-let gothicCss = null;
+import { loadGothicSample } from './gothic-fonts.js';
 
 /** @typedef {import('../db.js').Glyph} Glyph */
 /**
@@ -78,19 +74,6 @@ function exportBox(glyph) {
       'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'));
 }
 
-/** 見本用のゴシック体の @font-face を、初めて要るときに読み込む */
-function loadGothicFonts() {
-  gothicCss ??= new Promise((resolve, reject) => {
-    const link = h('link', {
-      rel: 'stylesheet', href: GOTHIC_CSS,
-      onload: () => resolve(),
-      onerror: () => { link.remove(); gothicCss = null; reject(new Error(`${GOTHIC_CSS} を読み込めませんでした`)); },
-    });
-    document.head.append(link);
-  });
-  return gothicCss;
-}
-
 /**
  * ゴシック体で使う方法: 使えるフォント・見本・ゴシック体用の文字（IVS なし）. 使えない（×）ときはその理由と代わりの方法
  * @param {Glyph} glyph
@@ -148,9 +131,7 @@ function gothicPreview(glyph, char, preview) {
     h('div', { class: `gothic-box__glyph gothic-box__glyph--${preview.key}` }, char), h('figcaption', {}, preview.name));
   // 読み込めなかったら、別のフォントで描いた字を見本と取り違えないよう、見本を消す
   // （待つ間に別の字形の詳細に替わっていたら、その画面には触らない）
-  loadGothicFonts()
-    .then(() => document.fonts.load(`32px "${preview.family}"`, char))
-    .then((faces) => { if (!faces.length) throw new Error(`${preview.family} に ${char} がありません`); })
+  loadGothicSample(preview.family, char)
     .catch(() => {
       if (figure.isConnected) figure.replaceWith(h('p', { class: 'gothic-box__note' }, 'ゴシック体の見本を読み込めませんでした。'));
     });

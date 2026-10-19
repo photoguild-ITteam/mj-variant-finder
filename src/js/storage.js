@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   favorites: 'mjv_favorites',
   theme: 'mjv_theme',
   glyphDiff: 'mjv_glyph_diff',
+  fontMode: 'mjv_font_mode',
 };
 
 /** 0.6 までのキー → 新しいキー。theme-init.js（通常のスクリプトで import できない）にも同じ対応を書いている */
