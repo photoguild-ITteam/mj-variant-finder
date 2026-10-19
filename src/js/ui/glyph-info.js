@@ -1,6 +1,6 @@
 // 字形・関連字の表示用ラベル。DOM に依存しない（tests/glyph-info.test.mjs でテスト）。
 
-import { hex, parseSequence, radicalChar, vsNumber } from '../db.js';
+import { hex, keyToChar, parseSequence, radicalChar, vsNumber } from '../db.js';
 
 /** @typedef {import('../db.js').Glyph} Glyph */
 /** @typedef {import('../db.js').Focus | null} Focus 検索語が指した字形（db.search() の chars の focus） */
@@ -115,6 +115,58 @@ export function gothicStatus(glyph, gothicMeta) {
     mark: '△',
     label: has.size ? '一部のゴシック体にしか字がない' : 'ゴシック体に字がない',
     detail: `文字コード（U+${glyph.impl}）で表せますが、ゴシック体のフォントに字が無いことがあります。${perFont}`,
+  };
+}
+
+/**
+ * 文書・印刷でゴシック体として使うときに案内するフォント（キーは glyph.gothic・meta.json の gothic.fonts）.
+ * installed は Windows に入っているもの。○ の字形はこれで足りるので、入手が要るフォントは案内しない.
+ * @typedef {{key: string, name: string, url: string, installed?: boolean, note?: string}} GothicPrintFont
+ * @type {GothicPrintFont[]}
+ */
+export const GOTHIC_PRINT_FONTS = [
+  { key: 'noto', name: 'Noto Sans JP', url: 'https://fonts.google.com/noto/specimen/Noto+Sans+JP', installed: true, note: 'Windows 11 に入っています' },
+  { key: 'biz', name: 'BIZ UDゴシック', url: 'https://fonts.google.com/specimen/BIZ+UDGothic', installed: true, note: 'Windows に入っています' },
+  { key: 'notocjk', name: 'Noto Sans CJK JP', url: 'https://github.com/notofonts/noto-cjk/releases', note: '全字の版（Windows の Noto Sans JP には無い字があります）' },
+  { key: 'plangothic', name: '遍黒体（Plangothic）', url: 'https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic_Project/releases', note: 'P1・P2 の2ファイル' },
+];
+
+/**
+ * 見本に使う同梱フォント（src/fonts/gothic/gothic.css）. Noto Sans CJK JP にあればそちら.
+ * @typedef {{key: string, family: string, name: string}} GothicPreview family は gothic.css のフォント名
+ * @type {GothicPreview[]}
+ */
+export const GOTHIC_PREVIEW = [
+  { key: 'notocjk', family: 'MJ Variant Gothic N', name: 'Noto Sans CJK JP' },
+  { key: 'plangothic', family: 'MJ Variant Gothic P', name: '遍黒体' },
+];
+
+const KUSA_RADICAL = 140; // 艸部
+
+/**
+ * 字形をゴシック体で使うための案内（字形の詳細の「ゴシック体で使う」）.
+ * - usable: false … IVS でしか区別できない（×）。ゴシック体では base（IVS を除いた字）の通常の字形になる
+ * - usable: true … 文字コード ucs の字 char（IVS なし）を fonts のゴシック体で使える。preview は見本に使う同梱フォント
+ *   kusa: 艸部の △。IPAmj明朝 は艹が4画（十十）のことがあり、ゴシック体では3画になることがある
+ * @param {Glyph} glyph
+ * @param {{fonts: {key: string, name: string, ok: boolean}[]} | null} gothicMeta meta.json の gothic
+ * @returns {{usable: false, base: string}
+ *   | {usable: true, char: string, ucs: string, fonts: GothicPrintFont[], preview: GothicPreview | null, kusa: boolean}
+ *   | null} 判定データが無ければ null
+ */
+export function gothicPrint(glyph, gothicMeta) {
+  const status = gothicStatus(glyph, gothicMeta);
+  if (!status || !glyph.char) return null;
+  if (!glyph.impl) return { usable: false, base: String.fromCodePoint(/** @type {number} */ (glyph.char.codePointAt(0))) };
+  const has = new Set(glyph.gothic ?? []);
+  const available = GOTHIC_PRINT_FONTS.filter((f) => has.has(f.key));
+  return {
+    usable: true,
+    char: keyToChar(glyph.impl),
+    ucs: glyph.impl,
+    fonts: status.mark === '○' ? available.filter((f) => f.installed) : available,
+    preview: GOTHIC_PREVIEW.find((p) => has.has(p.key)) ?? null,
+    kusa: status.mark === '△' && Boolean(glyph.radicals?.some(([r]) => r === KUSA_RADICAL)),
   };
 }
 

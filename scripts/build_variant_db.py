@@ -6,6 +6,7 @@
   - MJ縮退マップ Ver.1.2.0 (MJShrinkMap.1.2.0.json)           CC BY-SA 2.1 JP / IPA
   - Unicode IVD 2026-08-03 (IVD_Sequences.2026-08-03.txt)                Unicode License
   - Unihan Database (Unihan.18.0.0.zip, Unihan_Variants.txt のみ使用)  Unicode License
+  - ゴシック体の判定に使うフォント（GOTHIC_FONTS。cmap だけを読む）
 
 出力（src/data/）:
   - meta.json          ビルド情報・出典・ライセンス・件数
@@ -138,13 +139,17 @@ RELATION_TYPES = {
 
 PRESETS_PATH = ROOT / "scripts" / "data" / "name_presets.json"
 
-# 「ゴシック体で使えるか」の判定に使うフォント（文字の収録状況＝cmap だけを読む。フォント自体は配布しない）.
+# 「ゴシック体で使えるか」の判定に使うフォント（文字の収録状況＝cmap だけを読む）.
 # Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体で出せるのは「実装したUCS」を持つ字形だけ。
 #   ok=True のフォントすべてに字があれば ○、欠けていれば △、実装したUCS が無い（IVS でしか区別できない）字形は ×
 # ○ の判定には Noto Sans JP（SIL Open Font License）を使い、BIZ UDゴシックは参考として表示する
 # （BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。
-# 判定はフォントの版で変わるので、使うファイルを sha256 で固定する。いま固定しているのは Windows 11 に入っている版
+# △ の字（一般的なゴシック体に無い字）を印刷で使えるフォントとして、Noto Sans CJK JP（全字の版。基本の漢字・拡張A を受け持つ）と
+# 遍黒体 P1（拡張B 以降を受け持つ）も読む。△ の字はこの 2 つのどちらかにすべてある。
+# この 2 つは字形の見本用に抜き出して同梱する（scripts/build_gothic_webfont.py。src/fonts/gothic/README.md）。
+# 判定はフォントの版で変わるので、使うファイルを sha256 で固定する。Noto Sans JP・BIZ UDゴシックは Windows 11 に入っている版
 # （C:\Windows\Fonts の NotoSansJP-VF.ttf・BIZ-UDGothicR.ttc）。Windows 以外では、同じファイルを data/raw/ に置く。
+# url のあるフォントは、data/raw/ に無ければ配布元から取得する。
 # 別の版で判定し直すときは sha256 を書き換え、変わった字形の件数を PR に書く（AGENTS.md「生成物とデータ」）。
 GOTHIC_FONTS = [
     {"key": "noto", "name": "Noto Sans JP", "ok": True,
@@ -153,6 +158,15 @@ GOTHIC_FONTS = [
     {"key": "biz", "name": "BIZ UDゴシック", "ok": False,
      "paths": ["data/raw/BIZ-UDGothicR.ttc", r"C:\Windows\Fonts\BIZ-UDGothicR.ttc"],
      "sha256": "11cf9a40c90bf67fe9de86c9d852c7a8986dcf87fb16d86b510abf118df41673"},  # Version 2.02
+    {"key": "notocjk", "name": "Noto Sans CJK JP", "ok": False,
+     "paths": ["data/raw/NotoSansCJKjp-Regular.otf"],
+     "url": "https://github.com/notofonts/noto-cjk/raw/Sans2.004/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf",
+     "sha256": "68a3fc98800b2a27b371f2fb79991daf3633bd89309d4ffaa6946fd587f375b5"},  # Version 2.004
+    # P2 にも字があるが、MJ の字形の実装したUCS は P1 にすべて入っている（V2.9.5795 で確認）ので読まない
+    {"key": "plangothic", "name": "遍黒体", "ok": False,
+     "paths": ["data/raw/PlangothicP1-Regular.ttf"],
+     "url": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic_Project/releases/download/V2.9.5795/PlangothicP1-Regular.ttf",
+     "sha256": "550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6"},  # V2.9.5795（Version 6.400）
 ]
 
 
@@ -182,6 +196,25 @@ def verify_sha256(path: Path, expected: str) -> None:
         )
 
 
+def download(url: str, path: Path, expected_sha: str | None) -> None:
+    """url を path に保存する。sha256 が合わなければ保存しない."""
+    log(f"download {url}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    req = urllib.request.Request(url, headers={"User-Agent": "IPAmjWEB-build/1.0"})
+    tmp = path.with_suffix(path.suffix + ".part")
+    try:
+        with urllib.request.urlopen(req, timeout=300) as res, tmp.open("wb") as out:
+            while chunk := res.read(65536):
+                out.write(chunk)
+        if expected_sha:
+            verify_sha256(tmp, expected_sha)
+        tmp.replace(path)
+    except BaseException:
+        if tmp.exists():
+            tmp.unlink()
+        raise
+
+
 def ensure_sources(raw: Path, offline: bool) -> None:
     raw.mkdir(parents=True, exist_ok=True)
     for src in SOURCES.values():
@@ -193,20 +226,7 @@ def ensure_sources(raw: Path, offline: bool) -> None:
             continue
         if offline:
             sys.exit(f"missing {path} (--offline のためダウンロードしません)")
-        log(f"download {src['url']}")
-        req = urllib.request.Request(src["url"], headers={"User-Agent": "IPAmjWEB-build/1.0"})
-        tmp = path.with_suffix(path.suffix + ".part")
-        try:
-            with urllib.request.urlopen(req, timeout=300) as res, tmp.open("wb") as out:
-                while chunk := res.read(65536):
-                    out.write(chunk)
-            if expected_sha:
-                verify_sha256(tmp, expected_sha)
-            tmp.replace(path)
-        except BaseException:
-            if tmp.exists():
-                tmp.unlink()
-            raise
+        download(src["url"], path, expected_sha)
 
 
 def read_strict_xlsx(path: Path) -> list[dict[str, str]]:
@@ -307,15 +327,19 @@ def resolve_path(value: str) -> Path:
     return path if path.is_absolute() else ROOT / path
 
 
-def find_gothic_fonts(overrides: dict[str, str]) -> list[tuple[dict, Path]]:
+def find_gothic_fonts(overrides: dict[str, str], offline: bool = True) -> list[tuple[dict, Path]]:
     """GOTHIC_FONTS のフォントを探し、sha256 が固定した版と一致するかを確かめる.
 
+    url のあるフォントは、見つからなければ（offline でなければ）paths の先頭に取得する。
     見つからない・版が違うときは止める（黙って判定が変わったり、省かれたりしないように）。
     """
     found = []
     for spec in GOTHIC_FONTS:
         candidates = [overrides[spec["key"]]] if spec["key"] in overrides else spec["paths"]
         path = next((p for p in map(resolve_path, candidates) if p.exists()), None)
+        if path is None and spec.get("url") and spec["key"] not in overrides and not offline:
+            path = resolve_path(spec["paths"][0])
+            download(spec["url"], path, spec["sha256"])
         if path is None:
             sys.exit(
                 f"{spec['name']} が見つかりません（探した場所: {', '.join(candidates)}）。\n"
@@ -335,9 +359,9 @@ def find_gothic_fonts(overrides: dict[str, str]) -> list[tuple[dict, Path]]:
     return found
 
 
-def read_gothic_fonts(overrides: dict[str, str]) -> list[dict]:
+def read_gothic_fonts(overrides: dict[str, str], offline: bool = False) -> list[dict]:
     """GOTHIC_FONTS のフォントの cmap を読む."""
-    found = find_gothic_fonts(overrides)
+    found = find_gothic_fonts(overrides, offline)
     try:
         from fontTools.ttLib import TTCollection, TTFont
     except ImportError:
@@ -691,7 +715,7 @@ def build(raw: Path, out: Path, offline: bool, gothic_overrides: dict[str, str] 
 
     log("read gothic fonts ...")
     if gothic:
-        gothic_fonts = read_gothic_fonts(gothic_overrides or {})
+        gothic_fonts = read_gothic_fonts(gothic_overrides or {}, offline)
     else:
         log("warning: --no-gothic のため、ゴシック体の判定を省きます（このデータはコミットしない）")
         gothic_fonts = []

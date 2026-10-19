@@ -90,15 +90,20 @@ export function gothicLegend() {
   if (!app.db.meta.gothic) return null;
   return h('p', { class: 'gothic-legend' },
     badge('ゴシック○', 'ok'), ' ゴシック体でも使える　',
-    badge('ゴシック△', 'warn'), ' ゴシック体に字が無いことがある　',
-    badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる');
+    badge('ゴシック△', 'warn'), ' 一般的なゴシック体には字が無い（使えるフォントを案内）　',
+    badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる　',
+    '（印を押すと、ゴシック体で使う方法を表示）');
 }
 
 /** @param {Glyph} g */
 function glyphBadges(g) {
   const gothic = gothicStatus(g, app.db.meta.gothic);
   return [
-    gothic && badge(`ゴシック${gothic.mark}`, GOTHIC_VARIANT[gothic.mark], `${gothic.label}: ${gothic.detail}`),
+    gothic && h('button', {
+      class: `badge badge--${GOTHIC_VARIANT[gothic.mark]}`, type: 'button',
+      title: `${gothic.label}: ${gothic.detail}（押すと、ゴシック体で使う方法を表示）`,
+      onclick: () => openGlyphDialog(g, 'gothic'),
+    }, `ゴシック${gothic.mark}`),
     g.policy && badge(g.policy.replace('漢字', ''), 'gold'),
     g.jisLevel && badge(g.jisLevel.replace('水準', ''), 'navy'),
     g.koseki && badge('戸籍', null, `戸籍統一文字番号 ${g.koseki}`),

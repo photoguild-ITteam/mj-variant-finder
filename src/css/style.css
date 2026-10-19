@@ -430,6 +430,9 @@ a.icon-button { color: inherit; }
 .badge--warn { border-color: var(--gold-bright); background: transparent; color: var(--gold); }
 .badge--muted { border-style: dashed; background: transparent; color: var(--text-muted); }
 .gothic-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: -4px 0 12px; font-size: 12px; color: var(--text-muted); }
+/* 押せるバッジ（字形カードのゴシック体の印 → 字形の詳細の「ゴシック体で使う」） */
+button.badge { font: inherit; font-size: 11.5px; cursor: pointer; }
+button.badge:hover { border-style: solid; border-color: currentColor; }
 .badge--navy { border-color: transparent; background: var(--inverse-bg); color: var(--inverse-fg); }
 
 .panel-section { padding: 18px 24px 22px; }
@@ -675,6 +678,24 @@ a.icon-button { color: inherit; }
 .export-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--gold); margin-bottom: 6px; }
 .export-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .export-box__note { margin: 8px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+/* ゴシック体で使う（見本は src/fonts/gothic/gothic.css のフォント） */
+.gothic-box { margin-top: 14px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); scroll-margin: 16px; }
+.gothic-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.gothic-box__pair { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+.gothic-box__figure { margin: 0; text-align: center; }
+.gothic-box__figure figcaption { margin-top: 4px; font-size: 11.5px; color: var(--text-muted); }
+.gothic-box__glyph {
+  width: 96px; height: 96px; display: grid; place-items: center; font-size: 76px; line-height: 1; font-weight: 400;
+  background: var(--glyph-bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.gothic-box__glyph--notocjk { font-family: "MJ Variant Gothic N"; }
+.gothic-box__glyph--plangothic { font-family: "MJ Variant Gothic P"; }
+.gothic-box__text { margin: 0; font-size: 13px; line-height: 1.6; }
+.gothic-box__fonts { margin: 4px 0 8px; padding-left: 1.4em; font-size: 13px; line-height: 1.7; }
+.gothic-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.gothic-box .notice { margin: 8px 0 0; }
+.gothic-box__note { margin: 8px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 
 .glyph-detail__sections { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
 .glyph-detail__section { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }

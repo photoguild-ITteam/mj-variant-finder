@@ -35,6 +35,7 @@
 | `jsconfig.json` | `src/js/` の型検査の設定（`npm run test:types`。JSDoc の型を `tsc` で検査するだけで、ビルドはしない）。データの形の型は `db.js` の `@typedef`、同梱の Kanji Canvas の型は `src/vendor/kanji-canvas.bundle.d.ts`（JS 本体の隣に置くと tsc がこちらを読み、同梱ライブラリ自体は検査しない） |
 | `src/vendor/fontkit.js` | SVG 書き出しで woff2 から輪郭を取り出すための fontkit。`npm run build:vendor` で生成し、SVG 保存時にだけ読み込む（[ライセンス](src/vendor/THIRD_PARTY_LICENSES.txt)） |
 | `src/fonts/` | Webフォント「MJ Variant Mincho」（IPAmj明朝の派生フォント。[README](src/fonts/README.md)） |
+| `src/fonts/gothic/` | ゴシック体の見本用Webフォント「MJ Variant Gothic N / P」（Noto Sans CJK JP・遍黒体の派生フォント。[README](src/fonts/gothic/README.md)） |
 
 ## データパイプライン
 
@@ -63,7 +64,7 @@ Python 3.10 以上、標準ライブラリのみ。
 | `IVD_Sequences.2026-08-03.txt` | Unicode IVD 2026-08-03 | Unicode License v3 |
 | `Unihan.18.0.0.zip` | Unihan Database 18.0.0（`Unihan_Variants.txt` のみ使用） | Unicode License v3 |
 
-字形カードの「ゴシック○/△/×」は、ビルド時にゴシック体フォントの cmap を読んで判定する（`GOTHIC_FONTS`。SIL Open Font License の Noto Sans JP で ○/△ を判定し、BIZ UDゴシックは参考として表示する（BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない。フォント自体は配布しない）。判定はフォントの版で変わるので、使うファイル（いまは Windows 11 に入っている版）を sha256 で固定し、見つからない・版が違うときはビルドを止める。Windows 以外では同じファイルを `data/raw/` に置くか、`--gothic-font noto=path/to/font` で場所を指定する。`--no-gothic` で判定を省けるが、その出力はコミットしない。Moji_Joho の IVS に対応したゴシック体は無いため、実装したUCS を持たない字形は ×（IVD 上も Moji_Joho と Adobe-Japan1 の共通シーケンスは 0 件）。
+字形カードの「ゴシック○/△/×」は、ビルド時にゴシック体フォントの cmap を読んで判定する（`GOTHIC_FONTS`。SIL Open Font License の Noto Sans JP で ○/△ を判定し、BIZ UDゴシックは参考として表示する（BIZ UDゴシックの字は Noto Sans JP にすべて含まれる）。再配布に制限のある商用フォントは使わない）。あわせて、△ の字形を文書・印刷でゴシック体として使えるフォントとして Noto Sans CJK JP 2.004（全字の版）と遍黒体 P1 V2.9.5795 の cmap も読み、字形の `gothic` に `notocjk`・`plangothic` を付ける（△ の字形はどちらかにすべてある。`scripts/test_variant_db.py` で確かめる）。この 2 つは `data/raw/` に無ければ配布元から取得し、見本用に字を抜き出して同梱する（下の「Webフォント」）。判定はフォントの版で変わるので、使うファイル（Noto Sans JP・BIZ UDゴシックは Windows 11 に入っている版）を sha256 で固定し、見つからない・版が違うときはビルドを止める。Windows 以外では同じファイルを `data/raw/` に置くか、`--gothic-font noto=path/to/font` で場所を指定する。`--no-gothic` で判定を省けるが、その出力はコミットしない。Moji_Joho の IVS に対応したゴシック体は無いため、実装したUCS を持たない字形は ×（IVD 上も Moji_Joho と Adobe-Japan1 の共通シーケンスは 0 件）。
 
 `scripts/data/name_presets.json` は、姓・地名の読みから表記を引くための手作業の辞書。MJ の読みは1文字単位なので、「わたなべ → 渡辺・渡邊・渡邉」のような読み検索はこの辞書で補う。
 
@@ -107,6 +108,14 @@ python scripts/build_webfont.py --font path/to/ipamjm.ttf   # 既定は data/raw
 IPAmj明朝 Ver.006.01（MD5 を検証し、違えば止める）を 1024 コードポイント単位で分割し、79 個の WOFF2（合計約 12MB）にする。ブラウザは `unicode-range` で表示に必要なファイルだけを読み込む。
 
 最初の画面（ロゴ・ようこそ・よく検索される異体字）の字はばらばらのブロックにあり、そのままだと十数ファイル（約3MB）を読む。そこでこれらの字と、IVS 表示の判定（`font-detector.js`）に使う2字形だけを入れた `mjv-preset.woff2`（約7KB、フォント名「MJ Variant Mincho Preset」）を別に作り、最初の画面の字はこのフォントで表示する。判定用の字形もここに入れてあるので、最初の画面では大きなフォントを読まない。入れる字は `search-index.json` の `quickAccess` と `build_webfont.py` の `PRESET_EXTRA`・`PRESET_IVS` で、`tests/fonts.test.mjs` が漏れを検出する（quickAccess を変えたらフォントも作り直す）。検索結果の字形カードは本体のフォントで表示するので、IVS の描き分けには影響しない。IVS の対応表（cmap format 14）を残すため、サブセット時に異体字セレクタも要求に含めている。IPAフォントライセンス v1.0 第3条に従い、改名、ライセンス同梱、オリジナルへの置き換え方法の提示を行っている。
+
+### ゴシック体の見本
+
+```sh
+python scripts/build_gothic_webfont.py   # src/data/chars/ の gothic を読むので、build_variant_db.py の後に実行する
+```
+
+字形の詳細の「ゴシック体で使う」に出す見本のため、Noto Sans CJK JP 2.004 と遍黒体 P1 V2.9.5795（どちらも SIL Open Font License 1.1。`GOTHIC_FONTS` で sha256 を固定）から、字形の一覧で使う字だけを抜き出す。字形の `gothic` に `notocjk` があれば Noto Sans CJK JP（「MJ Variant Gothic N」、○ の字形と基本の漢字・拡張A の △）、無くて `plangothic` があれば遍黒体（「MJ Variant Gothic P」、拡張B 以降の △）に入れる。明朝体と同じく 1024 コードポイント単位に分け（77 個、合計約 9MB）、`src/fonts/gothic/gothic.css` は字形の詳細を開いたときにだけ読み込む（約 120KB）。見本なので `font-display: block` にし、`local()` は使わない（端末に別の版があっても、判定に使った版の形を見せる）。OFL に従い、予約名・商標を含まない名前に変え、著作権表示とライセンスの条文を同じフォルダに置いている。
 
 ## 人名・地名の読み辞書
 

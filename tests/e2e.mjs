@@ -166,6 +166,39 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     await page.waitForSelector('.glyph-card.is-focus');
   });
 
+  await check('ゴシック体の印を押す → 字形の詳細の「ゴシック体で使う」（同梱の見本・フォント・艹の注意）', async () => {
+    const openGothic = async (mj) => {
+      await page.fill('#q', mj);
+      await page.press('#q', 'Enter');
+      await page.click(`.glyph-card[data-mj="${mj}"] .glyph-card__badges .badge:first-child`);
+      await page.waitForSelector('#glyph-dialog[open] #glyph-gothic');
+      return page.textContent('#glyph-gothic');
+    };
+    // 艸部の △（拡張B）: 遍黒体を案内し、見本は同梱の MJ Variant Gothic P で描く
+    const text = await openGothic('MJ046275');
+    assert.match(text, /U\+26AF7 の字（IVS なし）/);
+    assert.match(text, /遍黒体/);
+    assert.match(text, /艹/);
+    // gothic.css は詳細を初めて開いたときに読み込む。読み終えて、見本の字のフォントが入るまで待つ
+    await page.waitForFunction(async () => {
+      const el = document.querySelector('#glyph-gothic .gothic-box__glyph--plangothic');
+      if (!el) return false;
+      const faces = await document.fonts.load('32px "MJ Variant Gothic P"', el.textContent);
+      return faces.some((f) => f.status === 'loaded');
+    }, null, { timeout: 15000 });
+    assert.match(await page.$eval('#glyph-gothic .gothic-box__glyph--plangothic', (el) => getComputedStyle(el).fontFamily), /MJ Variant Gothic P/);
+    assert.equal(await page.locator('#glyph-gothic :text("見本を読み込めませんでした")').count(), 0);
+    await page.screenshot({ path: OUT + '04b-gothic.png' });
+    await page.click('#glyph-dialog [data-close]');
+    // ×: ゴシック体は無いと案内する
+    assert.match(await openGothic('MJ026191'), /この字形のゴシック体はありません/);
+    assert.equal(await page.locator('#glyph-gothic .gothic-box__glyph').count(), 0);
+    await page.click('#glyph-dialog [data-close]');
+    await page.fill('#q', 'MJ026190');
+    await page.press('#q', 'Enter');
+    await page.waitForSelector('.glyph-card.is-focus');
+  });
+
   const ensureGlyphDialog = async () => {
     if (await page.locator('#glyph-dialog[open]').count() === 0) {
       if (await page.locator('.glyph-card.is-focus').count() === 0) {

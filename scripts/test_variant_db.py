@@ -176,10 +176,26 @@ class TestDatabase(unittest.TestCase):
         self.assertIn("noto", glyphs["MJ026190"]["gothic"])  # 実装したUCS U+9089 → ゴシック体にある
         self.assertNotIn("gothic", glyphs["MJ026191"])                        # IVS のみ → 判定対象外（×）
         ext_b = next(g for g in detail("\U00020000")["glyphs"] if g["mj"] == "MJ030312")
-        self.assertEqual(ext_b["gothic"], [])                                  # Noto Sans JP・BIZ UDゴシックに字が無い（△）
+        self.assertEqual(ext_b["gothic"], ["plangothic"])                      # Noto Sans JP・BIZ UDゴシックに字が無い（△）。遍黒体にはある
+        ext_a = next(g for g in detail("䁩")["glyphs"] if g["mj"] == "MJ002890")
+        self.assertEqual(ext_a["gothic"], ["notocjk"])                         # 拡張A の △ は Noto Sans CJK JP にある
         for ch in "髙𠮷﨑":                                                     # 人名でよく使う字は ○
             g = next(x for x in detail(ch)["glyphs"] if x.get("impl") == f"{ord(ch):04X}")
             self.assertIn("noto", g["gothic"], ch)
+
+    def test_gothic_print_fonts_cover_partial(self):
+        # △ の字形は、印刷に使うフォント（Noto Sans CJK JP・遍黒体）のどちらかにすべてある（字形の詳細で案内する）
+        if load(DATA / "meta.json")["gothic"] is None:
+            self.skipTest("ゴシック体のフォントが無い環境でビルドされた")
+        missing = []
+        for path in sorted((DATA / "chars").glob("*.json")):
+            if path.name == "none.json":
+                continue
+            for entry in load(path).values():
+                for g in entry["glyphs"]:
+                    if "impl" in g and "noto" not in g["gothic"] and not {"notocjk", "plangothic"} & set(g["gothic"]):
+                        missing.append(g["mj"])
+        self.assertEqual(missing, [])
 
     def test_compat_alias(self):
         self.assertEqual(resolve("塚"), "585A")  # 互換漢字 U+FA10 → 塚 U+585A

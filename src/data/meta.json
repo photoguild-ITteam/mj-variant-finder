@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T06:25:38+00:00",
+  "generatedAt": "2026-10-19T13:18:20+00:00",
   "sources": {
     "mji": {
       "url": "https://moji.or.jp/wp-content/uploads/2024/01/mji.00602.xlsx",
@@ -72,6 +72,22 @@
         "file": "BIZ-UDGothicR.ttc",
         "version": "Version 2.02",
         "sha256": "11cf9a40c90bf67fe9de86c9d852c7a8986dcf87fb16d86b510abf118df41673"
+      },
+      {
+        "key": "notocjk",
+        "name": "Noto Sans CJK JP",
+        "ok": false,
+        "file": "NotoSansCJKjp-Regular.otf",
+        "version": "Version 2.004;hotconv 1.0.118;makeotfexe 2.5.65603",
+        "sha256": "68a3fc98800b2a27b371f2fb79991daf3633bd89309d4ffaa6946fd587f375b5"
+      },
+      {
+        "key": "plangothic",
+        "name": "遍黒体",
+        "ok": false,
+        "file": "PlangothicP1-Regular.ttf",
+        "version": "Version 6.400;July 4, 2026;FontCreator 14.0.0.2901 64-bit",
+        "sha256": "550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6"
       }
     ],
     "counts": {
