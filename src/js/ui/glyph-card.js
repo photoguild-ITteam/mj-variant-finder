@@ -1,7 +1,7 @@
 // 字形カード（字形・MJ文字図形名・符号・バッジ・コピー/画像/比較ボタン）と、その一覧。
 
 import { app } from './context.js';
-import { badge, h } from './dom.js';
+import { badge, h, infoTip } from './dom.js';
 import { isCompared, toggleCompare } from './compare.js';
 import { exportImage } from './export-actions.js';
 import { copyText, glyphMessage } from './feedback.js';
@@ -85,15 +85,17 @@ function diffToggle() {
       h('span', { class: 'diff-legend__base' }, '通常の字形（IVSなし）だけ')));
 }
 
-/** 凡例（ゴシック体の判定データがあるときだけ） */
+/** 凡例（ゴシック体の判定データがあるときだけ）。一覧の上を込み合わせないよう、注記に畳む */
 export function gothicLegend() {
   if (!app.db.meta.gothic) return null;
-  return h('p', { class: 'gothic-legend' },
-    badge('ゴシック○', 'ok'), ' ゴシック体でも使える　',
-    badge('ゴシック△', 'warn'), ' 一般的なゴシック体には字が無い（使えるフォントを案内）　',
-    badge('ゴシックIVS', 'ok'), ' 別の IVS（Adobe-Japan1）でゴシック体でも同じ形が出せる　',
-    badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる　',
-    '（印を押すと、ゴシック体で使う方法を表示）');
+  return h('span', { class: 'gothic-legend' }, infoTip('ゴシック体の印の見方', [
+    h('ul', { class: 'gothic-legend__list' },
+      h('li', {}, badge('ゴシック○', 'ok'), ' ゴシック体でも使える'),
+      h('li', {}, badge('ゴシック△', 'warn'), ' 一般的なゴシック体には字が無い（使えるフォントを案内）'),
+      h('li', {}, badge('ゴシックIVS', 'ok'), ' 別の IVS（Adobe-Japan1）でゴシック体でも同じ形が出せる'),
+      h('li', {}, badge('ゴシック×', 'muted'), ' IVSでのみ区別でき、ゴシック体では通常の字形になる')),
+    h('p', {}, '印を押すと、ゴシック体で使う方法を表示します。'),
+  ], { text: 'ゴシック体の印の見方', end: true }));
 }
 
 /** @param {Glyph} g */

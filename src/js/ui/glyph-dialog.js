@@ -2,7 +2,7 @@
 
 import { copyFormats, keyToChar } from '../db.js';
 import { app } from './context.js';
-import { $, h, scrollBehavior } from './dom.js';
+import { $, h, infoTip, scrollBehavior } from './dom.js';
 import { toggleCompare } from './compare.js';
 import { exportImage } from './export-actions.js';
 import { copyText } from './feedback.js';
@@ -65,13 +65,25 @@ function exportBox(glyph) {
     class: `button button--small${primary ? ' button--primary' : ''}`, type: 'button', onclick: () => exportImage(action, glyph),
   }, label);
   return h('div', { class: 'export-box' },
-    h('span', { class: 'export-box__label' }, '画像として使う'),
+    boxHead('画像として使う', 'export-box__label',
+      'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'),
     h('div', { class: 'export-box__buttons' },
       button('画像でコピー', 'copyPng', true),
       button('PNGで保存', 'downloadPng'),
-      button('SVGで保存', 'downloadSvg')),
-    h('p', { class: 'export-box__note' },
-      'Canva など、IVS やフォントの扱いが不確かなアプリには画像で貼り付けると字形が崩れません。PNG は透明背景・1024px、SVG は拡大しても劣化しないアウトラインです。'));
+      button('SVGで保存', 'downloadSvg')));
+}
+
+/**
+ * 箱の見出しと、その説明の注記（説明は常には出さない）
+ * @param {string} text
+ * @param {string} className 見出しのクラス
+ * @param {any} [note] 説明（無ければ注記を出さない）
+ */
+function boxHead(text, className, note) {
+  const notes = [note].flat().filter(Boolean);
+  return h('div', { class: 'box-head' },
+    h('span', { class: className }, text),
+    notes.length ? infoTip(`${text}の説明`, notes) : null);
 }
 
 /**
@@ -81,9 +93,8 @@ function exportBox(glyph) {
 function gothicBox(glyph) {
   const info = gothicPrint(glyph, app.db.meta.gothic);
   if (!info) return null;
-  const label = h('span', { class: 'gothic-box__label' }, 'ゴシック体で使う');
   if (!info.usable) {
-    return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
+    return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, boxHead('ゴシック体で使う', 'gothic-box__label'),
       h('p', { class: 'gothic-box__text' },
         `この字形を指す Moji_Joho の IVS に対応したゴシック体は無いため、ゴシック体では通常の字形（${info.base}）で表示されます。`,
         info.checked ? 'Adobe-Japan1 の IVS で出せる形とも見比べましたが、同じ形はありませんでした。' : null),
@@ -98,7 +109,13 @@ function gothicBox(glyph) {
       : info.aj1
         ? `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）が、次のゴシック体でこの字形と同じ形になります。`
         : `文書・印刷では、文字コード U+${info.ucs} の字（IVS なし）を、次のゴシック体で使えます。`;
-  return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, label,
+  const notes = [
+    info.withIvs && h('p', {}, 'IVS を付けた字は、IVS に対応したアプリで使えます。同じ形かは、IPAmj明朝 と Noto Serif JP・Noto Sans JP の字形を見比べて確かめました。'),
+    info.preview?.key === 'plangothic' && h('p', {}, '遍黒体は中国大陸の字形を基準にしたフォントで、細部が IPAmj明朝 と違うことがあります。'),
+    info.preview && h('p', {}, `見本は、${info.preview.name} から字を抜き出して同梱したもので表示しています。`,
+      info.fonts.some((f) => !f.installed) ? '文書で使うには、フォントを入手して端末にインストールしてください。' : null),
+  ];
+  return h('div', { class: 'gothic-box', id: 'glyph-gothic' }, boxHead('ゴシック体で使う', 'gothic-box__label', notes),
     info.preview ? gothicPreview(glyph, info.char, info.preview) : null,
     h('p', { class: 'gothic-box__text' }, text),
     info.fonts.length ? h('ul', { class: 'gothic-box__fonts' }, info.fonts.map((f) => h('li', {},
@@ -108,15 +125,9 @@ function gothicBox(glyph) {
         class: 'button button--small', type: 'button',
         onclick: () => copyText(info.char, `ゴシック体用の文字（${seq}）をコピーしました`),
       }, 'ゴシック体用の文字をコピー')),
-    info.withIvs ? h('p', { class: 'gothic-box__note' },
-      'IVS を付けた字は、IVS に対応したアプリで使えます。同じ形かは、IPAmj明朝 と Noto Serif JP・Noto Sans JP の字形を見比べて確かめました。') : null,
+    // 間違いを防ぐための注意は、注記に畳まず常に出す
     info.kusa ? h('p', { class: 'notice notice--warn notice--compact' },
-      'この字形は、艹（くさかんむり）が「十 十」に分かれた4画のことがあります。ゴシック体では、つながった3画の艹で表示されることがあるので、見本で形を確かめてください。') : null,
-    info.preview?.key === 'plangothic' ? h('p', { class: 'gothic-box__note' },
-      '遍黒体は中国大陸の字形を基準にしたフォントで、細部が IPAmj明朝 と違うことがあります。') : null,
-    info.preview ? h('p', { class: 'gothic-box__note' },
-      `見本は、${info.preview.name} から字を抜き出して同梱したもので表示しています。`,
-      info.fonts.some((f) => !f.installed) ? '文書で使うには、フォントを入手して端末にインストールしてください。' : null) : null);
+      'この字形は、艹（くさかんむり）が「十 十」に分かれた4画のことがあります。ゴシック体では、つながった3画の艹で表示されることがあるので、見本で形を確かめてください。') : null);
 }
 
 /**

@@ -3,7 +3,6 @@
 // 字の見出し・タブ・関連字もゴシック体（同梱の見本用フォント）で表示する。CSS は <html data-font-mode> を見る。
 
 import { STORAGE_KEYS } from '../storage.js';
-import { $ } from './dom.js';
 import { loadGothicFonts } from './gothic-fonts.js';
 
 /** @typedef {'mincho' | 'gothic'} FontMode */
@@ -29,9 +28,6 @@ function apply(mode) {
   for (const button of document.querySelectorAll('[data-font-mode]')) {
     button.setAttribute('aria-pressed', String(button.getAttribute('data-font-mode') === mode));
   }
-  // 古い index.html がキャッシュに残っていると説明が無いので、無ければ飛ばす（ほかの初期化を止めない）
-  const note = $('#font-mode-note');
-  if (note) note.hidden = mode !== 'gothic';
   // 見出しなどをゴシック体で描くので、見本用フォントの @font-face を読んでおく（読めなければ端末のフォントで描く）
   if (mode === 'gothic') loadGothicFonts().catch((err) => console.warn(err));
 }

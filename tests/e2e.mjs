@@ -156,7 +156,20 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     const badge = (mj) => page.textContent(`.glyph-card[data-mj="${mj}"] .glyph-card__badges .badge:first-child`);
     assert.equal(await badge('MJ026190'), 'ゴシック○');
     assert.equal(await badge('MJ026191'), 'ゴシック×');
+    // 印の見方は注記に畳んである: マウスを乗せると出る。押すと開いたままになり（タッチの端末用）、Esc で閉じる
+    const legend = '.gothic-legend .tip__body';
     assert.ok(await page.isVisible('.gothic-legend'));
+    assert.equal(await page.isVisible(legend), false);
+    await page.hover('.gothic-legend .tip__button');
+    assert.ok(await page.isVisible(legend));
+    await page.mouse.move(0, 0);
+    assert.equal(await page.isVisible(legend), false);
+    await page.click('.gothic-legend .tip__button');
+    await page.mouse.move(0, 0);
+    assert.ok(await page.isVisible(legend));
+    assert.equal(await page.getAttribute('.gothic-legend .tip__button', 'aria-expanded'), 'true');
+    await page.keyboard.press('Escape');
+    assert.equal(await page.isVisible(legend), false);
     await page.fill('#q', 'U+20000');
     await page.press('#q', 'Enter');
     await page.waitForSelector('.glyph-card[data-mj="MJ030312"]');
@@ -225,7 +238,11 @@ async function newPage({ viewport = { width: 1360, height: 900 } } = {}) {
     await page.click('[data-font-mode="gothic"]');
     await page.waitForSelector('#gothic-variants .gothic-card[data-vs="E0101"]');
     assert.equal(await page.evaluate(() => localStorage.getItem('mjv_font_mode')), 'gothic');
+    // 説明は「?」の注記に畳んである。マウスを乗せると出る
+    assert.equal(await page.isVisible('#font-mode-note'), false);
+    await page.hover('.font-mode-row .tip__button');
     assert.ok(await page.isVisible('#font-mode-note'));
+    await page.mouse.move(0, 0);
     assert.equal(await page.locator('.mincho-glyphs[open]').count(), 0);
     assert.deepEqual(await page.$$eval('#gothic-variants .gothic-card', (els) => els.map((e) => e.dataset.vs)), ['', 'E0101']);
     const card = '#gothic-variants .gothic-card[data-vs="E0101"]';

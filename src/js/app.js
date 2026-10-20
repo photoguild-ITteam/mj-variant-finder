@@ -4,7 +4,7 @@
 import { AuthRequiredError, KANA_ONLY, VariantDB } from './db.js';
 import { setupCompare } from './ui/compare.js';
 import { app } from './ui/context.js';
-import { $, h, scrollBehavior } from './ui/dom.js';
+import { $, h, scrollBehavior, setupTips } from './ui/dom.js';
 import { renderQuickAccess, setupFilters } from './ui/filters.js';
 import { setupFontMode } from './ui/font-mode.js';
 import { setupFontStatus } from './ui/font-status.js';
@@ -41,6 +41,7 @@ init().catch((err) => {
 
 async function init() {
   setupTheme();
+  setupTips();
   setupDialogs();
   setupCompare();
   setupGlyphDiff();

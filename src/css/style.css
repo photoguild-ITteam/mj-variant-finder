@@ -265,17 +265,50 @@ a.icon-button { color: inherit; }
 .search-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .search-tools .button { flex: 1 1 auto; }
 
+/* 注記（dom.js の infoTip）: 「?」に畳んだ説明。マウスを乗せる・キーボードで選ぶ・押すと出る */
+.tip { position: relative; display: inline-flex; align-items: center; }
+.tip__button {
+  display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none;
+  font: inherit; font-size: 12px; color: var(--text-muted); cursor: help;
+}
+.tip__icon {
+  display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%;
+  border: 1px solid currentColor; font-size: 10.5px; font-weight: 700; line-height: 1;
+}
+.tip__button:hover, .tip.is-open .tip__button { color: var(--text); }
+.tip__button:focus-visible { outline: 2px solid var(--crimson-bright); outline-offset: 2px; border-radius: 4px; }
+.tip__body {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+  width: max-content; max-width: min(360px, calc(100vw - 32px));
+  padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface); box-shadow: var(--shadow);
+  font-size: 12px; font-weight: 400; line-height: 1.7; color: var(--text); text-align: left; white-space: normal;
+  visibility: hidden; opacity: 0; transition: opacity 0.12s;
+}
+.tip--end .tip__body { left: auto; right: 0; }
+/* 見出しの中の注記は、説明を見出しの行に合わせて開く（ダイアログ・狭い画面の端で切れないように） */
+.panel-section__head, .box-head { position: relative; }
+.panel-section__head .tip, .box-head .tip { position: static; }
+.panel-section__head .tip__body, .box-head .tip__body { max-width: 100%; }
+.tip:hover .tip__body, .tip__button:focus-visible ~ .tip__body, .tip.is-open .tip__body { visibility: visible; opacity: 1; }
+/* Esc で隠したもの（マウスを離す・フォーカスを外すと元に戻る。dom.js の setupTips） */
+.tip.is-dismissed .tip__body { visibility: hidden; opacity: 0; }
+.tip__body ul { margin: 0; padding-left: 1.2em; }
+.tip__body p { margin: 0; }
+.tip__body p + p, .tip__body p + ul, .tip__body ul + p { margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) { .tip__body { transition: none; } }
+
 /* 表示する書体（明朝モード・ゴシックモード。font-mode.js） */
+.font-mode-row { display: flex; flex: 1 1 auto; align-items: center; gap: 6px; }
 .font-mode { display: inline-flex; flex: 1 1 auto; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
 .font-mode__option {
   flex: 1; padding: 4px 12px; border: 0; background: var(--surface); color: var(--text-muted);
   font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
 }
-@media (max-width: 560px) { .font-mode { flex-basis: 100%; } }
+@media (max-width: 560px) { .font-mode-row { flex-basis: 100%; } }
 .font-mode__option + .font-mode__option { border-left: 1px solid var(--border-strong); }
 .font-mode__option[aria-pressed="true"] { background: var(--inverse-bg); color: var(--inverse-fg); font-weight: 600; }
 .font-mode__option:focus-visible { outline: 2px solid var(--crimson-bright); outline-offset: -2px; }
-.font-mode__note { margin: 6px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 /* ゴシックモードでは、字の見出し・タブ・関連字をゴシック体（同梱の見本用フォント。無い字は画面の字体）で描く */
 :root[data-font-mode="gothic"] .char-hero__glyph,
 :root[data-font-mode="gothic"] .char-hero__title .glyph,
@@ -452,7 +485,7 @@ a.icon-button { color: inherit; }
 .badge--ok { border-color: transparent; background: rgba(22, 163, 74, 0.12); color: var(--ok); }
 .badge--warn { border-color: var(--gold-bright); background: transparent; color: var(--gold); }
 .badge--muted { border-style: dashed; background: transparent; color: var(--text-muted); }
-.gothic-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: -4px 0 12px; font-size: 12px; color: var(--text-muted); }
+.gothic-legend { display: inline-flex; }
 /* 押せるバッジ（字形カードのゴシック体の印 → 字形の詳細の「ゴシック体で使う」） */
 button.badge { font: inherit; font-size: 11.5px; cursor: pointer; }
 button.badge:hover { border-style: solid; border-color: currentColor; }
@@ -463,6 +496,9 @@ button.badge:hover { border-style: solid; border-color: currentColor; }
 .panel-section__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .panel-section__head h3 { margin: 0; font-size: 15px; }
 .panel-section__head p { margin: 0; font-size: 12.5px; color: var(--text-muted); }
+.panel-section__title { display: flex; align-items: center; gap: 6px; }
+.tip__body .gothic-legend__list { list-style: none; padding-left: 0; display: grid; gap: 4px; }
+.gothic-legend__list .badge { margin-right: 4px; }
 @media (max-width: 560px) { .panel-section { padding: 14px 16px 18px; } }
 
 /* 字形カード */
@@ -698,13 +734,13 @@ button.badge:hover { border-style: solid; border-color: currentColor; }
 .copy-row__value.glyph { font-family: var(--font-glyph); font-size: 20px; line-height: 1.3; }
 
 .export-box { margin-top: 14px; padding: 10px 12px; border-radius: var(--radius); background: var(--gold-tint); }
-.export-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--gold); margin-bottom: 6px; }
+.box-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.export-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--gold); }
 .export-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
-.export-box__note { margin: 8px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 
 /* ゴシック体で使う（見本は src/fonts/gothic/gothic.css のフォント） */
 .gothic-box { margin-top: 14px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); scroll-margin: 16px; }
-.gothic-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.gothic-box__label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); }
 .gothic-box__pair { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
 .gothic-box__figure { margin: 0; text-align: center; }
 .gothic-box__figure figcaption { margin-top: 4px; font-size: 11.5px; color: var(--text-muted); }
@@ -733,7 +769,6 @@ button.badge:hover { border-style: solid; border-color: currentColor; }
 .gothic-card__same .chip .glyph { font-size: 15px; }
 .gothic-card__actions { display: flex; gap: 6px; padding: 6px 10px 10px; margin-top: auto; }
 .gothic-card__actions .button { flex: 1; }
-.gothic-section__note { margin: 10px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 .gothic-box__text { margin: 0; font-size: 13px; line-height: 1.6; }
 .gothic-box__fonts { margin: 4px 0 8px; padding-left: 1.4em; font-size: 13px; line-height: 1.7; }
 .gothic-box__buttons { display: flex; flex-wrap: wrap; gap: 6px; }

@@ -5,7 +5,7 @@ import { radicalChar } from '../db.js';
 import { getConfusablesForChar } from '../confusables.js';
 import { app } from './context.js';
 import { COMPARE_MAX, addToCompare } from './compare.js';
-import { badge, h, loading, queryButton } from './dom.js';
+import { badge, h, infoTip, loading, queryButton } from './dom.js';
 import { copyText, errorMessage, showToast } from './feedback.js';
 import { fontMode } from './font-mode.js';
 import { glyphGrid, glyphTools, gothicLegend } from './glyph-card.js';
@@ -103,14 +103,20 @@ function glyphSection(glyphs, focus) {
   const grid = glyphGrid(glyphs, focus);
   const section = h('section', { class: 'panel-section' },
     h('div', { class: 'panel-section__head' },
-      h('h3', {}, `字形バリエーション（${glyphs.length}）`),
-      h('p', {}, '字形をクリックすると詳細とコピー形式を表示')),
-    gothicLegend(),
+      panelTitle(`字形バリエーション（${glyphs.length}）`, '字形をクリックすると、詳細とコピー形式を表示します。'),
+      gothicLegend()),
     grid);
   // 絞り込みは grid の直後に「該当なし」の表示を足すので、grid を置いてから作る
   grid.before(glyphTools(glyphs, grid));
   return section;
 }
+
+/**
+ * 欄の見出しと、その説明の注記（説明は常には出さない）
+ * @param {string} title
+ * @param {any} note
+ */
+const panelTitle = (title, note) => h('div', { class: 'panel-section__title' }, h('h3', {}, title), infoTip(`${title}の説明`, note));
 
 /**
  * ゴシック体の字形（ゴシックモード）: 通常の字形と、Adobe-Japan1 の IVS で出せる別の形を、ゴシック体の見本で並べる
@@ -154,11 +160,12 @@ function gothicSection(key, detail, variants) {
   });
   return h('section', { class: 'panel-section', id: 'gothic-variants' },
     h('div', { class: 'panel-section__head' },
-      h('h3', {}, `ゴシック体の字形（${variants.length}）`),
-      h('p', {}, 'Noto Sans JP などのゴシック体で出せる形。IVS の形は Adobe-Japan1 の IVS で、MJ の IVS とは番号が違います')),
-    h('div', { class: 'gothic-grid' }, cards),
-    h('p', { class: 'gothic-section__note' },
-      '「同じ形の MJ 字形」は、字形を見比べて確かめたものだけ出しています。IVS を付けた字は、IVS に対応したフォントとアプリで使えます。見本は、Noto Sans CJK JP・遍黒体から字を抜き出して同梱したものです。'));
+      panelTitle(`ゴシック体の字形（${variants.length}）`, [
+        h('p', {}, 'Noto Sans JP などのゴシック体で出せる形です。IVS の形は Adobe-Japan1 の IVS で、MJ の IVS とは番号が違います。'),
+        h('p', {}, '「同じ形の MJ 字形」は、字形を見比べて確かめたものだけ出しています。IVS を付けた字は、IVS に対応したフォントとアプリで使えます。'),
+        h('p', {}, '見本は、Noto Sans CJK JP・遍黒体から字を抜き出して同梱したものです。'),
+      ])),
+    h('div', { class: 'gothic-grid' }, cards));
 }
 
 /** @param {{primary: RelatedChar[], reference: RelatedChar[]}} related db.related() の戻り値 */
@@ -167,8 +174,10 @@ function relatedSection({ primary, reference }) {
   const openCount = primary.length <= 3 ? 3 : 2;
   return h('section', { class: 'panel-section' },
     h('div', { class: 'panel-section__head' },
-      h('h3', {}, `関連する異体字（${primary.length}）`),
-      h('p', {}, '縮退先: この字の字形の代用になる文字 / 縮退元: この字で代用される文字')),
+      panelTitle(`関連する異体字（${primary.length}）`, [
+        h('p', {}, '縮退先: この字の字形の代用になる文字'),
+        h('p', {}, '縮退元: この字で代用される文字'),
+      ])),
     primary.length
       ? h('div', { class: 'related-list' }, primary.map((r, i) => relatedItem(r, i < openCount)))
       : h('p', { class: 'muted' }, 'MJ縮退マップに基づく関連字はありません。'),
